@@ -27,7 +27,7 @@ import powerworks.event.ViewMoveEvent;
 import powerworks.event.ZoomEvent;
 import powerworks.graphics.Screen;
 import powerworks.graphics.SynchronizedAnimatedTexture;
-import powerworks.input.InputHandler;
+import powerworks.input.ControlHandler;
 import powerworks.input.Mouse;
 import powerworks.level.Level;
 import powerworks.moving.entity.Player;
@@ -57,7 +57,6 @@ public final class Game extends Canvas implements Runnable, EventListener {
     public static int[] overlay = ((DataBufferInt) layer2.getRaster().getDataBuffer()).getData();
     public static List<String> allPlayerNames;
     private static List<Player> allPlayers;
-    public static Keyboard keyboard;
     public static Mouse mouse;
     public static boolean showRenderTimes = false;
     public static boolean showUpdateTimes = false;
@@ -164,7 +163,7 @@ public final class Game extends Canvas implements Runnable, EventListener {
 	if (showUpdateTimes)
 	    System.out.println("----------");
 	Task.update();
-	InputHandler.update();
+	ControlHandler.update();
 	player.update();
 	Level.level.update();
 	Quadtree.update();

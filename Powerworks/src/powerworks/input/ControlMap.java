@@ -11,7 +11,7 @@ public enum ControlMap {
     DEFAULT("/settings/binds.txt");
 
     HashMap<Integer, ControlOption> binds = new HashMap<Integer, ControlOption>();
-
+    
     private ControlMap(String path) {
 	if (!path.endsWith(".txt"))
 	    throw new IllegalArgumentException("Invalid file extension");
@@ -30,5 +30,17 @@ public enum ControlMap {
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
+    }
+    
+    public ControlOption getControlOption(KeyEvent key) {
+	return binds.get(key.getKeyCode());
+    }
+    
+    public void setKeyEvent(KeyEvent key, ControlOption control) {
+	if(binds.replace(key.getKeyCode(), control) == null) {
+	    System.err.println("Attempted to set key " + KeyEvent.getKeyText(e.getKeyCode()) + " to " + control.name() + " but the key was not defined previously, adding it as new definition");
+	    binds.put(key.getKeyCode(), control);
+	}
+	
     }
 }
