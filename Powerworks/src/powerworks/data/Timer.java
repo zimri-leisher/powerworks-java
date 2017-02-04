@@ -3,9 +3,9 @@ package powerworks.data;
 import java.util.ArrayList;
 
 public class Timer {
-
     static ArrayList<Timer> timers = new ArrayList<Timer>();
     int tickTime, tickOffset, minTicks, maxTicks, timer, currentTick;
+    boolean playing, stopOnFinish;
 
     /**
      * Instantiates a Timer object, which is a handy and easily extendible way
@@ -23,7 +23,8 @@ public class Timer {
      *            next time tickTime is reached it will go to minTicks)
      */
     public Timer(int tickTime, int tickOffset, int minTicks, int maxTicks) {
-	if(tickTime < 0 || tickOffset < 0 || minTicks < 0 || maxTicks < 0) throw new IllegalArgumentException("Arguments cannot be less than 0");
+	if (tickTime < 0 || tickOffset < 0 || minTicks < 0 || maxTicks < 0)
+	    throw new IllegalArgumentException("Arguments cannot be less than 0");
 	this.tickTime = tickTime;
 	this.tickOffset = tickOffset;
 	this.minTicks = minTicks;
@@ -37,6 +38,11 @@ public class Timer {
     public void resetTimer() {
 	timer = 0;
     }
+    
+    public void resetAll() {
+	timer = 0;
+	currentTick = 0;
+    }
 
     /**
      * Sets the timer that counts 60ths of a second (keeping the current frame
@@ -47,7 +53,8 @@ public class Timer {
      *            the time, in 60ths of a second, to set it to
      */
     public void setTimer(int time) {
-	if(time < 0) throw new IllegalArgumentException("Invalid time, can't be less than 0");
+	if (time < 0)
+	    throw new IllegalArgumentException("Invalid time, can't be less than 0");
 	if (time > tickTime) {
 	    timer = 0;
 	    nextTick();
@@ -58,39 +65,47 @@ public class Timer {
     public int getCurrentTick() {
 	return currentTick;
     }
-    
+
     public int getMaxTicks() {
 	return maxTicks;
     }
-    
+
     public int getMinTicks() {
 	return minTicks;
     }
-    
+
     public int getTimer() {
 	return timer;
     }
 
     /**
-     * Goes to the next tick, if it is already at maxTicks then it goes back to minTicks
+     * Goes to the next tick, if it is already at maxTicks and stopOnFinish is true then it goes back to
+     * minTicks and stops playing, otherwise, continues playing
      */
     public void nextTick() {
-	if (currentTick == maxTicks)
+	if (currentTick == maxTicks) {
 	    currentTick = minTicks;
-	else
+	    if(stopOnFinish) {
+		playing = false;
+		stopOnFinish = false;
+	    }
+	} else
 	    currentTick++;
     }
-    
+
     public void setCurrentTick(int currentTick) {
 	if (currentTick > maxTicks || currentTick < minTicks)
 	    throw new IllegalArgumentException("Cannot set tick number above or below max or min");
 	this.currentTick = currentTick;
     }
-    
+
     public static void update() {
-	for(Timer t : timers) {
-	    t.timer++;
-	    if(t.timer == t.tickTime) t.nextTick();
+	for (Timer t : timers) {
+	    if (t.playing) {
+		t.timer++;
+		if (t.timer == t.tickTime)
+		    t.nextTick();
+	    }
 	}
     }
 }
