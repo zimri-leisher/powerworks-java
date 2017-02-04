@@ -23,7 +23,7 @@ public class InputManager implements KeyListener{
     public static void removeControlHandler(ControlHandler h) {
 	handlers.remove(h);
     }
-    //test
+    
     static void sendControlPress(KeyEvent key, ControlPressType type) {
 	ControlOption option = map.getControlOption(key);
 	ControlPress control = new ControlPress(option, type);
