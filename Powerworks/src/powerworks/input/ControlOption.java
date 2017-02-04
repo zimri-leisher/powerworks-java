@@ -1,0 +1,6 @@
+package powerworks.input;
+
+
+public enum ControlOption {
+    UP, DOWN, LEFT, RIGHT, SPRINT, PLACE_BLOCK, REMOVE_BLOCK, ROTATE_SELECTED_BLOCK, DROP_ITEM, PICK_UP_ITEMS, GIVE_CONVEYOR_BELT, GIVE_MINER
+}
