@@ -42,6 +42,20 @@ public class Timer {
     public void resetAll() {
 	timer = 0;
 	currentTick = 0;
+	playing = false;
+	stopOnFinish = false;
+    }
+    
+    public void play() {
+	playing = true;
+    }
+    
+    public void stop() {
+	playing = false;
+    }
+    
+    public void setStopOnFinish(boolean stopOnFinish) {
+	this.stopOnFinish = stopOnFinish;
     }
 
     /**
