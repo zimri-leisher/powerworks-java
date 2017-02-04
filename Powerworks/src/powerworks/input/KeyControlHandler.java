@@ -1,6 +1,6 @@
 package powerworks.input;
 
 
-public interface ControlHandler {
-    public void handle(ControlPress p);
+public interface KeyControlHandler {
+    public void handle(KeyControlPress p);
 }

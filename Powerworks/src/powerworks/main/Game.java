@@ -27,7 +27,8 @@ import powerworks.event.ViewMoveEvent;
 import powerworks.event.ZoomEvent;
 import powerworks.graphics.Screen;
 import powerworks.graphics.SynchronizedAnimatedTexture;
-import powerworks.input.ControlHandler;
+import powerworks.input.KeyControlHandler;
+import powerworks.input.InputManager;
 import powerworks.input.Mouse;
 import powerworks.level.Level;
 import powerworks.moving.entity.Player;
@@ -57,15 +58,14 @@ public final class Game extends Canvas implements Runnable, EventListener {
     public static int[] overlay = ((DataBufferInt) layer2.getRaster().getDataBuffer()).getData();
     public static List<String> allPlayerNames;
     private static List<Player> allPlayers;
-    public static Mouse mouse;
+    public static InputManager input;
     public static boolean showRenderTimes = false;
     public static boolean showUpdateTimes = false;
 
     private Game() {
 	setPreferredSize(new Dimension(width * scale, height * scale));
 	frame = new JFrame();
-	keyboard = new Keyboard();
-	mouse = new Mouse();
+	input = new InputManager();
 	player = new Player(Level.level.getWidthPixels() / 2, Level.level.getHeightPixels() / 2);
 	System.out.println(player.getTexture().getWidthPixels());
 	scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
@@ -74,10 +74,10 @@ public final class Game extends Canvas implements Runnable, EventListener {
 	allPlayerNames.add(player.getName());
 	allPlayers = new ArrayList<Player>();
 	allPlayers.add(player);
-	addKeyListener(keyboard);
-	addMouseWheelListener(mouse);
-	addMouseListener(mouse);
-	addMouseMotionListener(mouse);
+	addKeyListener(input);
+	addMouseWheelListener(input);
+	addMouseListener(input);
+	addMouseMotionListener(input);
 	loadFont();
 	setCursor(Toolkit.getDefaultToolkit().createCustomCursor(
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
@@ -163,7 +163,7 @@ public final class Game extends Canvas implements Runnable, EventListener {
 	if (showUpdateTimes)
 	    System.out.println("----------");
 	Task.update();
-	ControlHandler.update();
+	KeyControlHandler.update();
 	player.update();
 	Level.level.update();
 	Quadtree.update();

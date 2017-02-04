@@ -10,7 +10,7 @@ import java.util.HashMap;
 public enum ControlMap {
     DEFAULT("/settings/binds.txt");
 
-    HashMap<Integer, ControlOption> binds = new HashMap<Integer, ControlOption>();
+    HashMap<Integer, KeyControlOption> binds = new HashMap<Integer, KeyControlOption>();
     
     private ControlMap(String path) {
 	if (!path.endsWith(".txt"))
@@ -23,7 +23,7 @@ public enum ControlMap {
 		count++;
 		first = line.split(":")[0].replaceAll(":", "");
 		last = line.split(":")[1];
-		binds.put(KeyEvent.getExtendedKeyCodeForChar(Integer.parseInt(first)), ControlOption.valueOf(last));
+		binds.put(KeyEvent.getExtendedKeyCodeForChar(Integer.parseInt(first)), KeyControlOption.valueOf(last));
 	    }
 	    System.out.println("Loaded " + count + " keybinds");
 	    reader.close();
@@ -32,13 +32,13 @@ public enum ControlMap {
 	}
     }
     
-    public ControlOption getControlOption(KeyEvent key) {
+    public KeyControlOption getControlOption(KeyEvent key) {
 	return binds.get(key.getKeyCode());
     }
     
-    public void setKeyEvent(KeyEvent key, ControlOption control) {
+    public void setKeyEvent(KeyEvent key, KeyControlOption control) {
 	if(binds.replace(key.getKeyCode(), control) == null) {
-	    System.err.println("Attempted to set key " + KeyEvent.getKeyText(e.getKeyCode()) + " to " + control.name() + " but the key was not defined previously, adding it as new definition");
+	    System.err.println("Attempted to set key " + KeyEvent.getKeyText(key.getKeyCode()) + " to " + control.name() + " but the key was not defined previously, adding it as new definition");
 	    binds.put(key.getKeyCode(), control);
 	}
 	

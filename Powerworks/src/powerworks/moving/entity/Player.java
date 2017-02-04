@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import powerworks.block.Block;
 import powerworks.collidable.Hitbox;
 import powerworks.command.Command;
+import powerworks.data.Timer;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
 import powerworks.event.EventManager;
@@ -11,6 +12,10 @@ import powerworks.event.PlaceBlockEvent;
 import powerworks.graphics.HUD;
 import powerworks.graphics.Screen;
 import powerworks.graphics.StaticTextureCollection;
+import powerworks.input.KeyControlHandler;
+import powerworks.input.KeyControlOption;
+import powerworks.input.KeyControlPress;
+import powerworks.input.InputManager;
 import powerworks.input.Mouse;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
@@ -18,17 +23,21 @@ import powerworks.level.Level;
 import powerworks.main.Game;
 import powerworks.moving.droppeditem.DroppedItem;
 
-public class Player extends Entity implements CommandActor, EventListener {
+public class Player extends Entity implements KeyControlHandler, EventListener {
 
-    private HUD hud;
-    private Inventory inv;
-    private boolean invOpen = false;
-    private boolean renderGhostBlock = false;
-    private int lastMouseXPixel = 0, lastMouseYPixel = 0;
-    private int rotationOfBlock = 0;
-    private String name;
-    private GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
-
+    HUD hud;
+    Inventory inv;
+    boolean invOpen = false;
+    boolean renderGhostBlock = false;
+    int rotationOfBlock = 0;
+    String name;
+    GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
+    
+    //Input flags
+    int lastMouseXPixel = 0, lastMouseYPixel = 0;
+    boolean moving, sprinting;
+    Timer removing;
+    
     public Player(int x, int y, String name) {
 	super(Hitbox.PLAYER);
 	this.x = x;
@@ -38,6 +47,7 @@ public class Player extends Entity implements CommandActor, EventListener {
 	hud = new HUD();
 	inv = new Inventory("", 10, 2);
 	EventManager.registerEventListener(this);
+	InputManager.registerControlHandler(this, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT, KeyControlOption.PLACE_BLOCK, KeyControlOption.REMOVE_BLOCK, KeyControlOption.ROTATE_SELECTED_BLOCK);
     }
 
     public Player(int x, int y) {
@@ -163,5 +173,34 @@ public class Player extends Entity implements CommandActor, EventListener {
     @Override
     public int getRotation() {
 	return 0;
+    }
+
+    @Override
+    public void handle(KeyControlPress p) {
+	switch (p.getControl()) {
+	    case UP:
+		break;
+	    case DOWN:
+		break;
+	    case DROP_ITEM:
+		break;
+	    case LEFT:
+		break;
+	    case PICK_UP_ITEMS:
+		break;
+	    case PLACE_BLOCK:
+		break;
+	    case REMOVE_BLOCK:
+		break;
+	    case RIGHT:
+		break;
+	    case ROTATE_SELECTED_BLOCK:
+		break;
+	    case SPRINT:
+		break;
+	    default:
+		break;
+		
+	}
     }
 }
