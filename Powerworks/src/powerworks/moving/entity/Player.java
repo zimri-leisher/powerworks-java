@@ -16,14 +16,15 @@ import powerworks.input.KeyControlHandler;
 import powerworks.input.KeyControlOption;
 import powerworks.input.KeyControlPress;
 import powerworks.input.InputManager;
-import powerworks.input.Mouse;
+import powerworks.input.MouseControlHandler;
+import powerworks.input.MouseControlPress;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
 import powerworks.level.Level;
 import powerworks.main.Game;
 import powerworks.moving.droppeditem.DroppedItem;
 
-public class Player extends Entity implements KeyControlHandler, EventListener {
+public class Player extends Entity implements KeyControlHandler, EventListener, MouseControlHandler {
 
     HUD hud;
     Inventory inv;
@@ -47,7 +48,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener {
 	hud = new HUD();
 	inv = new Inventory("", 10, 2);
 	EventManager.registerEventListener(this);
-	InputManager.registerControlHandler(this, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT, KeyControlOption.PLACE_BLOCK, KeyControlOption.REMOVE_BLOCK, KeyControlOption.ROTATE_SELECTED_BLOCK);
+	InputManager.registerKeyControlHandler(this, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT, KeyControlOption.ROTATE_SELECTED_BLOCK);
     }
 
     public Player(int x, int y) {
@@ -176,7 +177,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener {
     }
 
     @Override
-    public void handle(KeyControlPress p) {
+    public void handleKeyControlPress(KeyControlPress p) {
 	switch (p.getControl()) {
 	    case UP:
 		break;
@@ -202,5 +203,10 @@ public class Player extends Entity implements KeyControlHandler, EventListener {
 		break;
 		
 	}
+    }
+
+    @Override
+    public void handleMouseControlPress(MouseControlPress p) {
+	
     }
 }

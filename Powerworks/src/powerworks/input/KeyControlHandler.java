@@ -2,5 +2,5 @@ package powerworks.input;
 
 
 public interface KeyControlHandler {
-    public void handle(KeyControlPress p);
+    public void handleKeyControlPress(KeyControlPress p);
 }

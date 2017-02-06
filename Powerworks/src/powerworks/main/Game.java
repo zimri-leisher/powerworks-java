@@ -28,13 +28,15 @@ import powerworks.event.ZoomEvent;
 import powerworks.graphics.Screen;
 import powerworks.graphics.SynchronizedAnimatedTexture;
 import powerworks.input.KeyControlHandler;
+import powerworks.input.KeyControlOption;
+import powerworks.input.KeyControlPress;
+import powerworks.input.ControlPressType;
 import powerworks.input.InputManager;
-import powerworks.input.Mouse;
 import powerworks.level.Level;
 import powerworks.moving.entity.Player;
 import powerworks.task.Task;
 
-public final class Game extends Canvas implements Runnable, EventListener {
+public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler {
 
     public static Game game;
     private static final long serialVersionUID = 1L;
@@ -83,6 +85,7 @@ public final class Game extends Canvas implements Runnable, EventListener {
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
 	EventManager.registerEventListener(this);
+	InputManager.registerKeyControlHandler(this, KeyControlOption.EXIT);
     }
 
     private synchronized void start() {
@@ -145,8 +148,6 @@ public final class Game extends Canvas implements Runnable, EventListener {
 		updates = 0;
 		frames = 0;
 	    }
-	    if (keyboard.escape)
-		running = false;
 	    synchronized (gameThread) {
 		try {
 		    gameThread.wait(0, 5);
@@ -163,7 +164,7 @@ public final class Game extends Canvas implements Runnable, EventListener {
 	if (showUpdateTimes)
 	    System.out.println("----------");
 	Task.update();
-	KeyControlHandler.update();
+	InputManager.update();
 	player.update();
 	Level.level.update();
 	Quadtree.update();
@@ -201,7 +202,6 @@ public final class Game extends Canvas implements Runnable, EventListener {
 		time = System.nanoTime();
 	    }
 	    Level.level.render(scrollHelperX1, scrollHelperY1, player);
-	    mouse.render();
 	    g2d.drawImage(layer1, 0, 0, getWidth(), getHeight(), null);
 	    if (showRenderTimes) {
 		System.out.println("Rendering level took: " + (System.nanoTime() - time) + " ns");
@@ -278,5 +278,25 @@ public final class Game extends Canvas implements Runnable, EventListener {
     public void handleViewMoveEvent(ViewMoveEvent e) {
 	scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
 	scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
+    }
+
+    @Override
+    public void handleKeyControlPress(KeyControlPress p) {
+	KeyControlOption control = p.getControl();
+	ControlPressType pressType = p.getPressType();
+	switch(control) {
+	    case EXIT:
+		switch(pressType) {
+		    case PRESSED:
+			running = false;
+			break;
+		    default:
+			break;
+		}
+		break;
+	    default:
+		break;
+	    
+	}
     }
 }
