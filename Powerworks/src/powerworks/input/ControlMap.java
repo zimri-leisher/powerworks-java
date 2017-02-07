@@ -17,14 +17,14 @@ public enum ControlMap {
 	if (!path.endsWith(".txt"))
 	    throw new IllegalArgumentException("Invalid file extension");
 	try {
-	    BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
+	    BufferedReader reader = new BufferedReader(new FileReader(new File(ControlMap.class.getResource(path).getFile())));
 	    String line, first, last;
 	    int count = 0;
 	    while ((line = reader.readLine()) != null && line.contains(":")) {
 		count++;
 		first = line.split(":")[0].replaceAll(":", "");
 		last = line.split(":")[1];
-		keyBinds.put(KeyEvent.getExtendedKeyCodeForChar(Integer.parseInt(first)), KeyControlOption.valueOf(last));
+		keyBinds.put(Integer.parseInt(first), KeyControlOption.valueOf(last));
 	    }
 	    System.out.println("Loaded " + count + " keybinds");
 	    reader.close();
