@@ -61,9 +61,9 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	queue.add(control);
     }
 
-    static void sendMouseControlPress(int buttonCode, ControlPressType type, int xPixel, int yPixel) {
+    static void sendMouseControlPress(int buttonCode, ControlPressType type) {
 	MouseControlOption option = map.getMouseControlOption(buttonCode);
-	MouseControlPress control = new MouseControlPress(option, type, xPixel, yPixel);
+	MouseControlPress control = new MouseControlPress(option, type);
 	queue.add(control);
     }
 
@@ -99,7 +99,15 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		queue.add(new KeyControlPress(map.getKeyControlOption(u), ControlPressType.REPEAT));
 	}
 	if(mouseB != -1)
-	    queue.add(new MouseControlPress(map.getMouseControlOption(mouseB), ControlPressType.REPEAT, mouseXPixel, mouseYPixel));
+	    queue.add(new MouseControlPress(map.getMouseControlOption(mouseB), ControlPressType.REPEAT));
+    }
+    
+    public static int getMouseXPixel() {
+	return mouseXPixel;
+    }
+    
+    public static int getMouseYPixel() {
+	return mouseYPixel;
     }
 
     public InputManager() {
@@ -149,13 +157,13 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     @Override
     public void mousePressed(MouseEvent arg0) {
 	mouseB = arg0.getButton();
-	sendMouseControlPress(mouseB, ControlPressType.PRESSED, mouseXPixel, mouseYPixel);
+	sendMouseControlPress(mouseB, ControlPressType.PRESSED);
     }
 
     @Override
     public void mouseReleased(MouseEvent arg0) {
 	mouseB = arg0.getButton();
-	sendMouseControlPress(mouseB, ControlPressType.RELEASED, mouseXPixel, mouseYPixel);
+	sendMouseControlPress(mouseB, ControlPressType.RELEASED);
     }
 
     @Override

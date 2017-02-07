@@ -32,13 +32,16 @@ public class Timer {
     }
 
     /**
-     * Resets the timer that counts 60ths of a second (keeping the current frame
-     * and all other attributes)
+     * Resets the timer that counts 60ths of a second and the current tick (keeping all other attributes)
      */
-    public void resetTimer() {
+    public void resetTimes() {
 	timer = 0;
+	currentTick = 0;
     }
     
+    /**
+     * Sets timer, current tick, playing and stop on finish to default
+     */
     public void resetAll() {
 	timer = 0;
 	currentTick = 0;
