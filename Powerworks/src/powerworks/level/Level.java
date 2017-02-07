@@ -384,12 +384,4 @@ public class Level {
 	id = Integer.parseInt(split[2].substring(1));
 	tiles[x + y * width] = new Tile(TileType.getTileType(id), y, x);
     }
-
-    @Override
-    public void execute(Command c) {
-	if (c instanceof PlaceBlockCommand) {
-	    PlaceBlockCommand placeBlock = (PlaceBlockCommand) c;
-	    tryPlaceBlock(placeBlock.type, placeBlock.x, placeBlock.y);
-	}
-    }
 }
