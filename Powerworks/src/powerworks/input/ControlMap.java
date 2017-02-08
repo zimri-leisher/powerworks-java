@@ -6,12 +6,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 public enum ControlMap {
     DEFAULT("/settings/binds.txt");
 
-    HashMap<Integer, KeyControlOption> keyBinds = new HashMap<Integer, KeyControlOption>();
-    HashMap<Integer, MouseControlOption> mouseBinds = new HashMap<Integer, MouseControlOption>();
+    HashMap<KeyStroke, KeyControlOption> keyBinds = new HashMap<KeyStroke, KeyControlOption>();
+    HashMap<MouseClick, MouseControlOption> mouseBinds = new HashMap<MouseClick, MouseControlOption>();
     
     private ControlMap(String path) {
 	if (!path.endsWith(".txt"))
@@ -20,11 +21,19 @@ public enum ControlMap {
 	    BufferedReader reader = new BufferedReader(new FileReader(new File(ControlMap.class.getResource(path).getFile())));
 	    String line, first, last;
 	    int count = 0;
-	    while ((line = reader.readLine()) != null && line.contains(":")) {
+	    while ((line = reader.readLine()) != null && line.contains("=")) {
+		if(line.contains("k")) continue;
+		if(line.contains("m")) break;
 		count++;
-		first = line.split(":")[0].replaceAll(":", "");
-		last = line.split(":")[1];
-		keyBinds.put(Integer.parseInt(first), KeyControlOption.valueOf(last));
+		first = line.split(Pattern.quote("="))[0].replaceAll(Pattern.quote("="), "");
+		last = line.split(Pattern.quote("="))[1];
+		keyBinds.put(KeyStroke.getKeyStroke(first), KeyControlOption.valueOf(last));
+	    }
+	    while ((line = reader.readLine()) != null && line.contains("=")) {
+		count++;
+		first = line.split(Pattern.quote("="))[0].replaceAll(Pattern.quote("="), "");
+		last = line.split(Pattern.quote("="))[1];
+		mouseBinds.put(MouseClick.getMouseClick(first), MouseControlOption.valueOf(last));
 	    }
 	    System.out.println("Loaded " + count + " keybinds");
 	    reader.close();
@@ -33,29 +42,25 @@ public enum ControlMap {
 	}
     }
     
-    public KeyControlOption getKeyControlOption(KeyEvent key) {
-	return keyBinds.get(key.getKeyCode());
+    public KeyControlOption getKeyControlOption(KeyStroke key) {
+	return keyBinds.get(key);
     }
     
-    public KeyControlOption getKeyControlOption(Integer keyCode) {
-	return keyBinds.get(keyCode);
+    public MouseControlOption getMouseControlOption(MouseClick click) {
+	return mouseBinds.get(click);
     }
     
-    public MouseControlOption getMouseControlOption(Integer buttonCode) {
-	return mouseBinds.get(buttonCode);
-    }
-    
-    public void setKeyEvent(KeyEvent key, KeyControlOption control) {
-	if(keyBinds.replace(key.getKeyCode(), control) == null) {
-	    System.err.println("Attempted to set key " + KeyEvent.getKeyText(key.getKeyCode()) + " to " + control.name() + " but the key was not defined previously, adding it as new definition");
-	    keyBinds.put(key.getKeyCode(), control);
+    public void setKeyEvent(KeyStroke key, KeyControlOption control) {
+	if(keyBinds.replace(key, control) == null) {
+	    System.err.println("Attempted to set key " + key + " to " + control.name() + " but the key was not defined previously, adding it as new definition");
+	    keyBinds.put(key, control);
 	}
     }
     
-    public void setMouseButton(Integer buttonCode, MouseControlOption control) {
-	if(mouseBinds.replace(buttonCode, control) == null) {
-	    System.err.println("Attempted to set mouse button " + buttonCode + " to " + control.name() + " but the button was not defined previously, adding it as new definition");
-	    mouseBinds.put(buttonCode, control);
+    public void setMouseButton(MouseClick click, MouseControlOption control) {
+	if(mouseBinds.replace(click, control) == null) {
+	    System.err.println("Attempted to set mouse button " + click + " to " + control.name() + " but the button was not defined previously, adding it as new definition");
+	    mouseBinds.put(click, control);
 	}
     }
 }

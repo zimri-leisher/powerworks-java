@@ -55,14 +55,14 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	mouseHandlers.remove(h);
     }
 
-    static void sendKeyControlPress(KeyEvent key, ControlPressType type) {
+    static void sendKeyControlPress(KeyStroke key, ControlPressType type) {
 	KeyControlOption option = map.getKeyControlOption(key);
 	KeyControlPress control = new KeyControlPress(option, type);
 	queue.add(control);
     }
 
-    static void sendMouseControlPress(int buttonCode, ControlPressType type) {
-	MouseControlOption option = map.getMouseControlOption(buttonCode);
+    static void sendMouseControlPress(MouseClick click, ControlPressType type) {
+	MouseControlOption option = map.getMouseControlOption(click);
 	MouseControlPress control = new MouseControlPress(option, type);
 	queue.add(control);
     }
@@ -116,13 +116,13 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 
     @Override
     public void keyPressed(KeyEvent e) {
-	sendKeyControlPress(e, ControlPressType.PRESSED);
+	sendKeyControlPress(KeyStroke.getKeyStroke(e), ControlPressType.PRESSED);
 	keys[e.getKeyCode()] = true;
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-	sendKeyControlPress(e, ControlPressType.RELEASED);
+	sendKeyControlPress(KeyStroke.getKeyStroke(e), ControlPressType.RELEASED);
 	keys[e.getKeyCode()] = false;
     }
 
@@ -131,42 +131,42 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     @Override
-    public void mouseDragged(MouseEvent arg0) {
-	mouseXPixel = arg0.getX() / Game.scale;
-	mouseYPixel = arg0.getY() / Game.scale;
+    public void mouseDragged(MouseEvent e) {
+	mouseXPixel = e.getX() / Game.scale;
+	mouseYPixel = e.getY() / Game.scale;
     }
 
     @Override
-    public void mouseMoved(MouseEvent arg0) {
-	mouseXPixel = arg0.getX() / Game.scale;
-	mouseYPixel = arg0.getY() / Game.scale;
+    public void mouseMoved(MouseEvent e) {
+	mouseXPixel = e.getX() / Game.scale;
+	mouseYPixel = e.getY() / Game.scale;
     }
 
     @Override
-    public void mouseClicked(MouseEvent arg0) {
+    public void mouseClicked(MouseEvent e) {
     }
 
     @Override
-    public void mouseEntered(MouseEvent arg0) {
+    public void mouseEntered(MouseEvent e) {
     }
 
     @Override
-    public void mouseExited(MouseEvent arg0) {
+    public void mouseExited(MouseEvent e) {
     }
 
     @Override
-    public void mousePressed(MouseEvent arg0) {
-	mouseB = arg0.getButton();
-	sendMouseControlPress(mouseB, ControlPressType.PRESSED);
+    public void mousePressed(MouseEvent e) {
+	mouseB = e.getButton();
+	sendMouseControlPress(MouseClick.getMouseClick(e), ControlPressType.PRESSED);
     }
 
     @Override
-    public void mouseReleased(MouseEvent arg0) {
-	mouseB = arg0.getButton();
-	sendMouseControlPress(mouseB, ControlPressType.RELEASED);
+    public void mouseReleased(MouseEvent e) {
+	mouseB = e.getButton();
+	sendMouseControlPress(MouseClick.getMouseClick(e), ControlPressType.RELEASED);
     }
 
     @Override
-    public void mouseWheelMoved(MouseWheelEvent arg0) {
+    public void mouseWheelMoved(MouseWheelEvent e) {
     }
 }
