@@ -7,16 +7,15 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
-import powerworks.event.EventListener;
-import powerworks.event.EventManager;
-import powerworks.graphics.SynchronizedAnimatedTexture;
 import powerworks.main.Game;
 
-public class InputManager implements KeyListener, MouseWheelListener, MouseListener, MouseMotionListener, EventListener {
+public class InputManager implements KeyListener, MouseWheelListener, MouseListener, MouseMotionListener {
 
     static int mouseScroll = 0;
     static int mouseXPixel = -1;
@@ -25,7 +24,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static boolean hasMouseMoved = true;
     static int currentXPixel = 0;
     static int currentYPixel = 0;
-    static boolean[] keys = new boolean[156];
+    static List<KeyStroke> keys = new ArrayList<KeyStroke>(156);
+    static MouseClick mouse = null;
     static ControlMap map = ControlMap.DEFAULT;
     static HashMap<KeyControlHandler, KeyControlOption[]> keyHandlers = new HashMap<KeyControlHandler, KeyControlOption[]>();
     static HashMap<MouseControlHandler, MouseControlOption[]> mouseHandlers = new HashMap<MouseControlHandler, MouseControlOption[]>();
@@ -58,13 +58,23 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static void sendKeyControlPress(KeyStroke key, ControlPressType type) {
 	KeyControlOption option = map.getKeyControlOption(key);
 	KeyControlPress control = new KeyControlPress(option, type);
-	queue.add(control);
+	if(type == ControlPressType.PRESSED) {
+	    if(!keys.contains(key)) {
+		keys.add(key);
+		queue.add(control);
+	    }
+	} else if(type == ControlPressType.RELEASED) {
+	    keys.remove(key);
+	    queue.add(control);
+	} else
+	    queue.add(control);
     }
 
     static void sendMouseControlPress(MouseClick click, ControlPressType type) {
 	MouseControlOption option = map.getMouseControlOption(click);
 	MouseControlPress control = new MouseControlPress(option, type);
-	queue.add(control);
+	if (!(type == ControlPressType.PRESSED && mouse != null))
+	    queue.add(control);
     }
 
     static boolean contains(ControlOption[] options, ControlOption option) {
@@ -79,9 +89,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     public static void update() {
-	Iterator<ControlPress> i = queue.iterator();
-	while (i.hasNext()) {
-	    ControlPress p = i.next();
+	System.out.println(queue);
+	for (ControlPress p : queue) {
 	    if (p instanceof KeyControlPress) {
 		for (Entry<KeyControlHandler, KeyControlOption[]> entry : keyHandlers.entrySet()) {
 		    if (contains(entry.getValue(), p.getControl()))
@@ -94,36 +103,31 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		}
 	    }
 	}
-	for (int u = 0; u < keys.length; u++) {
-	    if (keys[u] == true)
-		queue.add(new KeyControlPress(map.getKeyControlOption(u), ControlPressType.REPEAT));
-	}
-	if(mouseB != -1)
-	    queue.add(new MouseControlPress(map.getMouseControlOption(mouseB), ControlPressType.REPEAT));
+	queue.clear();
+	keys.forEach((KeyStroke key) -> queue.add(new KeyControlPress(map.getKeyControlOption(key), ControlPressType.REPEAT)));
+	if (mouse != null)
+	    queue.add(new MouseControlPress(map.getMouseControlOption(mouse), ControlPressType.REPEAT));
     }
-    
+
     public static int getMouseXPixel() {
 	return mouseXPixel;
     }
-    
+
     public static int getMouseYPixel() {
 	return mouseYPixel;
     }
 
-    public InputManager() {
-	EventManager.registerStaticEventListener(this.getClass());
-    }
-
     @Override
     public void keyPressed(KeyEvent e) {
-	sendKeyControlPress(KeyStroke.getKeyStroke(e), ControlPressType.PRESSED);
-	keys[e.getKeyCode()] = true;
+	KeyStroke key = KeyStroke.getKeyStroke(e);
+	sendKeyControlPress(key, ControlPressType.PRESSED);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-	sendKeyControlPress(KeyStroke.getKeyStroke(e), ControlPressType.RELEASED);
-	keys[e.getKeyCode()] = false;
+	KeyStroke key = KeyStroke.getKeyStroke(e);
+	sendKeyControlPress(key, ControlPressType.RELEASED);
+	keys.remove(key);
     }
 
     @Override
@@ -157,13 +161,16 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     @Override
     public void mousePressed(MouseEvent e) {
 	mouseB = e.getButton();
-	sendMouseControlPress(MouseClick.getMouseClick(e), ControlPressType.PRESSED);
+	MouseClick click = MouseClick.getMouseClick(e);
+	sendMouseControlPress(click, ControlPressType.PRESSED);
+	mouse = click;
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
 	mouseB = e.getButton();
 	sendMouseControlPress(MouseClick.getMouseClick(e), ControlPressType.RELEASED);
+	mouse = null;
     }
 
     @Override

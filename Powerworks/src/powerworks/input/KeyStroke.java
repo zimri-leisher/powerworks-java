@@ -13,14 +13,23 @@ public class KeyStroke {
     
     @Override
     public String toString() {
-	return KeyEvent.getKeyModifiersText(modifiers) + ":" + keyCode;
+	return modifiers + ":" + keyCode;
     }
     
     public static KeyStroke getKeyStroke(String line) {
-	return new KeyStroke(Integer.parseInt(line.substring(0, line.indexOf(":"))), Integer.parseInt(line.substring(line.indexOf(":") + 1, line.length())));
+	return new KeyStroke(Integer.parseInt(line.substring(line.indexOf(":") + 1)), Integer.parseInt(line.substring(0, line.indexOf(":"))));
     }
     
     public static KeyStroke getKeyStroke(KeyEvent event) {
 	return new KeyStroke(event.getKeyCode(), event.getModifiers());
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+	if(o instanceof KeyStroke) {
+	    KeyStroke key = (KeyStroke) o;
+	    if(key.keyCode == keyCode && key.modifiers == modifiers) return true;
+	}
+	return false;
     }
 }

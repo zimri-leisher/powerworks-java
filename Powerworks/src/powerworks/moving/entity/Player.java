@@ -147,15 +147,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getPressType()) {
 		    case PRESSED:
 			if (sprinting)
-			    addVel(-2, 0);
+			    addVel(0, -2);
 			else
-			    addVel(-1, 0);
+			    addVel(0, -1);
 			break;
 		    case REPEAT:
 			if (sprinting)
-			    addVel(-2, 0);
+			    addVel(0, -2);
 			else
-			    addVel(-1, 0);
+			    addVel(0, -1);
 			break;
 		    default:
 			break;
@@ -165,15 +165,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getPressType()) {
 		    case PRESSED:
 			if (sprinting)
-			    addVel(2, 0);
+			    addVel(0, 2);
 			else
-			    addVel(1, 0);
+			    addVel(0, 1);
 			break;
 		    case REPEAT:
 			if (sprinting)
-			    addVel(2, 0);
+			    addVel(0, 2);
 			else
-			    addVel(1, 0);
+			    addVel(0, 1);
 			break;
 		    default:
 			break;
@@ -195,15 +195,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getPressType()) {
 		    case PRESSED:
 			if (sprinting)
-			    addVel(0, -2);
+			    addVel(-2, 0);
 			else
-			    addVel(0, -1);
+			    addVel(-1, 0);
 			break;
 		    case REPEAT:
 			if (sprinting)
-			    addVel(0, -2);
+			    addVel(-2, 0);
 			else
-			    addVel(0, -1);
+			    addVel(-1, 0);
 			break;
 		    default:
 			break;
@@ -225,15 +225,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getPressType()) {
 		    case PRESSED:
 			if (sprinting)
-			    addVel(0, 2);
+			    addVel(2, 0);
 			else
-			    addVel(0, 1);
+			    addVel(1, 0);
 			break;
 		    case REPEAT:
 			if (sprinting)
-			    addVel(0, 2);
+			    addVel(2, 0);
 			else
-			    addVel(0, 1);
+			    addVel(1, 0);
 			break;
 		    default:
 			break;

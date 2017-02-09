@@ -1,11 +1,11 @@
 package powerworks.input;
 
-import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 public enum ControlMap {
@@ -42,8 +42,17 @@ public enum ControlMap {
 	}
     }
     
+    public void save() {
+	//TODO save the binds
+    }
+    
     public KeyControlOption getKeyControlOption(KeyStroke key) {
-	return keyBinds.get(key);
+	KeyControlOption control = null;
+	for(Entry<KeyStroke, KeyControlOption> e : keyBinds.entrySet()) {
+	    if(e.getKey().equals(key))
+		control = e.getValue();
+	}
+	return control;
     }
     
     public MouseControlOption getMouseControlOption(MouseClick click) {

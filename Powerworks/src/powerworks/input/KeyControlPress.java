@@ -10,4 +10,9 @@ public class KeyControlPress extends ControlPress{
     public KeyControlOption getControl() {
 	return (KeyControlOption) option;
     }
+    
+    @Override
+    public String toString() {
+	return option + " " + type;
+    }
 }
