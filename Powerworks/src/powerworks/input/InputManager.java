@@ -58,23 +58,26 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static void sendKeyControlPress(KeyStroke key, ControlPressType type) {
 	KeyControlOption option = map.getKeyControlOption(key);
 	KeyControlPress control = new KeyControlPress(option, type);
-	if(type == ControlPressType.PRESSED) {
-	    if(!keys.contains(key)) {
-		keys.add(key);
+	if (option != null) {
+	    if (type == ControlPressType.PRESSED) {
+		if (!keys.contains(key)) {
+		    keys.add(key);
+		    queue.add(control);
+		}
+	    } else if (type == ControlPressType.RELEASED && KeyEvent.get) {
+		keys.remove(key);
 		queue.add(control);
-	    }
-	} else if(type == ControlPressType.RELEASED) {
-	    keys.remove(key);
-	    queue.add(control);
-	} else
-	    queue.add(control);
+	    } else
+		queue.add(control);
+	}
     }
 
     static void sendMouseControlPress(MouseClick click, ControlPressType type) {
 	MouseControlOption option = map.getMouseControlOption(click);
 	MouseControlPress control = new MouseControlPress(option, type);
-	if (!(type == ControlPressType.PRESSED && mouse != null))
-	    queue.add(control);
+	if (option != null)
+	    if (!(type == ControlPressType.PRESSED && mouse != null))
+		queue.add(control);
     }
 
     static boolean contains(ControlOption[] options, ControlOption option) {
@@ -89,7 +92,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     public static void update() {
-	System.out.println(queue);
+	//if (queue.size() != 0)
+	    //System.out.println(queue);
 	for (ControlPress p : queue) {
 	    if (p instanceof KeyControlPress) {
 		for (Entry<KeyControlHandler, KeyControlOption[]> entry : keyHandlers.entrySet()) {
@@ -126,8 +130,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     @Override
     public void keyReleased(KeyEvent e) {
 	KeyStroke key = KeyStroke.getKeyStroke(e);
+	System.out.println(key);
 	sendKeyControlPress(key, ControlPressType.RELEASED);
-	keys.remove(key);
     }
 
     @Override
