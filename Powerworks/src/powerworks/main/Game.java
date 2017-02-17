@@ -26,7 +26,9 @@ import powerworks.event.EventListener;
 import powerworks.event.EventManager;
 import powerworks.event.ViewMoveEvent;
 import powerworks.event.ZoomEvent;
+import powerworks.graphics.Mouse;
 import powerworks.graphics.Screen;
+import powerworks.graphics.StaticTexture;
 import powerworks.graphics.SynchronizedAnimatedTexture;
 import powerworks.newinput.KeyControlHandler;
 import powerworks.newinput.KeyControlOption;
@@ -62,6 +64,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static List<String> allPlayerNames;
     private static List<Player> allPlayers;
     public static InputManager input;
+    public static Mouse mouse;
     public static boolean showRenderTimes = false;
     public static boolean showUpdateTimes = false;
 
@@ -69,6 +72,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	setPreferredSize(new Dimension(width * scale, height * scale));
 	frame = new JFrame();
 	input = new InputManager();
+	mouse = new Mouse();
 	player = new Player(Level.level.getWidthPixels() / 2, Level.level.getHeightPixels() / 2);
 	System.out.println(player.getTexture().getWidthPixels());
 	scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
@@ -169,6 +173,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	player.update();
 	Level.level.update();
 	Quadtree.update();
+	mouse.update();
 	SynchronizedAnimatedTexture.update();
 	if (showUpdateTimes) {
 	    System.out.println("Updating everything took: " + (System.nanoTime() - time) + " ns");
@@ -207,6 +212,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    if (showRenderTimes) {
 		System.out.println("Rendering level took: " + (System.nanoTime() - time) + " ns");
 	    }
+	    mouse.render();
+	    Screen.screen.renderTexture(StaticTexture.CURSOR_DEFAULT, 10, 10, false, false);
 	    g2d.drawImage(layer2, 0, 0, getWidth(), getHeight(), null);
 	    g2d.dispose();
 	    bufferStrat.show();

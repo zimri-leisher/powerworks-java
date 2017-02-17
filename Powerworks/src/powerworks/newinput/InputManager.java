@@ -10,13 +10,14 @@ import java.awt.event.MouseWheelListener;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
+import powerworks.main.Game;
 
 public class InputManager implements KeyListener, MouseWheelListener, MouseListener, MouseMotionListener {
 
     static boolean[] keysDown = new boolean[156];
     static ControlMap map = ControlMap.DEFAULT;
-    static Integer modifier, mouseX, mouseY;
-    static Integer mouseButton = -1;
+    static int modifier, mouseX, mouseY, mouseXPixel, mouseYPixel;
+    static int mouseButton = -1;
     static LinkedList<ControlPress> queue = new LinkedList<ControlPress>();
     static HashMap<KeyControlHandler, KeyControlOption[]> keyHandlers = new HashMap<KeyControlHandler, KeyControlOption[]>();
     static HashMap<MouseControlHandler, MouseControlOption[]> mouseHandlers = new HashMap<MouseControlHandler, MouseControlOption[]>();
@@ -46,8 +47,6 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     public static void update() {
-	if (queue.size() != 0)
-	    System.out.println(queue);
 	for (ControlPress press : queue) {
 	    if (press instanceof KeyControlPress) {
 		KeyControlPress keyPress = (KeyControlPress) press;
@@ -85,21 +84,37 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		return true;
 	return false;
     }
-
-    static Integer getModifier() {
-	return modifier;
+    
+    public static int getMouseButton() {
+	return mouseButton;
     }
 
+    public static int getModifier() {
+	return modifier;
+    }
+    
+    public static int getMouseXPixel() {
+	return mouseXPixel;
+    }
+
+    public static int getMouseYPixel() {
+	return mouseYPixel;
+    }
+    
     @Override
     public void mouseDragged(MouseEvent e) {
 	mouseY = e.getY();
 	mouseX = e.getX();
+	mouseYPixel = mouseY / Game.scale;
+	mouseXPixel = mouseX / Game.scale;
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
 	mouseY = e.getY();
 	mouseX = e.getX();
+	mouseYPixel = mouseY / Game.scale;
+	mouseXPixel = mouseX / Game.scale;
     }
 
     @Override

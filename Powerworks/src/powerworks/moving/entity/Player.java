@@ -3,7 +3,6 @@ package powerworks.moving.entity;
 import java.awt.Graphics2D;
 import powerworks.block.Block;
 import powerworks.collidable.Hitbox;
-import powerworks.command.Command;
 import powerworks.data.Timer;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
@@ -12,18 +11,19 @@ import powerworks.event.PlaceBlockEvent;
 import powerworks.graphics.HUD;
 import powerworks.graphics.Screen;
 import powerworks.graphics.StaticTextureCollection;
-import powerworks.input.KeyControlHandler;
-import powerworks.input.KeyControlOption;
-import powerworks.input.KeyControlPress;
-import powerworks.input.InputManager;
-import powerworks.input.MouseControlHandler;
-import powerworks.input.MouseControlOption;
-import powerworks.input.MouseControlPress;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
+import powerworks.inventory.item.ItemType;
 import powerworks.level.Level;
 import powerworks.main.Game;
 import powerworks.moving.droppeditem.DroppedItem;
+import powerworks.newinput.InputManager;
+import powerworks.newinput.KeyControlHandler;
+import powerworks.newinput.KeyControlOption;
+import powerworks.newinput.KeyControlPress;
+import powerworks.newinput.MouseControlHandler;
+import powerworks.newinput.MouseControlOption;
+import powerworks.newinput.MouseControlPress;
 
 public class Player extends Entity implements KeyControlHandler, EventListener, MouseControlHandler {
 
@@ -142,9 +142,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 
     @Override
     public void handleKeyControlPress(KeyControlPress p) {
-	switch (p.getControl()) {
+	switch (p.getOption()) {
 	    case UP:
-		switch (p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			if (sprinting)
 			    addVel(0, -2);
@@ -162,7 +162,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case DOWN:
-		switch (p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			if (sprinting)
 			    addVel(0, 2);
@@ -180,9 +180,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case DROP_ITEM:
-		switch(p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
-			if(getHeldItem() != null) {
+			if (getHeldItem() != null) {
 			    Level.level.tryDropItem(getHeldItem().type, InputManager.getMouseXPixel(), InputManager.getMouseYPixel());
 			    inv.takeItem(getHeldItem().type, 1);
 			}
@@ -192,7 +192,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case LEFT:
-		switch (p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			if (sprinting)
 			    addVel(-2, 0);
@@ -210,9 +210,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case PICK_UP_ITEMS:
-		switch(p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
-			for(DroppedItem item : Level.level.getDroppedItems(InputManager.getMouseXPixel(), InputManager.getMouseYPixel(), 8)) {
+			for (DroppedItem item : Level.level.getDroppedItems(InputManager.getMouseXPixel(), InputManager.getMouseYPixel(), 8)) {
 			    Level.level.tryRemoveDroppedItem(item);
 			    inv.giveItem(new Item(item.getType()));
 			}
@@ -222,7 +222,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case RIGHT:
-		switch (p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			if (sprinting)
 			    addVel(2, 0);
@@ -240,7 +240,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case ROTATE_SELECTED_BLOCK:
-		switch(p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			block.rotation = (block.rotation == 3) ? 0 : block.rotation + 1;
 			break;
@@ -249,17 +249,31 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case SPRINT:
-		switch (p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			sprinting = true;
 			break;
-		    case REPEAT:
+		    case RELEASED:
 			sprinting = false;
 			break;
 		    default:
 			break;
 		}
 		break;
+	    case GIVE_CONVEYOR_BELT:
+		switch (p.getType()) {
+		    case PRESSED:
+			inv.giveItem(ItemType.CONVEYOR_BELT, 1);
+		    default:
+			break;
+		}
+	    case GIVE_ORE_MINER:
+		switch (p.getType()) {
+		    case PRESSED:
+			inv.giveItem(ItemType.ORE_MINER, 1);
+		    default:
+			break;
+		}
 	    default:
 		break;
 	}
@@ -267,9 +281,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 
     @Override
     public void handleMouseControlPress(MouseControlPress p) {
-	switch (p.getControl()) {
+	switch (p.getOption()) {
 	    case PLACE_BLOCK:
-		switch (p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			if (getHeldItem() != null && getHeldItem().isPlaceable())
 			    Level.level.tryPlaceBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseXPixel() >> 4, InputManager.getMouseYPixel() >> 4);
@@ -279,7 +293,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case REMOVE_BLOCK:
-		switch (p.getPressType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			removing.play();
 			break;

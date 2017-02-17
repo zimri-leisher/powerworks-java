@@ -1,5 +1,6 @@
 package powerworks.newinput;
 
+import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -33,7 +34,13 @@ public enum ControlMap {
 	}
 	
 	static KeyControlMapping getMapping(String map) {
-	    return new KeyControlMapping(Integer.parseInt(map.substring(map.indexOf(":") + 1)), Integer.parseInt(map.substring(0, map.indexOf(":"))));
+	    int modifier = 0;
+	    String modifierS = map.substring(0, map.indexOf(":"));
+	    if(modifierS.equals("~"))
+		modifier = -1;
+	    else
+		modifier = Integer.parseInt(modifierS);
+	    return new KeyControlMapping(Integer.parseInt(map.substring(map.indexOf(":") + 1)), modifier);
 	}
     }
     
@@ -56,12 +63,17 @@ public enum ControlMap {
 	}
 	
 	static MouseControlMapping getMapping(String map) {
-	    return new MouseControlMapping(Integer.parseInt(map.substring(0, map.indexOf(":"))), Integer.parseInt(map.substring(map.indexOf(":") + 1)));
+	    int modifier = 0;
+	    String modifierS = map.substring(0, map.indexOf(":"));
+	    if(modifierS.equals("~"))
+		modifier = -1;
+	    else
+		modifier = Integer.parseInt(modifierS);
+	    return new MouseControlMapping(Integer.parseInt(map.substring(map.indexOf(":") + 1)), modifier);
 	}
     }
     
     private ControlMap(String path) {
-	
 	try {
 	    BufferedReader reader = new BufferedReader(new FileReader(new File(ControlMap.class.getResource(path).getFile())));
 	    String line, first, last;
@@ -72,7 +84,6 @@ public enum ControlMap {
 		count++;
 		first = line.split(Pattern.quote("="))[0].replaceAll(Pattern.quote("="), "");
 		last = line.split(Pattern.quote("="))[1];
-		System.out.println(first + "=" + last);
 		keyBinds.put(KeyControlMapping.getMapping(first), KeyControlOption.valueOf(last));
 	    }
 	    while ((line = reader.readLine()) != null && line.contains("=")) {
@@ -94,7 +105,7 @@ public enum ControlMap {
     
     public KeyControlOption getKeyControl(int keyCode, int modifier) {
 	for(Entry<KeyControlMapping, KeyControlOption> e : keyBinds.entrySet()) {
-	    if(e.getKey().keyCode == keyCode && e.getKey().modifier == modifier)
+	    if(e.getKey().keyCode == keyCode && (e.getKey().modifier == -1 || e.getKey().modifier == modifier))
 		return e.getValue();
 	}
 	return null;
@@ -106,7 +117,7 @@ public enum ControlMap {
     
     public MouseControlOption getMouseControl(int buttonCode, int modifier) {
 	for(Entry<MouseControlMapping, MouseControlOption> e : mouseBinds.entrySet()) {
-	    if(e.getKey().buttonCode == buttonCode && e.getKey().modifier == modifier)
+	    if(e.getKey().buttonCode == buttonCode && (e.getKey().modifier == -1 || e.getKey().modifier == modifier))
 		return e.getValue();
 	}
 	return null;

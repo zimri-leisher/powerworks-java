@@ -18,4 +18,9 @@ public abstract class ControlPress {
     public ControlOption getOption() {
 	return option;
     }
+    
+    @Override
+    public String toString() {
+	return option + " " + type;
+    }
 }

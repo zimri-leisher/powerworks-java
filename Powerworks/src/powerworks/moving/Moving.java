@@ -7,8 +7,6 @@ import powerworks.data.PhysicalObject;
 import powerworks.event.EventManager;
 import powerworks.event.ViewMoveEvent;
 import powerworks.graphics.Screen;
-import powerworks.input.KeyControlOption;
-import powerworks.input.InputManager;
 import powerworks.level.Level;
 import powerworks.moving.droppeditem.DroppedItem;
 import powerworks.moving.entity.Player;
