@@ -64,7 +64,10 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		    keys.add(key);
 		    queue.add(control);
 		}
-	    } else if (type == ControlPressType.RELEASED && KeyEvent.get) {
+	    } else if (type == ControlPressType.RELEASED) {
+		if(isModifier(key.keyCode)) {
+		    
+		}
 		keys.remove(key);
 		queue.add(control);
 	    } else
@@ -92,8 +95,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     public static void update() {
-	//if (queue.size() != 0)
-	    //System.out.println(queue);
+	if (queue.size() != 0)
+	    System.out.println(queue);
 	for (ControlPress p : queue) {
 	    if (p instanceof KeyControlPress) {
 		for (Entry<KeyControlHandler, KeyControlOption[]> entry : keyHandlers.entrySet()) {
@@ -120,17 +123,29 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     public static int getMouseYPixel() {
 	return mouseYPixel;
     }
-
+    
+    static boolean isModifier(int keyCode) {
+	if(keyCode == KeyEvent.VK_SHIFT || keyCode == KeyEvent.VK_CONTROL || keyCode == KeyEvent.VK_ALT) return true;
+	return false;
+    }
+    
     @Override
     public void keyPressed(KeyEvent e) {
-	KeyStroke key = KeyStroke.getKeyStroke(e);
+	KeyStroke key;
+	if(isModifier(e.getKeyCode()))
+	    key = new KeyStroke(e.getKeyCode(), 0);
+	else
+	    key = KeyStroke.getKeyStroke(e);
 	sendKeyControlPress(key, ControlPressType.PRESSED);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-	KeyStroke key = KeyStroke.getKeyStroke(e);
-	System.out.println(key);
+	KeyStroke key;
+	if(isModifier(e.getKeyCode()))
+	    key = new KeyStroke(e.getKeyCode(), 0);
+	else
+	    key = KeyStroke.getKeyStroke(e);
 	sendKeyControlPress(key, ControlPressType.RELEASED);
     }
 

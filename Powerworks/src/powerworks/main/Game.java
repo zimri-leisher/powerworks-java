@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -27,11 +28,11 @@ import powerworks.event.ViewMoveEvent;
 import powerworks.event.ZoomEvent;
 import powerworks.graphics.Screen;
 import powerworks.graphics.SynchronizedAnimatedTexture;
-import powerworks.input.KeyControlHandler;
-import powerworks.input.KeyControlOption;
-import powerworks.input.KeyControlPress;
-import powerworks.input.ControlPressType;
-import powerworks.input.InputManager;
+import powerworks.newinput.KeyControlHandler;
+import powerworks.newinput.KeyControlOption;
+import powerworks.newinput.KeyControlPress;
+import powerworks.newinput.ControlPressType;
+import powerworks.newinput.InputManager;
 import powerworks.level.Level;
 import powerworks.moving.entity.Player;
 import powerworks.task.Task;
@@ -224,6 +225,29 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    ex.printStackTrace();
 	}
     }
+    
+    private String getDeviceConfigurationString(GraphicsConfiguration gc){
+        return "Bounds: " + gc.getBounds() + "\n" + 
+                "Buffer Capabilities: " + gc.getBufferCapabilities() + "\n" +
+                "   Back Buffer Capabilities: " + gc.getBufferCapabilities().getBackBufferCapabilities() + "\n" +
+                "      Accelerated: " + gc.getBufferCapabilities().getBackBufferCapabilities().isAccelerated() + "\n" + 
+                "      True Volatile: " + gc.getBufferCapabilities().getBackBufferCapabilities().isTrueVolatile() + "\n" +
+                "   Flip Contents: " + gc.getBufferCapabilities().getFlipContents() + "\n" +
+                "   Front Buffer Capabilities: " + gc.getBufferCapabilities().getFrontBufferCapabilities() + "\n" +
+                "      Accelerated: " + gc.getBufferCapabilities().getFrontBufferCapabilities().isAccelerated() + "\n" +
+                "      True Volatile: " + gc.getBufferCapabilities().getFrontBufferCapabilities().isTrueVolatile() + "\n" +
+                "   Is Full Screen Required: " + gc.getBufferCapabilities().isFullScreenRequired() + "\n" +
+                "   Is MultiBuffer Available: " + gc.getBufferCapabilities().isMultiBufferAvailable() + "\n" +
+                "   Is Page Flipping: " + gc.getBufferCapabilities().isPageFlipping() + "\n" +
+                "Device: " + gc.getDevice() + "\n" +
+                "   Available Accelerated Memory: " + gc.getDevice().getAvailableAcceleratedMemory() + "\n" +
+                "   ID String: " + gc.getDevice().getIDstring() + "\n" +
+                "   Type: " + gc.getDevice().getType() + "\n" +
+                "   Display Mode: " + gc.getDevice().getDisplayMode() + "\n" +              
+                "Image Capabilities: " + gc.getImageCapabilities() + "\n" + 
+                "      Accelerated: " + gc.getImageCapabilities().isAccelerated() + "\n" + 
+                "      True Volatile: " + gc.getImageCapabilities().isTrueVolatile() + "\n";        
+    }
 
     public static void main(String[] args) {
 	System.out.println("Starting game...");
@@ -233,7 +257,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
-	frame.setResizable(false);
+	frame.setResizable(true);
 	frame.setTitle("Powerworks - Loading");
 	frame.add(game);
 	frame.pack();
@@ -282,11 +306,11 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     @Override
     public void handleKeyControlPress(KeyControlPress p) {
-	KeyControlOption control = p.getControl();
-	ControlPressType pressType = p.getPressType();
-	switch(control) {
+	KeyControlOption control = p.getOption();
+	ControlPressType pressType = p.getType();
+	switch (control) {
 	    case EXIT:
-		switch(pressType) {
+		switch (pressType) {
 		    case PRESSED:
 			running = false;
 			break;
@@ -296,7 +320,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		break;
 	    default:
 		break;
-	    
 	}
     }
 }

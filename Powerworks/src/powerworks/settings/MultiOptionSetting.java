@@ -1,10 +1,10 @@
 package powerworks.settings;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class MultiOptionSetting<T> extends Setting<T>{
 
-    ArrayList<T> options;
+    LinkedList<T> options;
     
     @SafeVarargs
     protected MultiOptionSetting(String name, String desc, T...options) {

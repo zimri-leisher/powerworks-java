@@ -1,5 +1,8 @@
 package powerworks.graphics;
 
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -40,8 +43,13 @@ public enum ImageCollection {
 	    BufferedImage image = ImageIO.read(ImageCollection.class.getResource(path));
 	    if((image.getWidth() / numberOfFrames) % 1 != 0)
 		System.err.println("ImageCollection " + toString() + " may not be sized properly, as the image cannot be divided equally");
-	    width = image.getWidth() / numberOfFrames;
-	    height = image.getHeight();
+	    BufferedImage convertedImage = null;
+	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+	    GraphicsDevice gd = ge.getDefaultScreenDevice();
+	    GraphicsConfiguration gc = gd.getDefaultConfiguration();
+	    convertedImage = gc.createCompatibleImage(image.getWidth(), image.getHeight(), image.getTransparency());
+	    width = convertedImage.getWidth() / numberOfFrames;
+	    height = convertedImage.getHeight();
 	    pixels = new int[numberOfFrames][width * height];
 	    while (numberOfFrames > 0) {
 		numberOfFrames--;
