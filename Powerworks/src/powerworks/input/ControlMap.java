@@ -1,4 +1,4 @@
-package powerworks.newinput;
+package powerworks.input;
 
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
@@ -120,6 +120,11 @@ public enum ControlMap {
 	    if(e.getKey().buttonCode == buttonCode && (e.getKey().modifier == -1 || e.getKey().modifier == modifier))
 		return e.getValue();
 	}
+	return null;
+    }
+
+    public MouseWheelControlOption getMouseWheelControl(int rotation) {
+	
 	return null;
     }
 }

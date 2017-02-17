@@ -1,4 +1,4 @@
-package powerworks.newinput;
+package powerworks.input;
 
 
 public interface ControlOption {

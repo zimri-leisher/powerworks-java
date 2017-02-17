@@ -1,4 +1,4 @@
-package powerworks.newinput;
+package powerworks.input;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -21,6 +21,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static LinkedList<ControlPress> queue = new LinkedList<ControlPress>();
     static HashMap<KeyControlHandler, KeyControlOption[]> keyHandlers = new HashMap<KeyControlHandler, KeyControlOption[]>();
     static HashMap<MouseControlHandler, MouseControlOption[]> mouseHandlers = new HashMap<MouseControlHandler, MouseControlOption[]>();
+    static HashMap<MouseWheelControlHandler, MouseWheelControlOption[]> mouseWheelHandlers = new HashMap<MouseWheelControlHandler, MouseWheelControlOption[]>();
 
     public static void registerKeyControlHandler(KeyControlHandler h, KeyControlOption... wantedControls) {
 	keyHandlers.put(h, wantedControls);
@@ -46,20 +47,39 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	mouseHandlers.remove(h);
     }
 
+    public static void registerMouseWheelControlHandler(MouseWheelControlHandler h, MouseWheelControlOption... wantedControls) {
+	mouseWheelHandlers.put(h, wantedControls);
+    }
+
+    public static void setWantedMouseWheelControls(MouseWheelControlHandler h, MouseWheelControlOption... wantedControls) {
+	mouseWheelHandlers.replace(h, wantedControls);
+    }
+
+    public static void removeMouseWheelControlHandler(MouseWheelControlHandler h) {
+	mouseWheelHandlers.remove(h);
+    }
+
     public static void update() {
 	for (ControlPress press : queue) {
-	    if (press instanceof KeyControlPress) {
-		KeyControlPress keyPress = (KeyControlPress) press;
+	    if (press instanceof KeyPress) {
+		KeyPress keyPress = (KeyPress) press;
 		for (Entry<KeyControlHandler, KeyControlOption[]> e : keyHandlers.entrySet()) {
 		    if (containsControlOption(e.getValue(), keyPress.getOption())) {
 			e.getKey().handleKeyControlPress(keyPress);
 		    }
 		}
-	    } else {
-		MouseControlPress mousePress = (MouseControlPress) press;
+	    } else if (press instanceof MousePress) {
+		MousePress mousePress = (MousePress) press;
 		for (Entry<MouseControlHandler, MouseControlOption[]> e : mouseHandlers.entrySet()) {
 		    if (containsControlOption(e.getValue(), mousePress.getOption())) {
 			e.getKey().handleMouseControlPress(mousePress);
+		    }
+		}
+	    } else {
+		MouseWheelPress mouseWheelPress = (MouseWheelPress) press;
+		for (Entry<MouseWheelControlHandler, MouseWheelControlOption[]> e : mouseWheelHandlers.entrySet()) {
+		    if(containsControlOption(e.getValue(), mouseWheelPress.getOption())) {
+			e.getKey().handleMouseWheelPress(mouseWheelPress);
 		    }
 		}
 	    }
@@ -68,13 +88,13 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	if (mouseButton != -1) {
 	    MouseControlOption option = map.getMouseControl(mouseButton);
 	    if (option != null)
-		queue.add(new MouseControlPress(ControlPressType.REPEAT, option));
+		queue.add(new MousePress(ControlPressType.REPEAT, option));
 	}
 	for (int i = 0; i < keysDown.length; i++)
 	    if (keysDown[i]) {
 		KeyControlOption option = map.getKeyControl(i);
 		if (option != null)
-		    queue.add(new KeyControlPress(ControlPressType.REPEAT, option));
+		    queue.add(new KeyPress(ControlPressType.REPEAT, option));
 	    }
     }
 
@@ -84,7 +104,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		return true;
 	return false;
     }
-    
+
     public static int getMouseButton() {
 	return mouseButton;
     }
@@ -92,7 +112,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     public static int getModifier() {
 	return modifier;
     }
-    
+
     public static int getMouseXPixel() {
 	return mouseXPixel;
     }
@@ -100,7 +120,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     public static int getMouseYPixel() {
 	return mouseYPixel;
     }
-    
+
     @Override
     public void mouseDragged(MouseEvent e) {
 	mouseY = e.getY();
@@ -136,7 +156,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	    mouseButton = e.getButton();
 	    MouseControlOption option = map.getMouseControl(mouseButton);
 	    if (option != null)
-		queue.add(new MouseControlPress(ControlPressType.PRESSED, option));
+		queue.add(new MousePress(ControlPressType.PRESSED, option));
 	}
     }
 
@@ -147,12 +167,15 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	    mouseButton = -1;
 	    MouseControlOption option = map.getMouseControl(mouseButton);
 	    if (option != null)
-		queue.add(new MouseControlPress(ControlPressType.RELEASED, option));
+		queue.add(new MousePress(ControlPressType.RELEASED, option));
 	}
     }
 
     @Override
-    public void mouseWheelMoved(MouseWheelEvent arg0) {
+    public void mouseWheelMoved(MouseWheelEvent e) {
+	if(e.getWheelRotation() == 1) {
+	    MouseWheelControlOption option = map.getMouseWheelControl(1);
+	}
     }
 
     @Override
@@ -163,7 +186,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	    keysDown[code] = true;
 	    KeyControlOption option = map.getKeyControl(code);
 	    if (option != null)
-		queue.add(new KeyControlPress(ControlPressType.PRESSED, option));
+		queue.add(new KeyPress(ControlPressType.PRESSED, option));
 	}
     }
 
@@ -175,7 +198,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	    keysDown[code] = false;
 	    KeyControlOption option = map.getKeyControl(code);
 	    if (option != null)
-		queue.add(new KeyControlPress(ControlPressType.RELEASED, option));
+		queue.add(new KeyPress(ControlPressType.RELEASED, option));
 	}
     }
 

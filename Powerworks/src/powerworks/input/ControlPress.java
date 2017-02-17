@@ -1,6 +1,6 @@
-package powerworks.newinput;
+package powerworks.input;
 
-import powerworks.newinput.ControlOption;
+import powerworks.input.ControlOption;
 
 public abstract class ControlPress {
     ControlPressType type;
