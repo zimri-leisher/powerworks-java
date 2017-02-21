@@ -3,7 +3,6 @@ package powerworks.io;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
@@ -128,7 +127,6 @@ public class ControlMap {
 		last = line.split(Pattern.quote("="))[1];
 		mouseWheelBinds.put(MouseWheelMapping.getMapping(first), MouseWheelControlOption.valueOf(last));
 	    }
-	    System.out.println(mouseWheelBinds);
 	    System.out.println("Loaded " + count + " keybinds");
 	    reader.close();
 	} catch (IOException e) {

@@ -4,17 +4,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import powerworks.block.Block;
 import powerworks.block.BlockType;
 import powerworks.collidable.Collidable;
-import powerworks.data.Quadtree;
 import powerworks.event.EventManager;
 import powerworks.event.PlaceBlockEvent;
 import powerworks.exception.NoSuchTileException;
 import powerworks.graphics.Screen;
 import powerworks.inventory.item.ItemType;
+import powerworks.io.Statistic;
 import powerworks.level.tile.Tile;
 import powerworks.level.tile.TileType;
 import powerworks.main.Game;
@@ -147,12 +146,14 @@ public class Level {
 	int xTile1 = (xPixel1 >> 4) + 1;
 	int yTile0 = yPixel0 >> 4;
 	int yTile1 = (yPixel1 >> 4) + 1;
-	if (show) {
-	    System.out.println("Render offsets took:         " + (System.nanoTime() - time) + " ns");
-	    time = System.nanoTime();
-	}
 	int maxY = (yTile1 > height) ? height : yTile1;
 	int maxX = (xTile1 > width) ? width : xTile1;
+	if (show) {
+	    long diff = System.nanoTime() - time;
+	    Game.logger.p(diff);
+	    Game.logger.addAndLog(Statistic.CALC_RENDER_OFFSETS, (int) diff, true);
+	    time = System.nanoTime();
+	}
 	for (int y = yTile0 <= 0 ? 0 : yTile0; y < maxY; y++) {
 	    int yc = y * width;
 	    for (int x = xTile0 <= 0 ? 0 : xTile0; x < maxX; x++) {
@@ -167,20 +168,23 @@ public class Level {
 	    }
 	}
 	if (show) {
-	    System.out.println("Drawing blocks + tiles took: " + (System.nanoTime() - time) + " ns");
+	    long diff = System.nanoTime() - time;
+	    Game.logger.addAndLog(Statistic.DRAW_BLOCKS_AND_TILES, (int) diff, true);
 	    time = System.nanoTime();
 	}
 	for (DroppedItem item : DroppedItem.droppedItems.retrieveIn(xPixel0, yPixel0, xPixel1 - xPixel0, yPixel1 - yPixel0)) {
 	    item.render();
 	}
 	if (show) {
-	    System.out.println("Drawing dropped items took:  " + (System.nanoTime() - time) + " ns");
+	    long diff = System.nanoTime() - time;
+	    Game.logger.addAndLog(Statistic.DRAW_DROPPED_ITEMS, (int) diff, true);
 	    time = System.nanoTime();
 	}
 	player.block.render();
 	player.render();
 	if (show) {
-	    System.out.println("Drawing player took:         " + (System.nanoTime() - time) + " ns");
+	    long diff = System.nanoTime() - time;
+	    Game.logger.addAndLog(Statistic.DRAW_PLAYER, (int) diff, true);
 	}
     }
 
@@ -229,7 +233,6 @@ public class Level {
      *            the y tile
      */
     public boolean tryPlaceBlock(BlockType type, int xTile, int yTile) {
-	int coord = xTile + yTile * width;
 	if (spaceForBlock(type, xTile, yTile)) {
 	    Block block = type.createInstance(xTile, yTile);
 	    for(int y = 0; y < type.getHeightTiles(); y++) {

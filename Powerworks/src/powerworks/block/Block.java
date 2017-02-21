@@ -5,7 +5,6 @@ import powerworks.collidable.Hitbox;
 import powerworks.graphics.Screen;
 import powerworks.graphics.Texture;
 import powerworks.graphics.TexturedObject;
-import powerworks.level.Level;
 import powerworks.main.Game;
 
 public class Block implements TexturedObject, Collidable {

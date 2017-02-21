@@ -134,6 +134,7 @@ public class Quadtree<T extends PhysicalObject> {
 	maxLevels = m;
     }
 
+    @SuppressWarnings("hiding")
     class Node<T extends PhysicalObject> {
 
 	int x, y, width, height;
@@ -279,6 +280,7 @@ public class Quadtree<T extends PhysicalObject> {
 		children[localIndex(t)].retrievePossible(t, returnObj);
 	}
 
+	@SuppressWarnings("unchecked")
 	void split() {
 	    if (level >= currentLevels)
 		currentLevels++;
