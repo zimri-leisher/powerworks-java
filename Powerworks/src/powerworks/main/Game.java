@@ -12,14 +12,15 @@ import java.awt.Toolkit;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import powerworks.chat.ChatCommandExecutor;
+import powerworks.collidable.Collidable;
 import powerworks.data.Quadtree;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
@@ -28,27 +29,39 @@ import powerworks.event.ViewMoveEvent;
 import powerworks.event.ZoomEvent;
 import powerworks.graphics.Mouse;
 import powerworks.graphics.Screen;
-import powerworks.graphics.StaticTexture;
 import powerworks.graphics.SynchronizedAnimatedTexture;
-import powerworks.newinput.KeyControlHandler;
-import powerworks.newinput.KeyControlOption;
-import powerworks.newinput.KeyControlPress;
-import powerworks.newinput.ControlPressType;
-import powerworks.newinput.InputManager;
+import powerworks.io.ControlPressType;
+import powerworks.io.InputManager;
+import powerworks.io.KeyControlHandler;
+import powerworks.io.KeyControlOption;
+import powerworks.io.KeyPress;
+import powerworks.io.Logger;
+import powerworks.io.MouseWheelControlHandler;
+import powerworks.io.MouseWheelControlOption;
+import powerworks.io.MouseWheelPress;
 import powerworks.level.Level;
+import powerworks.moving.entity.Entity;
 import powerworks.moving.entity.Player;
 import powerworks.task.Task;
 
-public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler {
+public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler, MouseWheelControlHandler {
 
     public static Game game;
     private static final long serialVersionUID = 1L;
-    public static final double UPDATES_PER_SECOND = 60.0;
-    public static final double FRAMES_PER_SECOND = 60.0;
-    public static int width = 600, zoomedWidth = width;
+    // CONSTANT
+    public static final float UPDATES_PER_SECOND = 60.0f;
+    // CHANGING
+    public static final float FRAMES_PER_SECOND = 60.0f;
+    public static final float MS_PER_UPDATE = 1000 / UPDATES_PER_SECOND;
+    public static final float MS_PER_FRAME = 1000 / FRAMES_PER_SECOND;
+    public static final float NS_PER_UPDATE = 1000000000 / UPDATES_PER_SECOND;
+    public static final float NS_PER_FRAME = 1000000000 / FRAMES_PER_SECOND;
+    public static final int MAX_UPDATES_BEFORE_RENDER = 5;
+    public static IntSummaryStatistics fps = new IntSummaryStatistics(), ups = new IntSummaryStatistics();
+    public static int width = 300, zoomedWidth = width;
     public static int height = width / 16 * 9, zoomedHeight = height;
     public static int scale = 4;
-    public static double zoomFactor = 1.0;
+    public static double zoomFactor = 1;
     private static Player player;
     public static int scrollHelperX1;
     public static int scrollHelperY1;
@@ -90,7 +103,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
 	EventManager.registerEventListener(this);
-	InputManager.registerKeyControlHandler(this, KeyControlOption.EXIT);
+	InputManager.registerKeyControlHandler(this, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES);
+	InputManager.registerMouseWheelControlHandler(this, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
     }
 
     private synchronized void start() {
@@ -100,6 +114,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     private synchronized void stop() {
+	Logger.close();
 	Level.level.saveLevel();
 	System.exit(0);
 	try {
@@ -123,42 +138,42 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     @Override
     public void run() {
-	long lastTime = System.nanoTime();
-	long timer = System.currentTimeMillis();
-	double updateProgress = 0;
-	double frameProgress = 0;
-	final double nsU = 1000000000.0 / UPDATES_PER_SECOND;
-	final double nsF = 1000000000.0 / FRAMES_PER_SECOND;
-	int updates = 0;
-	int frames = 0;
+	double lastUpdateTime = System.nanoTime();
+	double lastRenderTime = System.nanoTime();
+	int lastSecondTime = (int) (lastUpdateTime / 1000000000);
+	int frameCount = 0;
+	int updateCount = 0;
 	while (running) {
-	    long now = System.nanoTime();
-	    long diff = now - lastTime;
-	    lastTime = now;
-	    updateProgress += diff / nsU;
-	    while (updateProgress >= 1) {
-		update();
-		updates++;
-		updateProgress--;
-	    }
-	    frameProgress += diff / nsF;
-	    if (frameProgress >= 1) {
-		render();
-		frames++;
-		frameProgress = 0;
-	    }
-	    if (System.currentTimeMillis() - timer >= 1000) {
-		timer += 1000;
-		frame.setTitle("Powerworks - " + frames + " fps, " + updates + " ups");
-		updates = 0;
-		frames = 0;
-	    }
-	    synchronized (gameThread) {
-		try {
-		    gameThread.wait(0, 5);
-		} catch (InterruptedException e) {
-		    e.printStackTrace();
+	    double now = System.nanoTime();
+	    int updates = 0;
+		while (now - lastUpdateTime > NS_PER_UPDATE && updates < MAX_UPDATES_BEFORE_RENDER) {
+		    update();
+		    lastUpdateTime += NS_PER_UPDATE;
+		    updates++;
+		    updateCount++;
 		}
+		if (now - lastUpdateTime > NS_PER_UPDATE) {
+		    lastUpdateTime = now - NS_PER_UPDATE;
+		}
+		render();
+		frameCount++;
+		lastRenderTime = now;
+		int thisSecond = (int) (lastUpdateTime / 1000000000);
+		if (thisSecond > lastSecondTime) {
+		    frame.setTitle("Powerworks - " + frameCount + " fps, " + updateCount + " ups");
+		    lastSecondTime = thisSecond;
+		    ups.accept(updateCount);
+		    fps.accept(frameCount);
+		    frameCount = 0;
+		    updateCount = 0;
+		}
+		while (now - lastRenderTime < NS_PER_FRAME && now - lastUpdateTime < NS_PER_UPDATE) {
+		    Thread.yield();
+		    try {
+			Thread.sleep(1);
+		    } catch (Exception e) {
+		    }
+		    now = System.nanoTime();
 	    }
 	}
 	stop();
@@ -166,17 +181,16 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     public void update() {
 	long time = System.nanoTime();
+	InputManager.update();
 	if (showUpdateTimes)
 	    System.out.println("----------");
 	Task.update();
-	InputManager.update();
-	player.update();
 	Level.level.update();
 	Quadtree.update();
 	mouse.update();
 	SynchronizedAnimatedTexture.update();
 	if (showUpdateTimes) {
-	    System.out.println("Updating everything took: " + (System.nanoTime() - time) + " ns");
+	    System.out.println("TOTAL:                       " + (System.nanoTime() - time) + " ns");
 	}
 	showUpdateTimes = false;
     }
@@ -187,19 +201,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    createBufferStrategy(3);
 	    return;
 	}
-	if (objects.length > overlay.length) {
-	    for (int i = 0; i < objects.length; i++) {
-		objects[i] = 0xFF000000;
-		if (i < overlay.length)
-		    overlay[i] = 0x00000000;
-	    }
-	} else {
-	    for (int i = 0; i < overlay.length; i++) {
-		overlay[i] = 0x00000000;
-		if (i < objects.length)
-		    objects[i] = 0xFF000000;
-	    }
-	}
+	for (int i = 0; i < overlay.length; i++)
+	    overlay[i] = 0;
 	Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
 	if (StateManager.state == StateManager.INGAME) {
 	    long time = 0;
@@ -208,15 +211,17 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		time = System.nanoTime();
 	    }
 	    Level.level.render(scrollHelperX1, scrollHelperY1, player);
-	    g2d.drawImage(layer1, 0, 0, getWidth(), getHeight(), null);
 	    if (showRenderTimes) {
 		System.out.println("Rendering level took: " + (System.nanoTime() - time) + " ns");
 	    }
+	    g2d.drawImage(layer1, 0, 0, getWidth(), getHeight(), null);
+	    player.hud.render(g2d);
 	    mouse.render();
-	    Screen.screen.renderTexture(StaticTexture.CURSOR_DEFAULT, 10, 10, false, false);
 	    g2d.drawImage(layer2, 0, 0, getWidth(), getHeight(), null);
 	    g2d.dispose();
 	    bufferStrat.show();
+	    if (showRenderTimes)
+		System.out.println("TOTAL:                       " + (System.nanoTime() - time) + " ns");
 	    showRenderTimes = false;
 	} else if (StateManager.state == StateManager.MAIN_MENU) {
 	}
@@ -224,7 +229,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     private void loadFont() {
 	try {
-	    Font font = Font.createFont(Font.TRUETYPE_FONT, new FileInputStream(Game.class.getResource("/font/MunroSmall.ttf").getFile())).deriveFont(Font.PLAIN, 28);
+	    Font font = Font.createFont(Font.TRUETYPE_FONT, Game.class.getResourceAsStream("/font/MunroSmall.ttf")).deriveFont(Font.PLAIN, 28);
 	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 	    ge.registerFont(font);
 	    Game.font = font;
@@ -232,28 +237,28 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    ex.printStackTrace();
 	}
     }
-    
-    private String getDeviceConfigurationString(GraphicsConfiguration gc){
-        return "Bounds: " + gc.getBounds() + "\n" + 
-                "Buffer Capabilities: " + gc.getBufferCapabilities() + "\n" +
-                "   Back Buffer Capabilities: " + gc.getBufferCapabilities().getBackBufferCapabilities() + "\n" +
-                "      Accelerated: " + gc.getBufferCapabilities().getBackBufferCapabilities().isAccelerated() + "\n" + 
-                "      True Volatile: " + gc.getBufferCapabilities().getBackBufferCapabilities().isTrueVolatile() + "\n" +
-                "   Flip Contents: " + gc.getBufferCapabilities().getFlipContents() + "\n" +
-                "   Front Buffer Capabilities: " + gc.getBufferCapabilities().getFrontBufferCapabilities() + "\n" +
-                "      Accelerated: " + gc.getBufferCapabilities().getFrontBufferCapabilities().isAccelerated() + "\n" +
-                "      True Volatile: " + gc.getBufferCapabilities().getFrontBufferCapabilities().isTrueVolatile() + "\n" +
-                "   Is Full Screen Required: " + gc.getBufferCapabilities().isFullScreenRequired() + "\n" +
-                "   Is MultiBuffer Available: " + gc.getBufferCapabilities().isMultiBufferAvailable() + "\n" +
-                "   Is Page Flipping: " + gc.getBufferCapabilities().isPageFlipping() + "\n" +
-                "Device: " + gc.getDevice() + "\n" +
-                "   Available Accelerated Memory: " + gc.getDevice().getAvailableAcceleratedMemory() + "\n" +
-                "   ID String: " + gc.getDevice().getIDstring() + "\n" +
-                "   Type: " + gc.getDevice().getType() + "\n" +
-                "   Display Mode: " + gc.getDevice().getDisplayMode() + "\n" +              
-                "Image Capabilities: " + gc.getImageCapabilities() + "\n" + 
-                "      Accelerated: " + gc.getImageCapabilities().isAccelerated() + "\n" + 
-                "      True Volatile: " + gc.getImageCapabilities().isTrueVolatile() + "\n";        
+
+    private String getDeviceConfigurationString(GraphicsConfiguration gc) {
+	return "Bounds: " + gc.getBounds() + "\n" +
+		"Buffer Capabilities: " + gc.getBufferCapabilities() + "\n" +
+		"   Back Buffer Capabilities: " + gc.getBufferCapabilities().getBackBufferCapabilities() + "\n" +
+		"      Accelerated: " + gc.getBufferCapabilities().getBackBufferCapabilities().isAccelerated() + "\n" +
+		"      True Volatile: " + gc.getBufferCapabilities().getBackBufferCapabilities().isTrueVolatile() + "\n" +
+		"   Flip Contents: " + gc.getBufferCapabilities().getFlipContents() + "\n" +
+		"   Front Buffer Capabilities: " + gc.getBufferCapabilities().getFrontBufferCapabilities() + "\n" +
+		"      Accelerated: " + gc.getBufferCapabilities().getFrontBufferCapabilities().isAccelerated() + "\n" +
+		"      True Volatile: " + gc.getBufferCapabilities().getFrontBufferCapabilities().isTrueVolatile() + "\n" +
+		"   Is Full Screen Required: " + gc.getBufferCapabilities().isFullScreenRequired() + "\n" +
+		"   Is MultiBuffer Available: " + gc.getBufferCapabilities().isMultiBufferAvailable() + "\n" +
+		"   Is Page Flipping: " + gc.getBufferCapabilities().isPageFlipping() + "\n" +
+		"Device: " + gc.getDevice() + "\n" +
+		"   Available Accelerated Memory: " + gc.getDevice().getAvailableAcceleratedMemory() + "\n" +
+		"   ID String: " + gc.getDevice().getIDstring() + "\n" +
+		"   Type: " + gc.getDevice().getType() + "\n" +
+		"   Display Mode: " + gc.getDevice().getDisplayMode() + "\n" +
+		"Image Capabilities: " + gc.getImageCapabilities() + "\n" +
+		"      Accelerated: " + gc.getImageCapabilities().isAccelerated() + "\n" +
+		"      True Volatile: " + gc.getImageCapabilities().isTrueVolatile() + "\n";
     }
 
     public static void main(String[] args) {
@@ -264,7 +269,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
-	frame.setResizable(true);
+	frame.setResizable(false);
 	frame.setTitle("Powerworks - Loading");
 	frame.add(game);
 	frame.pack();
@@ -312,15 +317,68 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     @Override
-    public void handleKeyControlPress(KeyControlPress p) {
-	KeyControlOption control = p.getOption();
+    public void handleMouseWheelPress(MouseWheelPress p) {
+	MouseWheelControlOption option = p.getOption();
+	switch (option) {
+	    case ZOOM_IN:
+		if (zoomFactor > 0.89) {
+		    zoomFactor /= 1.1;
+		    zoomedWidth = (int) (width * zoomFactor);
+		    zoomedHeight = (int) (height * zoomFactor);
+		    layer1 = new BufferedImage(zoomedWidth, zoomedHeight, BufferedImage.TYPE_INT_ARGB);
+		    objects = ((DataBufferInt) layer1.getRaster().getDataBuffer()).getData();
+		    Screen.screen.set(zoomedWidth, zoomedHeight, objects);
+		    scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
+		    scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
+		}
+		break;
+	    case ZOOM_OUT:
+		if (zoomFactor < 5) {
+		    zoomFactor *= 1.1;
+		    zoomedWidth = (int) (width * zoomFactor);
+		    zoomedHeight = (int) (height * zoomFactor);
+		    layer1 = new BufferedImage(zoomedWidth, zoomedHeight, BufferedImage.TYPE_INT_ARGB);
+		    objects = ((DataBufferInt) layer1.getRaster().getDataBuffer()).getData();
+		    Screen.screen.set(zoomedWidth, zoomedHeight, objects);
+		    scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
+		    scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
+		}
+		break;
+	    default:
+		break;
+	}
+    }
+
+    @Override
+    public void handleKeyControlPress(KeyPress p) {
+	KeyControlOption option = p.getOption();
 	ControlPressType pressType = p.getType();
-	switch (control) {
+	switch (option) {
 	    case EXIT:
 		switch (pressType) {
 		    case PRESSED:
 			running = false;
 			break;
+		    default:
+			break;
+		}
+		break;
+	    case SHOW_UPDATE_TIMES:
+		switch (pressType) {
+		    case PRESSED:
+			System.out.println("Cols");
+			Collidable.collidables.print();
+			System.out.println("Entities");
+			Entity.entities.print();
+			//showUpdateTimes = true;
+		    default:
+			break;
+		}
+		break;
+	    case SHOW_RENDER_TIMES:
+		switch (pressType) {
+		    case PRESSED:
+			showRenderTimes = true;
 		    default:
 			break;
 		}

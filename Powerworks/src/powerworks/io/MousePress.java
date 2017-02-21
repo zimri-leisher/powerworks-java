@@ -1,4 +1,4 @@
-package powerworks.input;
+package powerworks.io;
 
 
 public class MousePress extends ControlPress{

@@ -6,6 +6,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.URL;
 import javax.imageio.ImageIO;
 
 public enum Image {
@@ -27,19 +28,14 @@ public enum Image {
     }
 
     void load(String path) {
-	System.out.println("Loading sheet " + toString());
+	System.out.println("Loading Image " + toString());
 	try {
 	    BufferedImage image = ImageIO.read(Image.class.getResource(path));
-	    BufferedImage convertedImage = null;
-	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-	    GraphicsDevice gd = ge.getDefaultScreenDevice();
-	    GraphicsConfiguration gc = gd.getDefaultConfiguration();
-	    convertedImage = gc.createCompatibleImage(image.getWidth(), image.getHeight(), image.getTransparency());
 	    width = image.getWidth();
 	    height = image.getHeight();
 	    pixels = new int[width * height];
-	    convertedImage.getRGB(0, 0, width, height, pixels, 0, width);
-	    hasTransparency = convertedImage.getTransparency() != Transparency.OPAQUE;
+	    image.getRGB(0, 0, width, height, pixels, 0, width);
+	    hasTransparency = image.getTransparency() != Transparency.OPAQUE;
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}

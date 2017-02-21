@@ -1,17 +1,15 @@
-package powerworks.moving.entity;
+package powerworks.graphics;
 
 import powerworks.block.BlockType;
-import powerworks.graphics.Screen;
-import powerworks.graphics.Texture;
-import powerworks.graphics.TexturedObject;
 
-public class GhostBlock implements TexturedObject{
-    
-    BlockType type;
-    int xTile, yTile;
-    boolean placeable;
-    int rotation;
-    
+public class GhostBlock implements TexturedObject {
+
+    public BlockType type;
+    public int xTile, yTile;
+    public boolean placeable;
+    public boolean render;
+    public int rotation;
+
     public GhostBlock(BlockType type, int xTile, int yTile, boolean placeable, int rotation) {
 	this.type = type;
 	this.xTile = xTile;
@@ -19,14 +17,16 @@ public class GhostBlock implements TexturedObject{
 	this.placeable = placeable;
 	this.rotation = rotation;
     }
-    
+
     public void render() {
-	Screen.screen.renderTexturedObject(this);
+	if (render) {
+	    Screen.screen.renderTexturedObject(this);
+	}
     }
-    
+
     @Override
     public Texture getTexture() {
-	return (placeable) ? type.getPlaceableTexture() : type.getNotPlaceableTexture();
+	return type.getTexture();
     }
 
     @Override
@@ -41,17 +41,12 @@ public class GhostBlock implements TexturedObject{
 
     @Override
     public int getYPixel() {
-	return 0;
+	return yTile << 4;
     }
 
     @Override
     public int getXPixel() {
-	return 0;
-    }
-
-    @Override
-    public boolean hasMoved() {
-	return false;
+	return xTile << 4;
     }
 
     @Override

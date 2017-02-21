@@ -34,7 +34,6 @@ public class LocalizedAnimatedTexture implements Texture{
 	    }
 	}
     }
-
     /**
      * Sets the animation back to the start
      */

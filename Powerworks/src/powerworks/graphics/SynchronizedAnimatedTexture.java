@@ -1,5 +1,7 @@
 package powerworks.graphics;
 
+import powerworks.main.Game;
+
 public enum SynchronizedAnimatedTexture implements Texture {
     CONVEYOR_BELT_CONNECTED_UP(StaticTextureCollection.CONVEYOR_BELT_CONNECTED_UP, new int[] { 2, 2, 2, 2 }), 
     CURSOR_RIGHT_CLICK(StaticTextureCollection.CURSOR_RIGHT_CLICK, new int[] { 12, 12, 12, 12, 12, 12, 12, 12 }, true);
@@ -22,6 +24,9 @@ public enum SynchronizedAnimatedTexture implements Texture {
     }
 
     public static void update() {
+	long time = 0;
+	if(Game.showUpdateTimes)
+	    time = System.nanoTime();
 	for (SynchronizedAnimatedTexture anim : values()) {
 	    if (anim.playing) {
 		anim.currentTick++;
@@ -40,16 +45,27 @@ public enum SynchronizedAnimatedTexture implements Texture {
 		}
 	    }
 	}
+	if(Game.showUpdateTimes)
+	    System.out.println("Updating animations took:    " + (System.nanoTime() - time) + " ns");
     }
 
+    /**
+     * Starts playing from wherever it left off
+     */
     public void play() {
 	playing = true;
     }
 
+    /**
+     * Stops playing, keeps all timings
+     */
     public void stop() {
 	playing = false;
     }
 
+    /**
+     * Sets the frame and the tick to 0
+     */
     public void reset() {
 	currentFrame = 0;
 	currentTick = 0;

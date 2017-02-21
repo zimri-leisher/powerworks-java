@@ -1,4 +1,4 @@
-package powerworks.input;
+package powerworks.io;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -7,17 +7,23 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
+import java.util.TreeMap;
+import powerworks.graphics.Screen;
+import powerworks.inventory.item.ItemType;
 import powerworks.main.Game;
 
 public class InputManager implements KeyListener, MouseWheelListener, MouseListener, MouseMotionListener {
 
     static boolean[] keysDown = new boolean[156];
     static ControlMap map = ControlMap.DEFAULT;
-    static int modifier, mouseX, mouseY, mouseXPixel, mouseYPixel;
+    static int modifier, mouseX, mouseY, mouseXPixel, mouseYPixel, mouseLevelYPixel, mouseLevelXPixel;
     static int mouseButton = -1;
+    static KeyControlOption keyBinding = null;
     static LinkedList<ControlPress> queue = new LinkedList<ControlPress>();
     static HashMap<KeyControlHandler, KeyControlOption[]> keyHandlers = new HashMap<KeyControlHandler, KeyControlOption[]>();
     static HashMap<MouseControlHandler, MouseControlOption[]> mouseHandlers = new HashMap<MouseControlHandler, MouseControlOption[]>();
@@ -60,30 +66,35 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     public static void update() {
-	for (ControlPress press : queue) {
-	    if (press instanceof KeyPress) {
-		KeyPress keyPress = (KeyPress) press;
-		for (Entry<KeyControlHandler, KeyControlOption[]> e : keyHandlers.entrySet()) {
-		    if (containsControlOption(e.getValue(), keyPress.getOption())) {
-			e.getKey().handleKeyControlPress(keyPress);
+	if (queue.size() != 0)
+	    try {
+		for (Iterator<ControlPress> it = queue.iterator(); it.hasNext();) {
+		    ControlPress press = it.next();
+		    if (press instanceof KeyPress) {
+			KeyPress keyPress = (KeyPress) press;
+			for (Entry<KeyControlHandler, KeyControlOption[]> e : keyHandlers.entrySet()) {
+			    if (containsControlOption(e.getValue(), keyPress.getOption())) {
+				e.getKey().handleKeyControlPress(keyPress);
+			    }
+			}
+		    } else if (press instanceof MousePress) {
+			MousePress mousePress = (MousePress) press;
+			for (Entry<MouseControlHandler, MouseControlOption[]> e : mouseHandlers.entrySet()) {
+			    if (containsControlOption(e.getValue(), mousePress.getOption())) {
+				e.getKey().handleMouseControlPress(mousePress);
+			    }
+			}
+		    } else {
+			MouseWheelPress mouseWheelPress = (MouseWheelPress) press;
+			for (Entry<MouseWheelControlHandler, MouseWheelControlOption[]> e : mouseWheelHandlers.entrySet()) {
+			    if (containsControlOption(e.getValue(), mouseWheelPress.getOption())) {
+				e.getKey().handleMouseWheelPress(mouseWheelPress);
+			    }
+			}
 		    }
 		}
-	    } else if (press instanceof MousePress) {
-		MousePress mousePress = (MousePress) press;
-		for (Entry<MouseControlHandler, MouseControlOption[]> e : mouseHandlers.entrySet()) {
-		    if (containsControlOption(e.getValue(), mousePress.getOption())) {
-			e.getKey().handleMouseControlPress(mousePress);
-		    }
-		}
-	    } else {
-		MouseWheelPress mouseWheelPress = (MouseWheelPress) press;
-		for (Entry<MouseWheelControlHandler, MouseWheelControlOption[]> e : mouseWheelHandlers.entrySet()) {
-		    if(containsControlOption(e.getValue(), mouseWheelPress.getOption())) {
-			e.getKey().handleMouseWheelPress(mouseWheelPress);
-		    }
-		}
+	    } catch (ConcurrentModificationException | NullPointerException e) {
 	    }
-	}
 	queue.clear();
 	if (mouseButton != -1) {
 	    MouseControlOption option = map.getMouseControl(mouseButton);
@@ -114,11 +125,23 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     public static int getMouseXPixel() {
-	return mouseXPixel;
+	return mouseXPixel - 3;
     }
 
     public static int getMouseYPixel() {
 	return mouseYPixel;
+    }
+
+    public static int getMouseLevelXPixel() {
+	return (int) ((mouseXPixel - 5) * Game.zoomFactor + Screen.screen.xOffset);
+    }
+
+    public static int getMouseLevelYPixel() {
+	return (int) (mouseYPixel * Game.zoomFactor + Screen.screen.yOffset);
+    }
+
+    public static void enterKeyBindMode(KeyControlOption option) {
+	keyBinding = option;
     }
 
     @Override
@@ -127,6 +150,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	mouseX = e.getX();
 	mouseYPixel = mouseY / Game.scale;
 	mouseXPixel = mouseX / Game.scale;
+	mouseLevelXPixel = (int) ((mouseXPixel - 5) * Game.zoomFactor + Screen.screen.xOffset);
+	mouseLevelYPixel = (int) (mouseYPixel * Game.zoomFactor + Screen.screen.yOffset);
     }
 
     @Override
@@ -164,8 +189,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     public void mouseReleased(MouseEvent e) {
 	modifier = e.getModifiers();
 	if (mouseButton != -1) {
-	    mouseButton = -1;
 	    MouseControlOption option = map.getMouseControl(mouseButton);
+	    mouseButton = -1;
 	    if (option != null)
 		queue.add(new MousePress(ControlPressType.RELEASED, option));
 	}
@@ -173,8 +198,11 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-	if(e.getWheelRotation() == 1) {
-	    MouseWheelControlOption option = map.getMouseWheelControl(1);
+	int rotation = e.getWheelRotation();
+	if (rotation == 1 || rotation == -1) {
+	    MouseWheelControlOption option = map.getMouseWheelControl(rotation);
+	    if (option != null)
+		queue.add(new MouseWheelPress(ControlPressType.PRESSED, option));
 	}
     }
 
@@ -182,7 +210,12 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     public void keyPressed(KeyEvent e) {
 	int code = e.getKeyCode();
 	modifier = e.getModifiers();
-	if (!keysDown[code]) {
+	if (keyBinding != null) {
+	    map.setKeyBind(code, modifier, keyBinding);
+	    keyBinding = null;
+	    System.out.println("Bound key " + modifier + ":" + e.getKeyCode() + " to " + keyBinding);
+	}
+	if (code < keysDown.length && !keysDown[code]) {
 	    keysDown[code] = true;
 	    KeyControlOption option = map.getKeyControl(code);
 	    if (option != null)
@@ -194,7 +227,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     public void keyReleased(KeyEvent e) {
 	int code = e.getKeyCode();
 	modifier = e.getModifiers();
-	if (keysDown[code]) {
+	if (code < keysDown.length && keysDown[code]) {
 	    keysDown[code] = false;
 	    KeyControlOption option = map.getKeyControl(code);
 	    if (option != null)

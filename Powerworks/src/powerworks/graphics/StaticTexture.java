@@ -27,7 +27,6 @@ public enum StaticTexture implements Texture{
     
     private StaticTexture(Image image) {
 	this.pixels = image.getPixels();
-	System.out.println(pixels[0] + ", " + toString());
 	this.width = image.getWidth();
 	this.height = image.getHeight();
 	this.hasTransparency = image.hasTransparency();
@@ -35,7 +34,6 @@ public enum StaticTexture implements Texture{
     
     private StaticTexture(int[] pixels, final int height, final int width, final boolean HAS_TRANSPARENCY) {
 	this.pixels = pixels;
-	System.out.println(pixels[0] + ", " + toString());
 	this.width = width;
 	this.height = height;
 	this.hasTransparency = HAS_TRANSPARENCY;
@@ -48,7 +46,6 @@ public enum StaticTexture implements Texture{
      */
     private StaticTexture(int[] pixels, boolean hue, int width, int height) {
 	pixels = ImageModifier.setAlpha((hue) ? ImageModifier.getPixelsInGreen(pixels) : ImageModifier.getPixelsInRed(pixels), 127);
-	System.out.println(pixels[0] + ", " + toString());
 	this.hasTransparency = true;
 	this.width = width;
 	this.height = height;

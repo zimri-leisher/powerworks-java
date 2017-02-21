@@ -1,4 +1,4 @@
-package powerworks.input;
+package powerworks.io;
 
 
 public interface MouseWheelControlHandler {
