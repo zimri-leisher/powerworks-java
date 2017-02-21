@@ -7,12 +7,12 @@ import powerworks.level.tile.TileType;
 
 public class SimplexLevel extends Level {
 
-    public static final double IRON_ORE_THRESHOLD = 1.45;
-    public static final double IRON_ORE_MAX_THRESHOLD = 2.0;
-    public static final int IRON_ORE_SCATTER = 5;
+    static final double IRON_ORE_THRESHOLD = 1.45;
+    static final double IRON_ORE_MAX_THRESHOLD = 2.0;
+    static final int IRON_ORE_SCATTER = 5;
     static Random rand = new Random();
-    public static SimplexNoise singleOre = new SimplexNoise(100, 0.5, rand.nextInt(4096));
-    public static SimplexNoise orePatch = new SimplexNoise(100, 0.5, rand.nextInt(4096));
+    static SimplexNoise singleOre = new SimplexNoise(100, 0.5, rand.nextInt(4096));
+    static SimplexNoise orePatch = new SimplexNoise(100, 0.5, rand.nextInt(4096));
 
     public SimplexLevel(int width, int height) {
 	super(width, height);

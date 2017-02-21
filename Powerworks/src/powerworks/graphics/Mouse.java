@@ -1,6 +1,6 @@
 package powerworks.graphics;
 
-import powerworks.input.InputManager;
+import powerworks.io.InputManager;
 
 public class Mouse {
     

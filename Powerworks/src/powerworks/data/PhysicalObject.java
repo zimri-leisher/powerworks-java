@@ -6,5 +6,5 @@ public interface PhysicalObject {
     public int getXPixel();
     public int getWidthPixels();
     public int getHeightPixels();
-    public boolean hasMoved();
+    public int getRotation();
 }

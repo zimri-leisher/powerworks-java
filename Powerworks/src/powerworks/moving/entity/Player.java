@@ -1,6 +1,5 @@
 package powerworks.moving.entity;
 
-import java.awt.Graphics2D;
 import powerworks.block.Block;
 import powerworks.collidable.Hitbox;
 import powerworks.data.Timer;
@@ -8,32 +7,31 @@ import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
 import powerworks.event.EventManager;
 import powerworks.event.PlaceBlockEvent;
+import powerworks.graphics.GhostBlock;
 import powerworks.graphics.HUD;
 import powerworks.graphics.Screen;
 import powerworks.graphics.StaticTextureCollection;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
+import powerworks.io.InputManager;
+import powerworks.io.KeyControlHandler;
+import powerworks.io.KeyControlOption;
+import powerworks.io.KeyPress;
+import powerworks.io.MouseControlHandler;
+import powerworks.io.MouseControlOption;
+import powerworks.io.MousePress;
 import powerworks.level.Level;
 import powerworks.main.Game;
 import powerworks.moving.droppeditem.DroppedItem;
-import powerworks.newinput.InputManager;
-import powerworks.newinput.KeyControlHandler;
-import powerworks.newinput.KeyControlOption;
-import powerworks.newinput.KeyControlPress;
-import powerworks.newinput.MouseControlHandler;
-import powerworks.newinput.MouseControlOption;
-import powerworks.newinput.MouseControlPress;
 
 public class Player extends Entity implements KeyControlHandler, EventListener, MouseControlHandler {
 
-    HUD hud;
+    public HUD hud;
     Inventory inv;
     boolean invOpen = false;
-    boolean renderGhostBlock = false;
     String name;
-    GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
-    // Input flags
+    public GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
     int lastMouseXPixel = 0, lastMouseYPixel = 0;
     boolean moving, sprinting;
     Timer removing = new Timer(96, 0, 0, 1);
@@ -48,7 +46,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	inv = new Inventory("", 10, 4);
 	EventManager.registerEventListener(this);
 	InputManager.registerKeyControlHandler(this, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
-		KeyControlOption.ROTATE_SELECTED_BLOCK);
+		KeyControlOption.ROTATE_SELECTED_BLOCK, 
+		KeyControlOption.SLOT_1, KeyControlOption.SLOT_2, KeyControlOption.SLOT_3, KeyControlOption.SLOT_4, KeyControlOption.SLOT_5, KeyControlOption.SLOT_6, KeyControlOption.SLOT_7, KeyControlOption.SLOT_8,
+		KeyControlOption.GIVE_CONVEYOR_BELT, KeyControlOption.DROP_ITEM);
 	InputManager.registerMouseControlHandler(this, MouseControlOption.PLACE_BLOCK, MouseControlOption.REMOVE_BLOCK);
     }
 
@@ -58,26 +58,33 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 
     @Override
     public void update() {
+	long time = 0;
+	int mouseXPixel = InputManager.getMouseLevelXPixel();
+	int mouseYPixel = InputManager.getMouseLevelYPixel();
+	if(Game.showUpdateTimes)
+	    time = System.nanoTime();
 	if (velX != 0 || velY != 0)
 	    move();
 	if (getHeldItem() != null && getHeldItem().isPlaceable()) {
-	    if (InputManager.getMouseYPixel() != lastMouseXPixel || InputManager.getMouseYPixel() != lastMouseYPixel) {
-		int xTile = InputManager.getMouseXPixel() >> 4;
-		int yTile = InputManager.getMouseYPixel() >> 4;
-		if (Block.spaceFor(getHeldItem().type.getPlacedBlock(), xTile, yTile))
+	    if (mouseXPixel != lastMouseXPixel || mouseYPixel != lastMouseYPixel) {
+		int xTile = mouseXPixel >> 4;
+		int yTile = mouseYPixel >> 4;
+		if (Level.level.spaceForBlock(getHeldItem().type.getPlacedBlock(), xTile, yTile))
 		    block.placeable = true;
 		else
 		    block.placeable = false;
 		block.xTile = xTile;
 		block.yTile = yTile;
-		lastMouseXPixel = InputManager.getMouseXPixel();
-		lastMouseYPixel = InputManager.getMouseYPixel();
+		lastMouseXPixel = mouseXPixel;
+		lastMouseYPixel = mouseYPixel;
 	    }
 	    block.type = getHeldItem().getPlacedBlock();
-	    renderGhostBlock = true;
+	    block.render = true;
 	} else {
-	    renderGhostBlock = false;
+	    block.render = false;
 	}
+	if(Game.showUpdateTimes)
+	    System.out.println("Updating player took:        " + (System.nanoTime() - time) + " ns");
     }
 
     public Item getHeldItem() {
@@ -86,10 +93,6 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 
     @Override
     public void render() {
-	if (renderGhostBlock) {
-	    System.out.println("tesdt");
-	    block.render();
-	}
 	Screen.screen.renderTexturedObject(this);
 	if (Game.game.showHitboxes())
 	    renderHitbox();
@@ -98,18 +101,6 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
     @Override
     public double getScale() {
 	return 2;
-    }
-
-    public void renderHUD(Graphics2D g2d) {
-	long time = 0;
-	if (Game.showRenderTimes)
-	    time = System.nanoTime();
-	if (Game.showRenderTimes)
-	    System.out.println("Drawing HUD took: " + (System.nanoTime() - time) + " ns");
-    }
-
-    public HUD getHUD() {
-	return hud;
     }
 
     public Inventory getInv() {
@@ -141,8 +132,64 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
     }
 
     @Override
-    public void handleKeyControlPress(KeyControlPress p) {
+    public void handleKeyControlPress(KeyPress p) {
 	switch (p.getOption()) {
+	    case SLOT_1:
+		switch(p.getType()) {
+		    case PRESSED:
+			hud.setSelectedSlotNum(0);
+			break;
+		}
+		break;
+	    case SLOT_2:
+		switch(p.getType()) {
+		    case PRESSED:
+			hud.setSelectedSlotNum(1);
+			break;
+		}
+		break;
+	    case SLOT_3:
+		switch(p.getType()) {
+		    case PRESSED:
+			hud.setSelectedSlotNum(2);
+			break;
+		}
+		break;
+	    case SLOT_4:
+		switch(p.getType()) {
+		    case PRESSED:
+			hud.setSelectedSlotNum(3);
+			break;
+		}
+		break;
+	    case SLOT_5:
+		switch(p.getType()) {
+		    case PRESSED:
+			hud.setSelectedSlotNum(4);
+			break;
+		}
+		break;
+	    case SLOT_6:
+		switch(p.getType()) {
+		    case PRESSED:
+			hud.setSelectedSlotNum(5);
+			break;
+		}
+		break;
+	    case SLOT_7:
+		switch(p.getType()) {
+		    case PRESSED:
+			hud.setSelectedSlotNum(6);
+			break;
+		}
+		break;
+	    case SLOT_8:
+		switch(p.getType()) {
+		    case PRESSED:
+			hud.setSelectedSlotNum(7);
+			break;
+		}
+		break;
 	    case UP:
 		switch (p.getType()) {
 		    case PRESSED:
@@ -264,29 +311,43 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			inv.giveItem(ItemType.CONVEYOR_BELT, 1);
+			break;
 		    default:
 			break;
 		}
+		break;
 	    case GIVE_ORE_MINER:
 		switch (p.getType()) {
 		    case PRESSED:
 			inv.giveItem(ItemType.ORE_MINER, 1);
+			break;
 		    default:
 			break;
 		}
+		break;
 	    default:
 		break;
 	}
     }
 
     @Override
-    public void handleMouseControlPress(MouseControlPress p) {
+    public void handleMouseControlPress(MousePress p) {
 	switch (p.getOption()) {
 	    case PLACE_BLOCK:
 		switch (p.getType()) {
 		    case PRESSED:
-			if (getHeldItem() != null && getHeldItem().isPlaceable())
-			    Level.level.tryPlaceBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseXPixel() >> 4, InputManager.getMouseYPixel() >> 4);
+			if (getHeldItem() != null && getHeldItem().isPlaceable() && block.placeable) {
+			    Level.level.setBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
+			    block.placeable = false;
+			    inv.takeItem(getHeldItem().type, 1);
+			}
+			break;
+		    case REPEAT:
+			if (getHeldItem() != null && getHeldItem().isPlaceable() && block.placeable) {
+			    Level.level.setBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
+			    block.placeable = false;
+			    inv.takeItem(getHeldItem().type, 1);
+			}
 			break;
 		    default:
 			break;
@@ -302,8 +363,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 			break;
 		    case REPEAT:
 			if (removing.getCurrentTick() == 1) {
-			    // TODO Remove block
-			    System.out.println("remove");
+			    Level.level.tryRemoveBlock(InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
 			    removing.resetTimes();
 			}
 			break;

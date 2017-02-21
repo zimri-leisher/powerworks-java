@@ -9,11 +9,8 @@ import powerworks.graphics.TexturedObject;
 import powerworks.main.Game;
 
 public class Tile implements Collidable, TexturedObject{
-
-    /**
-     * The default tile for everything - keep note that it always stays at 0, 0
-     */
-    public int x, y;
+    
+    public int xPixel, yPixel;
     private Texture texture;
     public TileType type;
     private int rotation;
@@ -27,8 +24,8 @@ public class Tile implements Collidable, TexturedObject{
      */
     public Tile(TileType type, int xTile, int yTile, int rotation) {
 	this.type = type;
-	this.x = xTile;
-	this.y = yTile;
+	this.xPixel = xTile << 4;
+	this.yPixel = yTile << 4;
 	texture = type.getTexture();
 	this.rotation = rotation;
 	if (type.hitbox.solid)
@@ -38,13 +35,13 @@ public class Tile implements Collidable, TexturedObject{
     /**
      * Instantiates a new Tile object
      * @param type the TileType
-     * @param x the x tile
-     * @param y the y tile
+     * @param xTile the x tile
+     * @param yTile the y tile
      */
-    public Tile(TileType type, int x, int y) {
+    public Tile(TileType type, int xTile, int yTile) {
 	this.type = type;
-	this.x = x;
-	this.y = y;
+	this.xPixel = xTile << 4;
+	this.yPixel = yTile << 4;
 	texture = type.getTexture();
 	if (type.rotateRandomly) {
 	    Random rand = new Random();
@@ -145,12 +142,12 @@ public class Tile implements Collidable, TexturedObject{
 
     @Override
     public int getXPixel() {
-	return x << 4;
+	return xPixel;
     }
 
     @Override
     public int getYPixel() {
-	return y << 4;
+	return yPixel;
     }
 
     @Override
@@ -165,16 +162,11 @@ public class Tile implements Collidable, TexturedObject{
 
     @Override
     public int getWidthPixels() {
-	return 1;
+	return 16;
     }
 
     @Override
     public int getHeightPixels() {
-	return 1;
-    }
-
-    @Override
-    public boolean hasMoved() {
-	return false;
+	return 16;
     }
 }

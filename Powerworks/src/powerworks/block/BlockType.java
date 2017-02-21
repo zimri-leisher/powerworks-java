@@ -1,5 +1,6 @@
 package powerworks.block;
 
+import java.lang.reflect.InvocationTargetException;
 import powerworks.collidable.Hitbox;
 import powerworks.graphics.StaticTexture;
 import powerworks.graphics.SynchronizedAnimatedTexture;
@@ -7,11 +8,11 @@ import powerworks.graphics.Texture;
 
 public enum BlockType {
     
-    ERROR(Hitbox.TILE, StaticTexture.ERROR, StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Error", 0, false),
+    ERROR(Hitbox.TILE, StaticTexture.ERROR, StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Error", 0, false, ErrorBlock.class),
     
-    CONVEYOR_BELT_CONNECTED_UP(Hitbox.NONE, SynchronizedAnimatedTexture.CONVEYOR_BELT_CONNECTED_UP, StaticTexture.CONVEYOR_BELT_PLACEABLE, StaticTexture.CONVEYOR_BELT_NOT_PLACEABLE, 1, 1, "Conveyor Belt", 1, true),
+    CONVEYOR_BELT_CONNECTED_UP(Hitbox.TILE, SynchronizedAnimatedTexture.CONVEYOR_BELT_CONNECTED_UP, StaticTexture.CONVEYOR_BELT_PLACEABLE, StaticTexture.CONVEYOR_BELT_NOT_PLACEABLE, 1, 1, "Conveyor Belt", 1, true, ConveyorBeltBlock.class),
     
-    ORE_MINER(Hitbox.TILE, StaticTexture.ERROR, StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Ore Miner", 2, true);
+    ORE_MINER(Hitbox.TILE, StaticTexture.ERROR, StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Ore Miner", 2, true, OreMinerBlock.class);
     
     Hitbox hitbox;
     Texture texture;
@@ -22,6 +23,7 @@ public enum BlockType {
     boolean placeable;
     boolean defaultRequiresUpdate = true;
     int id;
+    Class<? extends Block> instantiator;
 
     /**
      * Creates a BlockType constant
@@ -37,7 +39,7 @@ public enum BlockType {
      * @param id
      *            the id
      */
-    private BlockType(Hitbox hitbox, Texture texture, StaticTexture placeableTexture, StaticTexture notPlaceableTexture, int width, int height, String name, int id, boolean placeable) {
+    private BlockType(Hitbox hitbox, Texture texture, StaticTexture placeableTexture, StaticTexture notPlaceableTexture, int width, int height, String name, int id, boolean placeable, Class<? extends Block> instantiator) {
 	this.hitbox = hitbox;
 	this.texture = texture;
 	this.width = width;
@@ -45,9 +47,9 @@ public enum BlockType {
 	this.name = name;
 	this.placeableTexture = placeableTexture;
 	this.notPlaceableTexture = notPlaceableTexture;
-	System.out.println(placeableTexture.getPixels()[0]);
 	this.placeable = placeable;
 	this.id = id;
+	this.instantiator = instantiator;
     }
     
     public boolean defaultRequiresUpdate() {
@@ -101,10 +103,19 @@ public enum BlockType {
      * @return the Block object (ErrorBlock if class to use is not defined
      */
     public Block createInstance(int xTile, int yTile) {
-	if (this.toString().contains("CONVEYOR_BELT"))
-	    return new ConveyorBeltBlock(this, xTile, yTile);
-	else if(this.toString().contains("ORE_MINER"))
-	    return new OreMinerBlock(this, xTile, yTile);
-	return new ErrorBlock(this, xTile, yTile);
+	try {
+	    Block b = null;
+	    try {
+		b = instantiator.getConstructor(getClass(), int.class, int.class).newInstance(this, xTile, yTile);
+	    } catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+		e.printStackTrace();
+	    }
+	    return b;
+	} catch (InstantiationException e) {
+	    e.printStackTrace();
+	} catch (IllegalAccessException e) {
+	    e.printStackTrace();
+	}
+	return null;
     }
 }

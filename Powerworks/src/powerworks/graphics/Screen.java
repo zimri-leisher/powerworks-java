@@ -3,6 +3,7 @@ package powerworks.graphics;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import powerworks.collidable.Collidable;
+import powerworks.level.Level;
 import powerworks.main.Game;
 
 public class Screen {
@@ -39,8 +40,8 @@ public class Screen {
      *            the y pixel to offset the screen
      */
     public void setOffset(int xOffset, int yOffset) {
-	this.xOffset = xOffset;
-	this.yOffset = yOffset;
+	if(xOffset - width / 2 >= 0) this.xOffset = xOffset;
+	if(yOffset - height / 2 >= 0) this.yOffset = yOffset;
     }
 
     public void renderHitbox(Collidable col) {
@@ -168,15 +169,15 @@ public class Screen {
     public void renderTexturedObject(TexturedObject obj) {
 	int xPixel = obj.getXPixel() - xOffset;
 	int yPixel = obj.getYPixel() - yOffset;
-	final int[] objPixels = obj.getTexture().getPixels();
-	final double scale = obj.getScale();
-	final int widthPixels = obj.getTexture().getWidthPixels();
-	final int heightPixels = obj.getTexture().getHeightPixels();
-	final double absoluteHeightPixels = obj.getScale() * heightPixels;
-	final double absoluteWidthPixels = obj.getScale() * widthPixels;
+	int[] objPixels = obj.getTexture().getPixels();
+	double scale = obj.getScale();
+	int widthPixels = obj.getTexture().getWidthPixels();
+	int heightPixels = obj.getTexture().getHeightPixels();
+	double absoluteHeightPixels = obj.getScale() * heightPixels;
+	double absoluteWidthPixels = obj.getScale() * widthPixels;
 	for (int y = 0; y < absoluteHeightPixels; y++) {
-	    final int ya = (yPixel + y) * width;
-	    final int yc = (int) (y / scale) * widthPixels;
+	    int ya = (yPixel + y) * width;
+	    int yc = (int) (y / scale);
 	    for (int x = 0; x < absoluteWidthPixels; x++) {
 		int xa = xPixel + x;
 		int xc = (int) (x / scale);
@@ -184,9 +185,18 @@ public class Screen {
 		    break;
 		if (xa < 0)
 		    xa = 0;
-		final int coord2 = xa + ya;
-		final int pixel = objPixels[xc + yc];
-		final int alpha = (pixel >> 24) & 0xFF;
+		int coord2 = xa + ya;
+		int pixel = 0;
+		if(obj.getRotation() == 0)
+		    pixel = objPixels[xc + yc * widthPixels];
+		else if(obj.getRotation() == 1)
+		    pixel = objPixels[(15 - yc) * widthPixels + xc];
+		else if(obj.getRotation() == 2)
+		    pixel = objPixels[xc * widthPixels + yc];
+		else
+		    pixel = objPixels[(15 - xc) * widthPixels + yc];
+		int alpha = (pixel >> 24) & 0xFF;
+		
 		if (alpha == 255)
 		    objects[coord2] = pixel;
 		else if (alpha != 0)

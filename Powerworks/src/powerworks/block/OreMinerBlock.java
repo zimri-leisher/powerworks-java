@@ -20,10 +20,10 @@ public class OreMinerBlock extends Block {
     @Override
     public void update() {
 	if (t.getCurrentTick() == 1) {
-	    Tile tile = Level.level.getTileFromTile(x, y);
+	    Tile tile = Level.level.getTileFromTile(xPixel, yPixel);
 	    if (tile.type.equals(TileType.IRON_ORE)) {
 		OreTile ore = (OreTile) tile;
-		Level.level.tryDropItem(ItemType.IRON_ORE, (x + 1) << 4, (y + 1) << 4);
+		Level.level.tryDropItem(ItemType.IRON_ORE, (xPixel + 1) << 4, (yPixel + 1) << 4);
 		ore.addAmount(-1);
 		if (ore.getAmount() == 0)
 		    ore.setType(TileType.GRASS);

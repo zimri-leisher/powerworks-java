@@ -15,7 +15,7 @@ public abstract class Moving implements PhysicalObject, Collidable {
 
     public static final int AIR_DRAG = 4;
     public static final int DEFAULT_MAX_SPEED = 20;
-    protected int x, y;
+    protected int x, y, lastX, lastY;
     protected int velX, velY;
     protected Hitbox hitbox;
     protected boolean hasMoved = false;
@@ -155,10 +155,5 @@ public abstract class Moving implements PhysicalObject, Collidable {
     @Override
     public Hitbox getHitbox() {
 	return hitbox;
-    }
-    
-    @Override
-    public boolean hasMoved() {
-	return hasMoved;
     }
 }

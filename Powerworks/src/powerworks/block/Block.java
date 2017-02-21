@@ -11,10 +11,10 @@ import powerworks.main.Game;
 public class Block implements TexturedObject, Collidable {
 
     int rotation;
-    int x, y;
+    int xPixel, yPixel;
     BlockType type;
     boolean requiresUpdate = true;
-    //test
+    
     /**
      * Instantiates a Block object
      * 
@@ -26,10 +26,11 @@ public class Block implements TexturedObject, Collidable {
      *            the y tile
      */
     public Block(BlockType type, int xTile, int yTile) {
-	this.x = xTile;
-	this.y = yTile;
+	this.xPixel = xTile << 4;
+	this.yPixel = yTile << 4;
 	this.type = type;
 	requiresUpdate = type.defaultRequiresUpdate;
+	System.out.println("test");
 	if (type.hitbox.solid)
 	    Collidable.collidables.put(this);
     }
@@ -41,11 +42,11 @@ public class Block implements TexturedObject, Collidable {
     }
 
     public int getXTile() {
-	return x;
+	return xPixel >> 4;
     }
 
     public int getYTile() {
-	return y;
+	return yPixel >> 4;
     }
 
     public void update() {
@@ -66,19 +67,6 @@ public class Block implements TexturedObject, Collidable {
 
     public Texture getNotPlaceableTexture() {
 	return type.notPlaceableTexture;
-    }
-
-    public static boolean spaceFor(BlockType type, int xTile, int yTile) {
-	for (int y = 0; y < type.height; y++) {
-	    for (int x = 0; x < type.width; x++) {
-		if (Level.level.getBlockFromTile(x + xTile, y + yTile) != null || Level.level.getTileFromTile(x + xTile, y + yTile).isSolid()) {
-		    return false;
-		}
-	    }
-	}
-	int xPixel = xTile << 4;
-	int yPixel = yTile << 4;
-	return !(Collidable.collidables.anyIn(xPixel, yPixel, type.getHitbox().width, type.getHitbox().height));
     }
 
     @Override
@@ -103,12 +91,12 @@ public class Block implements TexturedObject, Collidable {
 
     @Override
     public int getXPixel() {
-	return x << 4;
+	return xPixel;
     }
 
     @Override
     public int getYPixel() {
-	return y << 4;
+	return yPixel;
     }
 
     @Override
@@ -132,10 +120,5 @@ public class Block implements TexturedObject, Collidable {
     @Override
     public double getScale() {
 	return 1;
-    }
-
-    @Override
-    public boolean hasMoved() {
-	return false;
     }
 }

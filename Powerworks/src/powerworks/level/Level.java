@@ -9,7 +9,7 @@ import java.util.List;
 import powerworks.block.Block;
 import powerworks.block.BlockType;
 import powerworks.collidable.Collidable;
-import powerworks.command.Command;
+import powerworks.data.Quadtree;
 import powerworks.event.EventManager;
 import powerworks.event.PlaceBlockEvent;
 import powerworks.exception.NoSuchTileException;
@@ -28,8 +28,7 @@ public class Level {
     int height;
     protected Tile[] tiles;
     protected Block[] blocks;
-    protected List<DroppedItem> items = new ArrayList<DroppedItem>();
-    public static Level level = new SimplexLevel(64, 64);
+    public static Level level = new SimplexLevel(512, 512);
     protected String path;
 
     protected Level(int width, int height) {
@@ -110,13 +109,13 @@ public class Level {
 	    }
 	}
 	if (show) {
-	    System.out.println("Updating blocks took: " + (System.nanoTime() - time) + " ns");
+	    System.out.println("Updating blocks took:        " + (System.nanoTime() - time) + " ns");
 	    time = System.nanoTime();
 	}
 	for (Entity e : Entity.entities.retrieveAll()) {
 	    e.update();
 	}
-	for (DroppedItem item : items)
+	for (DroppedItem item : DroppedItem.droppedItems.retrieveAll())
 	    item.update();
 	if (show) {
 	    System.out.println("Updating dropped items took: " + (System.nanoTime() - time) + " ns");
@@ -140,22 +139,25 @@ public class Level {
 	if (show)
 	    time = System.nanoTime();
 	Screen.screen.setOffset(xScroll, yScroll);
-	int xPixel0 = xScroll;
-	int xPixel1 = xScroll + Screen.screen.width;
-	int yPixel0 = yScroll;
-	int yPixel1 = yScroll + Screen.screen.height;
+	int xPixel0 = Screen.screen.xOffset;
+	int xPixel1 = Screen.screen.xOffset + Screen.screen.width;
+	int yPixel0 = Screen.screen.yOffset;
+	int yPixel1 = Screen.screen.yOffset + Screen.screen.height;
 	int xTile0 = xPixel0 >> 4;
 	int xTile1 = (xPixel1 >> 4) + 1;
 	int yTile0 = yPixel0 >> 4;
 	int yTile1 = (yPixel1 >> 4) + 1;
 	if (show) {
-	    System.out.println("Calculating level render offsets took: " + (System.nanoTime() - time) + " ns");
+	    System.out.println("Render offsets took:         " + (System.nanoTime() - time) + " ns");
 	    time = System.nanoTime();
 	}
-	for (int y = yTile0 <= 0 ? 0 : yTile0; y < ((yTile1 > height) ? height : yTile1); y++) {
-	    for (int x = xTile0 <= 0 ? 0 : xTile0; x < ((xTile1 > width) ? width : xTile1); x++) {
+	int maxY = (yTile1 > height) ? height : yTile1;
+	int maxX = (xTile1 > width) ? width : xTile1;
+	for (int y = yTile0 <= 0 ? 0 : yTile0; y < maxY; y++) {
+	    int yc = y * width;
+	    for (int x = xTile0 <= 0 ? 0 : xTile0; x < maxX; x++) {
 		if (!(x < 0 || y < 0 || x >= width || y >= height)) {
-		    int coord = x + y * width;
+		    int coord = x + yc;
 		    if (blocks[coord] == null || blocks[coord].hasTransparency())
 			tiles[coord].render();
 		    if (blocks[coord] != null) {
@@ -165,21 +167,20 @@ public class Level {
 	    }
 	}
 	if (show) {
-	    System.out.println("Drawing blocks and tiles took: " + (System.nanoTime() - time) + " ns");
+	    System.out.println("Drawing blocks + tiles took: " + (System.nanoTime() - time) + " ns");
 	    time = System.nanoTime();
 	}
-	for (DroppedItem item : items) {
-	    if (item.getXPixel() >= xPixel0 - 16 && item.getXPixel() < xPixel1 && item.getYPixel() >= yPixel0 - 16 && item.getYPixel() < yPixel1) {
-		item.render();
-	    }
+	for (DroppedItem item : DroppedItem.droppedItems.retrieveIn(xPixel0, yPixel0, xPixel1 - xPixel0, yPixel1 - yPixel0)) {
+	    item.render();
 	}
 	if (show) {
-	    System.out.println("Drawing dropped items took: " + (System.nanoTime() - time) + " ns");
+	    System.out.println("Drawing dropped items took:  " + (System.nanoTime() - time) + " ns");
 	    time = System.nanoTime();
 	}
+	player.block.render();
 	player.render();
 	if (show) {
-	    System.out.println("Drawing player took: " + (System.nanoTime() - time) + " ns");
+	    System.out.println("Drawing player took:         " + (System.nanoTime() - time) + " ns");
 	}
     }
 
@@ -195,7 +196,7 @@ public class Level {
      */
     public boolean tryDropItem(ItemType type, int xPixel, int yPixel) {
 	if (spaceForDroppedItem(type, xPixel, yPixel)) {
-	    items.add(new DroppedItem(type, xPixel, yPixel));
+	    DroppedItem.droppedItems.put(new DroppedItem(type, xPixel, yPixel));
 	    return true;
 	}
 	return false;
@@ -229,13 +230,24 @@ public class Level {
      */
     public boolean tryPlaceBlock(BlockType type, int xTile, int yTile) {
 	int coord = xTile + yTile * width;
-	if (Block.spaceFor(type, xTile, yTile)) {
+	if (spaceForBlock(type, xTile, yTile)) {
 	    Block block = type.createInstance(xTile, yTile);
-	    blocks[coord] = block;
-	    EventManager.sendEvent(new PlaceBlockEvent(block, xTile, yTile));
+	    for(int y = 0; y < type.getHeightTiles(); y++) {
+		int yc = y + yTile;
+		for(int x = 0; x < type.getWidthTiles(); x++) {
+		    int xc = x + xTile;
+		    blocks[xc + yc * width] = block;
+		    EventManager.sendEvent(new PlaceBlockEvent(block, xc, yc));
+		}
+	    }
+	    
 	    return true;
 	}
 	return false;
+    }
+    
+    public void setBlock(BlockType type, int xTile, int yTile) {
+	blocks[xTile + yTile * width] = type.createInstance(xTile, yTile);
     }
 
     /**
@@ -244,28 +256,34 @@ public class Level {
      * @param xTile
      * @param yTile
      */
-    public void removeBlock(int xTile, int yTile) {
+    public void tryRemoveBlock(int xTile, int yTile) {
 	int coord = xTile + yTile * width;
 	if (blocks[coord] != null) {
 	    blocks[coord] = null;
 	}
     }
-
+    
     /**
-     * Removes a DroppedItem object
-     * 
-     * @param xPixel
-     *            the x pixel of the object to remove
-     * @param yPixel
-     *            the y pixel of the object to remove
+     * Checks the boundaries of the block to see if it is able to be placed
+     * @param type the type to check for
+     * @param xTile the x tile of the top left corner
+     * @param yTile the y tile of the top left corner
+     * @return true if able to place, false otherwise
      */
-    public void tryRemoveDroppedItem(int xPixel, int yPixel) {
-	for (DroppedItem item : items) {
-	    if (item.getXPixel() == xPixel && item.getYPixel() == yPixel) {
-		items.remove(item);
-		DroppedItem.droppedItems.remove(item);
+    public boolean spaceForBlock(BlockType type, int xTile, int yTile) {
+	if(xTile < 0 || xTile >= width || yTile < 0 || yTile >= height) return false;
+	for (int y = 0; y < type.getHeightTiles(); y++) {
+	    for (int x = 0; x < type.getWidthTiles(); x++) {
+		if (Level.level.getBlockFromTile(x + xTile, y + yTile) != null || Level.level.getTileFromTile(x + xTile, y + yTile).isSolid()) {
+		    return false;
+		}
 	    }
 	}
+	
+	int xPixel = xTile << 4;
+	int yPixel = yTile << 4;
+	boolean ret = !(Collidable.collidables.anyIn(xPixel, yPixel, type.getHitbox().width, type.getHitbox().height));
+	return ret;
     }
 
     /**
@@ -275,9 +293,8 @@ public class Level {
      *            the object to remove
      */
     public void tryRemoveDroppedItem(DroppedItem itemToRemove) {
-	items.remove(itemToRemove);
-	Collidable.collidables.remove(itemToRemove);
 	DroppedItem.droppedItems.remove(itemToRemove);
+	Collidable.collidables.remove(itemToRemove);
     }
 
     /**
@@ -306,12 +323,7 @@ public class Level {
      * @return the list of DroppedItems that are within the radius
      */
     public List<DroppedItem> getDroppedItems(int xPixel, int yPixel, int radius) {
-	List<DroppedItem> itemsNear = new ArrayList<DroppedItem>();
-	for (DroppedItem item : items) {
-	    if (Math.abs(item.getXPixel() - xPixel) < radius && Math.abs(item.getYPixel() - yPixel) < radius)
-		itemsNear.add(item);
-	}
-	return itemsNear;
+	return DroppedItem.droppedItems.retrieveIn(xPixel - radius, yPixel - radius, radius * 2, radius * 2);
     }
 
     /**

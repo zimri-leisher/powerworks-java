@@ -2,9 +2,10 @@ package powerworks.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import powerworks.main.Game;
 
 public class Quadtree<T extends PhysicalObject> {
-    
+
     static List<Quadtree<?>> trees = new ArrayList<Quadtree<?>>();
     int width, height, x, y;
     Node<T>[] children;
@@ -12,9 +13,15 @@ public class Quadtree<T extends PhysicalObject> {
     int numObjects = 0;
     int maxObjects = 8;
     int maxLevels = 5;
+    List<T> remove = new ArrayList<T>();
 
     public static void update() {
+	long time = 0;
+	if (Game.showUpdateTimes)
+	    time = System.nanoTime();
 	trees.forEach((Quadtree<?> q) -> q.refresh());
+	if (Game.showUpdateTimes)
+	    System.out.println("Updating quadtrees took:     " + (System.nanoTime() - time) + " ns");
     }
 
     @SuppressWarnings("unchecked")
@@ -32,35 +39,36 @@ public class Quadtree<T extends PhysicalObject> {
 	children[1] = new Node<T>(x2, y2, newWidth, newHeight, null);
 	children[2] = new Node<T>(x, y2, newWidth, newHeight, null);
 	children[3] = new Node<T>(x, y, newWidth, newHeight, null);
+	trees.add(this);
     }
-    
+
     public List<T> retrieveAll() {
 	List<T> returnObj = new ArrayList<T>();
-	for(int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	    children[i].retrieveAll(returnObj);
 	return returnObj;
     }
 
     private int localIndex(T t) {
-        return localIndex(t.getXPixel(), t.getYPixel(), t.getWidthPixels(), t.getHeightPixels());
+	return localIndex(t.getXPixel(), t.getYPixel(), t.getWidthPixels(), t.getHeightPixels());
     }
 
     private int localIndex(int x, int y, int width, int height) {
-        int xMid = this.width / 2;
-        int yMid = this.height / 2;
-        boolean top = y < yMid;
-        boolean left = x < xMid;
-        int index = -1;
-        if (top)
-            if (left)
-        	index = 3;
-            else
-        	index = 0;
-        else if (left)
-            index = 2;
-        else
-            index = 1;
-        return index;
+	int xMid = this.width / 2;
+	int yMid = this.height / 2;
+	boolean top = y < yMid;
+	boolean left = x < xMid;
+	int index = -1;
+	if (top)
+	    if (left)
+		index = 3;
+	    else
+		index = 0;
+	else if (left)
+	    index = 2;
+	else
+	    index = 1;
+	return index;
     }
 
     public void print() {
@@ -78,18 +86,28 @@ public class Quadtree<T extends PhysicalObject> {
     }
 
     public void refresh() {
-        currentLevels = 0;
-        numObjects = 0;
-        List<T> reinsert = new ArrayList<T>();
-        for (int i = 0; i < 4; i++) {
-            children[i].refresh(reinsert);
-        }
-        reinsert.forEach((T t) -> put(t));
+	currentLevels = 0;
+	numObjects = 0;
+	List<T> reinsert = new ArrayList<T>();
+	for (int i = 0; i < 4; i++) {
+	    children[i].refresh(reinsert);
+	}
+	reinsert.forEach((T t) -> {
+	    if (!remove.contains(t))
+		put(t);
+	    else
+		numObjects--;
+	});
+	remove.clear();
     }
 
     public void remove(T t) {
-        children[localIndex(t)].remove(t);
-        numObjects--;
+	children[localIndex(t)].remove(t);
+	numObjects--;
+    }
+
+    public void removeNextRefresh(T t) {
+	remove.add(t);
     }
 
     public List<T> retrievePossible(T t) {
@@ -103,15 +121,15 @@ public class Quadtree<T extends PhysicalObject> {
 	children[localIndex(x, y, width, height)].retrieveIn(x, y, width, height, returnObj);
 	return returnObj;
     }
-    
+
     public boolean anyIn(int x, int y, int width, int height) {
 	return children[localIndex(x, y, width, height)].anyIn(x, y, width, height);
     }
-    
+
     public void setMaxObjects(int m) {
 	maxObjects = m;
     }
-    
+
     public void setMaxLevels(int m) {
 	maxLevels = m;
     }
@@ -137,18 +155,20 @@ public class Quadtree<T extends PhysicalObject> {
 
 	public void retrieveAll(List<T> returnObj) {
 	    returnObj.addAll(objects);
-	    if(!hasChildren()) return;
-	    for(int i = 0; i < 4; i++)
+	    if (!hasChildren())
+		return;
+	    for (int i = 0; i < 4; i++)
 		children[i].retrieveAll(returnObj);
 	}
 
 	public boolean anyIn(int x, int y, int width, int height) {
 	    for (T t : objects) {
-		if (x < this.x + this.width && x + width > this.x && y < this.y + this.height && y + height > this.y) {
+		if (x < t.getXPixel() + t.getWidthPixels() && x + width > t.getXPixel() && y < t.getYPixel() + t.getHeightPixels() && y + height > t.getYPixel()) {
 		    return true;
 		}
 	    }
-	    if(!hasChildren()) return false;
+	    if (!hasChildren())
+		return false;
 	    return children[localIndex(x, y, width, height)].anyIn(x, y, width, height);
 	}
 
@@ -205,7 +225,6 @@ public class Quadtree<T extends PhysicalObject> {
 		    children[localIndex].put(t);
 		} else {
 		    objects.add(t);
-		    System.out.println("Adding object at level " + level);
 		}
 	    } else {
 		if (objects.size() == maxObjects) {
@@ -215,16 +234,12 @@ public class Quadtree<T extends PhysicalObject> {
 			    children[localIndex].put(t);;
 			} else {
 			    objects.add(t);
-			    System.out.println("Adding object at level " + level);
 			}
 		    } else {
 			objects.add(t);
-			System.out.println("Adding object at level " + level);
-			System.err.println("Warning, quadtree has reached max levels and tried to split, adding instead");
 		    }
 		} else {
 		    objects.add(t);
-		    System.out.println("Adding object at level " + level);
 		}
 	    }
 	}
@@ -249,7 +264,8 @@ public class Quadtree<T extends PhysicalObject> {
 
 	void retrieveIn(int x, int y, int width, int height, List<T> returnObj) {
 	    for (T t : objects) {
-		if (x < this.x + this.width && x + width > this.x && y < this.y + this.height && y + height > this.y) {
+		if (!(x >= t.getXPixel() + t.getWidthPixels()) && !(x + width <= t.getXPixel() && !(t.getYPixel() + t.getHeightPixels() >= y) && !(t.getYPixel() <= y + height))) {
+		    System.out.println(t.getXPixel() + ", " + t.getYPixel() + ", " + t.getWidthPixels() + ", " + t.getHeightPixels() + " is inside " + x + ", " + y + ", " + width + ", " + height);
 		    returnObj.add(t);
 		}
 	    }
