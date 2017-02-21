@@ -12,15 +12,14 @@ import java.awt.Toolkit;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.awt.image.VolatileImage;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import powerworks.chat.ChatCommandExecutor;
-import powerworks.collidable.Collidable;
 import powerworks.data.Quadtree;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
@@ -39,8 +38,8 @@ import powerworks.io.Logger;
 import powerworks.io.MouseWheelControlHandler;
 import powerworks.io.MouseWheelControlOption;
 import powerworks.io.MouseWheelPress;
+import powerworks.io.Statistic;
 import powerworks.level.Level;
-import powerworks.moving.entity.Entity;
 import powerworks.moving.entity.Player;
 import powerworks.task.Task;
 
@@ -48,16 +47,13 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     public static Game game;
     private static final long serialVersionUID = 1L;
-    // CONSTANT
     public static final float UPDATES_PER_SECOND = 60.0f;
-    // CHANGING
-    public static final float FRAMES_PER_SECOND = 60.0f;
+    public static final float FRAMES_PER_SECOND = 1000.0f;
     public static final float MS_PER_UPDATE = 1000 / UPDATES_PER_SECOND;
     public static final float MS_PER_FRAME = 1000 / FRAMES_PER_SECOND;
     public static final float NS_PER_UPDATE = 1000000000 / UPDATES_PER_SECOND;
     public static final float NS_PER_FRAME = 1000000000 / FRAMES_PER_SECOND;
     public static final int MAX_UPDATES_BEFORE_RENDER = 5;
-    public static IntSummaryStatistics fps = new IntSummaryStatistics(), ups = new IntSummaryStatistics();
     public static int width = 300, zoomedWidth = width;
     public static int height = width / 16 * 9, zoomedHeight = height;
     public static int scale = 4;
@@ -70,6 +66,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     private static JFrame frame;
     public static Font font = null;
     private boolean running = false;
+    private VolatileImage img = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleVolatileImage(width, height);
     private static BufferedImage layer1 = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
     public static int[] objects = ((DataBufferInt) layer1.getRaster().getDataBuffer()).getData();
     private static BufferedImage layer2 = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -78,12 +75,14 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     private static List<Player> allPlayers;
     public static InputManager input;
     public static Mouse mouse;
+    public static Logger logger;
     public static boolean showRenderTimes = false;
     public static boolean showUpdateTimes = false;
 
     private Game() {
 	setPreferredSize(new Dimension(width * scale, height * scale));
 	frame = new JFrame();
+	logger = new Logger();
 	input = new InputManager();
 	mouse = new Mouse();
 	player = new Player(Level.level.getWidthPixels() / 2, Level.level.getHeightPixels() / 2);
@@ -114,7 +113,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     private synchronized void stop() {
-	Logger.close();
+	logger.close();
 	Level.level.saveLevel();
 	System.exit(0);
 	try {
@@ -146,34 +145,34 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	while (running) {
 	    double now = System.nanoTime();
 	    int updates = 0;
-		while (now - lastUpdateTime > NS_PER_UPDATE && updates < MAX_UPDATES_BEFORE_RENDER) {
-		    update();
-		    lastUpdateTime += NS_PER_UPDATE;
-		    updates++;
-		    updateCount++;
+	    while (now - lastUpdateTime > NS_PER_UPDATE && updates < MAX_UPDATES_BEFORE_RENDER) {
+		update();
+		lastUpdateTime += NS_PER_UPDATE;
+		updates++;
+		updateCount++;
+	    }
+	    if (now - lastUpdateTime > NS_PER_UPDATE) {
+		lastUpdateTime = now - NS_PER_UPDATE;
+	    }
+	    render();
+	    frameCount++;
+	    lastRenderTime = now;
+	    int thisSecond = (int) (lastUpdateTime / 1000000000);
+	    if (thisSecond > lastSecondTime) {
+		frame.setTitle("Powerworks - " + frameCount + " fps, " + updateCount + " ups");
+		lastSecondTime = thisSecond;
+		logger.addData(Statistic.FPS, frameCount);
+		logger.addData(Statistic.UPS, updateCount);
+		frameCount = 0;
+		updateCount = 0;
+	    }
+	    while (now - lastRenderTime < NS_PER_FRAME && now - lastUpdateTime < NS_PER_UPDATE) {
+		Thread.yield();
+		try {
+		    Thread.sleep(1);
+		} catch (Exception e) {
 		}
-		if (now - lastUpdateTime > NS_PER_UPDATE) {
-		    lastUpdateTime = now - NS_PER_UPDATE;
-		}
-		render();
-		frameCount++;
-		lastRenderTime = now;
-		int thisSecond = (int) (lastUpdateTime / 1000000000);
-		if (thisSecond > lastSecondTime) {
-		    frame.setTitle("Powerworks - " + frameCount + " fps, " + updateCount + " ups");
-		    lastSecondTime = thisSecond;
-		    ups.accept(updateCount);
-		    fps.accept(frameCount);
-		    frameCount = 0;
-		    updateCount = 0;
-		}
-		while (now - lastRenderTime < NS_PER_FRAME && now - lastUpdateTime < NS_PER_UPDATE) {
-		    Thread.yield();
-		    try {
-			Thread.sleep(1);
-		    } catch (Exception e) {
-		    }
-		    now = System.nanoTime();
+		now = System.nanoTime();
 	    }
 	}
 	stop();
@@ -201,30 +200,66 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    createBufferStrategy(3);
 	    return;
 	}
-	for (int i = 0; i < overlay.length; i++)
-	    overlay[i] = 0;
-	Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
-	if (StateManager.state == StateManager.INGAME) {
-	    long time = 0;
-	    if (showRenderTimes) {
-		System.out.println("----------");
-		time = System.nanoTime();
-	    }
-	    Level.level.render(scrollHelperX1, scrollHelperY1, player);
-	    if (showRenderTimes) {
-		System.out.println("Rendering level took: " + (System.nanoTime() - time) + " ns");
-	    }
-	    g2d.drawImage(layer1, 0, 0, getWidth(), getHeight(), null);
-	    player.hud.render(g2d);
-	    mouse.render();
-	    g2d.drawImage(layer2, 0, 0, getWidth(), getHeight(), null);
-	    g2d.dispose();
-	    bufferStrat.show();
-	    if (showRenderTimes)
-		System.out.println("TOTAL:                       " + (System.nanoTime() - time) + " ns");
-	    showRenderTimes = false;
-	} else if (StateManager.state == StateManager.MAIN_MENU) {
+	long time = 0, startTime = 0;
+	if (showRenderTimes) {
+	    time = startTime = System.nanoTime();
 	}
+	do {
+	    if (StateManager.state == StateManager.INGAME) {
+		do {
+		    for (int i = 0; i < overlay.length; i++)
+			overlay[i] = 0;
+		    if (showRenderTimes) {
+			long diff = System.nanoTime() - time;
+			logger.addAndLog(Statistic.OVERLAY_CLEAR, (int) diff, true);
+			time = System.nanoTime();
+		    }
+		    Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
+		    if (showRenderTimes) {
+			long diff = System.nanoTime() - time;
+			logger.addAndLog(Statistic.GET_DRAW_GRAPHICS, (int) diff, true);
+			time = System.nanoTime();
+		    }
+		    Level.level.render(scrollHelperX1, scrollHelperY1, player);
+		    if (showRenderTimes)
+			time = System.nanoTime();
+		    g2d.drawImage(layer1, 0, 0, getWidth(), getHeight(), null);
+		    if (showRenderTimes) {
+			long diff = System.nanoTime() - time;
+			Game.logger.addAndLog(Statistic.RENDER_OBJECTS_TO_GRAPHICS, (int) diff, true);
+			time = System.nanoTime();
+		    }
+		    player.hud.render(g2d);
+		    if (showRenderTimes) {
+			long diff = System.nanoTime() - time;
+			Game.logger.addAndLog(Statistic.DRAW_HUD, (int) diff, true);
+			time = System.nanoTime();
+		    }
+		    mouse.render();
+		    if (showRenderTimes) {
+			long diff = System.nanoTime() - time;
+			Game.logger.addAndLog(Statistic.DRAW_MOUSE, (int) diff, true);
+			time = System.nanoTime();
+		    }
+		    g2d.drawImage(layer2, 0, 0, getWidth(), getHeight(), null);
+		    if (showRenderTimes) {
+			long diff = System.nanoTime() - time;
+			Game.logger.addAndLog(Statistic.RENDER_OVERLAY_TO_GRAPHICS, (int) diff, true);
+			time = System.nanoTime();
+		    }
+		    g2d.dispose();
+		    showRenderTimes = false;
+		} while (bufferStrat.contentsRestored());
+		if(showRenderTimes)
+		    time = System.nanoTime();
+		bufferStrat.show();
+		if (showRenderTimes) {
+		    Game.logger.addAndLog(Statistic.SHOW_BUFFER_STRAT, (int) (System.nanoTime() - time), true);
+		    Game.logger.addAndLog(Statistic.TOTAL_RENDER_TIME, (int) (System.nanoTime() - startTime), true);
+		}
+	    } else if (StateManager.state == StateManager.MAIN_MENU) {
+	    }
+	} while (bufferStrat.contentsLost());
     }
 
     private void loadFont() {
@@ -238,6 +273,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	}
     }
 
+    @SuppressWarnings("unused")
     private String getDeviceConfigurationString(GraphicsConfiguration gc) {
 	return "Bounds: " + gc.getBounds() + "\n" +
 		"Buffer Capabilities: " + gc.getBufferCapabilities() + "\n" +
@@ -366,11 +402,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case SHOW_UPDATE_TIMES:
 		switch (pressType) {
 		    case PRESSED:
-			System.out.println("Cols");
-			Collidable.collidables.print();
-			System.out.println("Entities");
-			Entity.entities.print();
-			//showUpdateTimes = true;
+			showUpdateTimes = true;
 		    default:
 			break;
 		}
@@ -378,7 +410,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case SHOW_RENDER_TIMES:
 		switch (pressType) {
 		    case PRESSED:
-			showRenderTimes = true;
+			System.out.println(getDeviceConfigurationString(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()));
+			// showRenderTimes = true;
 		    default:
 			break;
 		}
