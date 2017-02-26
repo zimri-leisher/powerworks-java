@@ -1,22 +1,21 @@
 package powerworks.moving.entity;
 
 import powerworks.collidable.Hitbox;
-import powerworks.data.Quadtree;
+import powerworks.data.SpatialOrganizer;
 import powerworks.graphics.StaticTextureCollection;
 import powerworks.graphics.Texture;
 import powerworks.graphics.TexturedObject;
-import powerworks.level.Level;
 import powerworks.moving.Moving;
 
 public abstract class Entity extends Moving implements TexturedObject {
 
-    public static final Quadtree<Entity> entities = new Quadtree<Entity>(0, 0, Level.level.getWidthPixels(), Level.level.getHeightPixels());
+    public static final SpatialOrganizer<Entity> entities = new SpatialOrganizer<Entity>();
     int dir;
     StaticTextureCollection textures;
 
     protected Entity(Hitbox hitbox) {
 	super(hitbox);
-	entities.put(this);
+	entities.add(this);
     }
     
     @Override

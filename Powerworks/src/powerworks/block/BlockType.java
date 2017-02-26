@@ -10,7 +10,7 @@ public enum BlockType {
     
     ERROR(Hitbox.TILE, StaticTexture.ERROR, StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Error", 0, false, ErrorBlock.class),
     
-    CONVEYOR_BELT_CONNECTED_UP(Hitbox.TILE, SynchronizedAnimatedTexture.CONVEYOR_BELT_CONNECTED_UP, StaticTexture.CONVEYOR_BELT_PLACEABLE, StaticTexture.CONVEYOR_BELT_NOT_PLACEABLE, 1, 1, "Conveyor Belt", 1, true, ConveyorBeltBlock.class),
+    CONVEYOR_BELT_CONNECTED_UP(Hitbox.NONE, SynchronizedAnimatedTexture.CONVEYOR_BELT_CONNECTED_UP, StaticTexture.CONVEYOR_BELT_PLACEABLE, StaticTexture.CONVEYOR_BELT_NOT_PLACEABLE, 1, 1, "Conveyor Belt", 1, true, ConveyorBeltBlock.class),
     
     ORE_MINER(Hitbox.TILE, StaticTexture.ERROR, StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Ore Miner", 2, true, OreMinerBlock.class);
     

@@ -1,6 +1,5 @@
 package powerworks.moving.entity;
 
-import powerworks.block.Block;
 import powerworks.collidable.Hitbox;
 import powerworks.data.Timer;
 import powerworks.event.EventHandler;
@@ -131,6 +130,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	return 0;
     }
 
+    @SuppressWarnings("incomplete-switch")
     @Override
     public void handleKeyControlPress(KeyPress p) {
 	switch (p.getOption()) {
@@ -310,6 +310,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	    case GIVE_CONVEYOR_BELT:
 		switch (p.getType()) {
 		    case PRESSED:
+			inv.giveItem(ItemType.CONVEYOR_BELT, 1);
+			break;
+		    case REPEAT:
 			inv.giveItem(ItemType.CONVEYOR_BELT, 1);
 			break;
 		    default:

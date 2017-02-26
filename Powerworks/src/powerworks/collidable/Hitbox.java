@@ -2,7 +2,7 @@ package powerworks.collidable;
 
 public enum Hitbox {
 
-    PLAYER(0, 8, 8, 8), 
+    PLAYER(8, 16, 16, 16), 
     TILE(0, 0, 16, 16),
     CONVEYOR_BELT_ITEM(1, 0, 14, 16),
     IRON_ORE_ITEM(0, 1, 16, 15),

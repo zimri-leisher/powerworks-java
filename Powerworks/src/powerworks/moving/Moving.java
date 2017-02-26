@@ -22,17 +22,13 @@ public abstract class Moving implements PhysicalObject, Collidable {
     
     public Moving(Hitbox hitbox) {
 	this.hitbox = hitbox;
-	Collidable.collidables.put(this);
+	Collidable.collidables.add(this);
     }
     
     protected boolean getCollision(int moveX, int moveY) {
-	for (Collidable col : Collidable.collidables.retrievePossible(this)) {
-	    if (this != col && col.getHitbox().solid && col.toString() != "Void" && !(this instanceof Player && col instanceof DroppedItem)) {
-		Rectangle otherRect = new Rectangle(col.getXPixel() + col.getHitbox().xStart, col.getYPixel() + col.getHitbox().yStart, col.getHitbox().width, col.getHitbox().height);
-		Rectangle thisRect = new Rectangle(x + hitbox.xStart + moveX, y + hitbox.yStart + moveY, hitbox.width, hitbox.height);
-		if (otherRect.intersects(thisRect))
-		    return true;
-	    }
+	for (Collidable col : Collidable.collidables.getIntersecting(x + moveX, y + moveY, hitbox.width, hitbox.height)) {
+	    if(col != this)
+		return true;
 	}
 	return false;
     }
@@ -78,16 +74,6 @@ public abstract class Moving implements PhysicalObject, Collidable {
 	    hasMoved = false;
 	velX /= AIR_DRAG;
 	velY /= AIR_DRAG;
-    }
-
-    @Override
-    public int getWidthPixels() {
-	return hitbox.width;
-    }
-
-    @Override
-    public int getHeightPixels() {
-	return hitbox.height;
     }
 
     public int getVelX() {
@@ -155,5 +141,15 @@ public abstract class Moving implements PhysicalObject, Collidable {
     @Override
     public Hitbox getHitbox() {
 	return hitbox;
+    }
+    
+    @Override
+    public int getWidthPixels() {
+	return hitbox.width;
+    }
+    
+    @Override
+    public int getHeightPixels() {
+	return hitbox.height;
     }
 }

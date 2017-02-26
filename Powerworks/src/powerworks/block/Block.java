@@ -31,7 +31,7 @@ public class Block implements TexturedObject, Collidable {
 	requiresUpdate = type.defaultRequiresUpdate;
 	System.out.println("test");
 	if (type.hitbox.solid)
-	    Collidable.collidables.put(this);
+	    Collidable.collidables.add(this);
     }
 
     public void render() {
@@ -69,16 +69,6 @@ public class Block implements TexturedObject, Collidable {
     }
 
     @Override
-    public int getWidthPixels() {
-	return type.getHitbox().width;
-    }
-
-    @Override
-    public int getHeightPixels() {
-	return type.getHitbox().height;
-    }
-
-    @Override
     public String toString() {
 	return type.name;
     }
@@ -96,6 +86,16 @@ public class Block implements TexturedObject, Collidable {
     @Override
     public int getYPixel() {
 	return yPixel;
+    }
+    
+    @Override
+    public int getWidthPixels() {
+	return type.hitbox.width;
+    }
+    
+    @Override
+    public int getHeightPixels() {
+	return type.hitbox.height;
     }
 
     @Override

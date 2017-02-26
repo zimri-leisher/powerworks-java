@@ -5,6 +5,7 @@ import powerworks.inventory.item.ItemType;
 import powerworks.io.InputManager;
 import powerworks.io.KeyControlOption;
 import powerworks.io.Logger;
+import powerworks.io.Statistic;
 import powerworks.main.Game;
 import powerworks.moving.entity.Player;
 
@@ -23,9 +24,8 @@ public class ChatCommandExecutor {
 		InputManager.enterKeyBindMode(option);
 	    }
 	} else if(command.equals("printstats")) {
-	    Logger.log(Game.fps.getAverage() + " average fps this play session, " + Game.ups.getAverage() + " average ups this session \n"
-	    	+ "Max fps: " + Game.fps.getMax() + ", max ups: " + Game.ups.getMax());
-	    
+	    Game.logger.logData(Statistic.FPS);
+	    Game.logger.logData(Statistic.UPS);
 	}
     }
 }

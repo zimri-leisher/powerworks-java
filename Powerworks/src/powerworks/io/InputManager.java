@@ -12,9 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import powerworks.graphics.Screen;
-import powerworks.inventory.item.ItemType;
 import powerworks.main.Game;
 
 public class InputManager implements KeyListener, MouseWheelListener, MouseListener, MouseMotionListener {

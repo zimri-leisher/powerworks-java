@@ -1,13 +1,12 @@
 package powerworks.collidable;
 
 import powerworks.data.PhysicalObject;
-import powerworks.data.Quadtree;
-import powerworks.level.Level;
+import powerworks.data.SpatialOrganizer;
 
-public interface Collidable extends PhysicalObject{
-    
-    public static Quadtree<Collidable> collidables = new Quadtree<Collidable>(0, 0, Level.level.getWidthPixels(), Level.level.getHeightPixels());
-    
+public interface Collidable extends PhysicalObject {
+
+    public static SpatialOrganizer<Collidable> collidables = new SpatialOrganizer<Collidable>();
+
     /**
      * Gets the hitbox of the collidable
      * 

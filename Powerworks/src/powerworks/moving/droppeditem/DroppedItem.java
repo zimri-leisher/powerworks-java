@@ -2,7 +2,7 @@ package powerworks.moving.droppeditem;
 
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
-import powerworks.data.Quadtree;
+import powerworks.data.SpatialOrganizer;
 import powerworks.graphics.Screen;
 import powerworks.graphics.Texture;
 import powerworks.graphics.TexturedObject;
@@ -13,7 +13,7 @@ import powerworks.moving.Moving;
 
 public class DroppedItem extends Moving implements TexturedObject {
 
-    public static final Quadtree<DroppedItem> droppedItems = new Quadtree<DroppedItem>(0, 0, Level.level.getWidthPixels(), Level.level.getHeightPixels());
+    public static final SpatialOrganizer<DroppedItem> droppedItems = new SpatialOrganizer<DroppedItem>();
     
     ItemType type;
     Hitbox hitbox;
@@ -33,7 +33,8 @@ public class DroppedItem extends Moving implements TexturedObject {
 	this.type = type;
 	this.x = xPixel;
 	this.y = yPixel;
-	Collidable.collidables.put(this);
+	Collidable.collidables.add(this);
+	droppedItems.add(this);
     }
 
     @Override
@@ -102,16 +103,6 @@ public class DroppedItem extends Moving implements TexturedObject {
     @Override
     public double getScale() {
 	return 1;
-    }
-
-    @Override
-    public int getWidthPixels() {
-	return hitbox.width;
-    }
-
-    @Override
-    public int getHeightPixels() {
-	return hitbox.height;
     }
 
     @Override

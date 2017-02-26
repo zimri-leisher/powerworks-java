@@ -71,7 +71,7 @@ public enum TileType {
 	    if(mat.id == id) {
 		return mat;
 	    }
-	}	
+	}
 	throw new NoSuchTileException("The material with id " + id + " does not exist");
     }
 }

@@ -3,7 +3,6 @@ package powerworks.graphics;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import powerworks.collidable.Collidable;
-import powerworks.level.Level;
 import powerworks.main.Game;
 
 public class Screen {
@@ -45,8 +44,8 @@ public class Screen {
     }
 
     public void renderHitbox(Collidable col) {
-	int xPixel = col.getXPixel() - xOffset;
-	int yPixel = col.getYPixel() - yOffset;
+	int xPixel = col.getXPixel() - xOffset + col.getHitbox().xStart;
+	int yPixel = col.getYPixel() - yOffset + col.getHitbox().yStart;
 	for (int y = 0; y < col.getHitbox().height; y++) {
 	    int ya = (yPixel + y) * width;
 	    for (int x = 0; x < col.getHitbox().width; x++) {

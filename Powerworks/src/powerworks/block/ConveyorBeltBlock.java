@@ -10,7 +10,6 @@ public class ConveyorBeltBlock extends Block {
     }
 
     public static final int CONVEYOR_BELT_ACCELERATION = 1;
-    private int moveDir;
 
 
     public void updateDir() {
@@ -21,9 +20,10 @@ public class ConveyorBeltBlock extends Block {
     // TODO use CommandZones for this
     @Override
     public void update() {
-	//for (Entity entity : Entity.entities.retrieveIn(xPixel, yPixel, 16, 16)) {
+	for (Entity entity : Entity.entities.getIntersecting(xPixel, yPixel, 16, 16)) {
+	    System.out.println(entity);
 	    //entity.addVel((moveDir == 3) ? -CONVEYOR_BELT_ACCELERATION : (moveDir == 1) ? CONVEYOR_BELT_ACCELERATION : 0,
-	//	    (moveDir == 2) ? CONVEYOR_BELT_ACCELERATION : (moveDir == 0) ? -CONVEYOR_BELT_ACCELERATION : 0);
-	//}
+		    //(moveDir == 2) ? CONVEYOR_BELT_ACCELERATION : (moveDir == 0) ? -CONVEYOR_BELT_ACCELERATION : 0);
+	}
     }
 }

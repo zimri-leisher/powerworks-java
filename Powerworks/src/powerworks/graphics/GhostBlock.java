@@ -30,16 +30,6 @@ public class GhostBlock implements TexturedObject {
     }
 
     @Override
-    public int getWidthPixels() {
-	return getTexture().getWidthPixels();
-    }
-
-    @Override
-    public int getHeightPixels() {
-	return getTexture().getHeightPixels();
-    }
-
-    @Override
     public int getYPixel() {
 	return yTile << 4;
     }
@@ -57,5 +47,15 @@ public class GhostBlock implements TexturedObject {
     @Override
     public double getScale() {
 	return 1;
+    }
+
+    @Override
+    public int getWidthPixels() {
+	return type.getHitbox().width;
+    }
+
+    @Override
+    public int getHeightPixels() {
+	return type.getHitbox().height;
     }
 }

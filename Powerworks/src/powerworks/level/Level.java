@@ -111,10 +111,10 @@ public class Level {
 	    System.out.println("Updating blocks took:        " + (System.nanoTime() - time) + " ns");
 	    time = System.nanoTime();
 	}
-	for (Entity e : Entity.entities.retrieveAll()) {
+	for (Entity e : Entity.entities.getAll()) {
 	    e.update();
 	}
-	for (DroppedItem item : DroppedItem.droppedItems.retrieveAll())
+	for (DroppedItem item : DroppedItem.droppedItems.getAll())
 	    item.update();
 	if (show) {
 	    System.out.println("Updating dropped items took: " + (System.nanoTime() - time) + " ns");
@@ -172,7 +172,7 @@ public class Level {
 	    Game.logger.addAndLog(Statistic.DRAW_BLOCKS_AND_TILES, (int) diff, true);
 	    time = System.nanoTime();
 	}
-	for (DroppedItem item : DroppedItem.droppedItems.retrieveIn(xPixel0, yPixel0, xPixel1 - xPixel0, yPixel1 - yPixel0)) {
+	for (DroppedItem item : DroppedItem.droppedItems.getIntersecting(xPixel0, yPixel0, xPixel1 - xPixel0, yPixel1 - yPixel0)) {
 	    item.render();
 	}
 	if (show) {
@@ -200,7 +200,7 @@ public class Level {
      */
     public boolean tryDropItem(ItemType type, int xPixel, int yPixel) {
 	if (spaceForDroppedItem(type, xPixel, yPixel)) {
-	    DroppedItem.droppedItems.put(new DroppedItem(type, xPixel, yPixel));
+	    DroppedItem.droppedItems.add(new DroppedItem(type, xPixel, yPixel));
 	    return true;
 	}
 	return false;
@@ -218,7 +218,7 @@ public class Level {
      * @return true if there is space, false otherwise
      */
     private boolean spaceForDroppedItem(ItemType type, int xPixel, int yPixel) {
-	return !(Collidable.collidables.anyIn(xPixel, yPixel, type.getDroppedHitbox().width, type.getDroppedHitbox().height));
+	return !(Collidable.collidables.anyIntersecting(xPixel, yPixel, type.getDroppedHitbox().width, type.getDroppedHitbox().height));
     }
 
     /**
@@ -285,7 +285,7 @@ public class Level {
 	
 	int xPixel = xTile << 4;
 	int yPixel = yTile << 4;
-	boolean ret = !(Collidable.collidables.anyIn(xPixel, yPixel, type.getHitbox().width, type.getHitbox().height));
+	boolean ret = !(Collidable.collidables.anyIntersecting(xPixel, yPixel, type.getHitbox().width, type.getHitbox().height));
 	return ret;
     }
 
@@ -326,7 +326,7 @@ public class Level {
      * @return the list of DroppedItems that are within the radius
      */
     public List<DroppedItem> getDroppedItems(int xPixel, int yPixel, int radius) {
-	return DroppedItem.droppedItems.retrieveIn(xPixel - radius, yPixel - radius, radius * 2, radius * 2);
+	return DroppedItem.droppedItems.getIntersecting(xPixel - radius, yPixel - radius, radius * 2, radius * 2);
     }
 
     /**

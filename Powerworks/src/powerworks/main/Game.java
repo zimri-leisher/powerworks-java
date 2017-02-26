@@ -20,7 +20,6 @@ import java.util.Scanner;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import powerworks.chat.ChatCommandExecutor;
-import powerworks.data.Quadtree;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
 import powerworks.event.EventManager;
@@ -102,7 +101,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
 	EventManager.registerEventListener(this);
-	InputManager.registerKeyControlHandler(this, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES);
+	InputManager.registerKeyControlHandler(this, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES, KeyControlOption.RENDER_HITBOX);
 	InputManager.registerMouseWheelControlHandler(this, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
     }
 
@@ -185,7 +184,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    System.out.println("----------");
 	Task.update();
 	Level.level.update();
-	Quadtree.update();
 	mouse.update();
 	SynchronizedAnimatedTexture.update();
 	if (showUpdateTimes) {
@@ -250,7 +248,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		    g2d.dispose();
 		    showRenderTimes = false;
 		} while (bufferStrat.contentsRestored());
-		if(showRenderTimes)
+		if (showRenderTimes)
 		    time = System.nanoTime();
 		bufferStrat.show();
 		if (showRenderTimes) {
@@ -416,6 +414,11 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 			break;
 		}
 		break;
+	    case RENDER_HITBOX:
+		switch (pressType) {
+		    case PRESSED:
+			showHitboxes = !showHitboxes;
+		}
 	    default:
 		break;
 	}

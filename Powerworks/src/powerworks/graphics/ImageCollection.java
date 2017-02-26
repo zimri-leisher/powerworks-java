@@ -7,6 +7,8 @@ import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import powerworks.exception.InvalidResourceException;
+import powerworks.main.Game;
 
 public enum ImageCollection {
     CURSOR_RIGHT_CLICK("/textures/cursor/cursor_right_click_anim.png", 8), 
@@ -21,7 +23,11 @@ public enum ImageCollection {
     boolean[] hasTransparency;
 
     private ImageCollection(String path, int numberOfFrames) {
-	load(path, numberOfFrames);
+	try {
+	    load(path, numberOfFrames);
+	} catch (InvalidResourceException e) {
+	    e.printStackTrace();
+	}
     }
     
     public int getWidth() {
@@ -36,20 +42,17 @@ public enum ImageCollection {
 	return pixels;
     }
     
-    private void load(String path, int numberOfFrames) {
+    private void load(String path, int numberOfFrames) throws InvalidResourceException {
 	System.out.println("Loading ImageCollection " + toString());
 	try {
 	    hasTransparency = new boolean[numberOfFrames];
 	    BufferedImage image = ImageIO.read(ImageCollection.class.getResource(path));
-	    if((image.getWidth() / numberOfFrames) % 1 != 0)
-		System.err.println("ImageCollection " + toString() + " may not be sized properly, as the image cannot be divided equally");
-	    BufferedImage convertedImage = null;
-	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-	    GraphicsDevice gd = ge.getDefaultScreenDevice();
-	    GraphicsConfiguration gc = gd.getDefaultConfiguration();
-	    convertedImage = gc.createCompatibleImage(image.getWidth(), image.getHeight(), image.getTransparency());
-	    width = convertedImage.getWidth() / numberOfFrames;
-	    height = convertedImage.getHeight();
+	    if((image.getWidth() / numberOfFrames) % 1 != 0) {
+		Game.logger.error("ImageCollection " + toString() + " may not be sized properly, as the image cannot be divided equally");
+		throw new InvalidResourceException();
+	    }
+	    width = image.getWidth() / numberOfFrames;
+	    height = image.getHeight();
 	    pixels = new int[numberOfFrames][width * height];
 	    while (numberOfFrames > 0) {
 		numberOfFrames--;

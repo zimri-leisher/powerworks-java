@@ -29,7 +29,7 @@ public class Tile implements Collidable, TexturedObject{
 	texture = type.getTexture();
 	this.rotation = rotation;
 	if (type.hitbox.solid)
-	    Collidable.collidables.put(this);
+	    Collidable.collidables.add(this);
     }
 
     /**
@@ -50,7 +50,7 @@ public class Tile implements Collidable, TexturedObject{
 	    rotation = 0;
 	}
 	if (type.hitbox.solid)
-	    Collidable.collidables.put(this);
+	    Collidable.collidables.add(this);
     }
 
     /**
@@ -130,7 +130,7 @@ public class Tile implements Collidable, TexturedObject{
 	}
 	texture = type.getTexture();
 	if (type.hitbox.solid)
-	    Collidable.collidables.put(this);
+	    Collidable.collidables.add(this);
 	else 
 	    Collidable.collidables.remove(this);
     }
@@ -162,11 +162,11 @@ public class Tile implements Collidable, TexturedObject{
 
     @Override
     public int getWidthPixels() {
-	return 16;
+	return type.hitbox.width;
     }
 
     @Override
     public int getHeightPixels() {
-	return 16;
+	return type.hitbox.height;
     }
 }
