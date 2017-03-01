@@ -10,6 +10,7 @@ import powerworks.graphics.GhostBlock;
 import powerworks.graphics.HUD;
 import powerworks.graphics.Screen;
 import powerworks.graphics.StaticTextureCollection;
+import powerworks.graphics.gui.PlayerInventoryGUI;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
@@ -26,6 +27,8 @@ import powerworks.moving.droppeditem.DroppedItem;
 
 public class Player extends Entity implements KeyControlHandler, EventListener, MouseControlHandler {
 
+    public static int MOVE_SPEED = 1, SPRINT_SPEED = 2;
+    public PlayerInventoryGUI invGui;
     public HUD hud;
     Inventory inv;
     boolean invOpen = false;
@@ -33,7 +36,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
     public GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
     int lastMouseXPixel = 0, lastMouseYPixel = 0;
     boolean moving, sprinting;
-    Timer removing = new Timer(96, 0, 0, 1);
+    Timer removing = new Timer(96, 0, 0, 1), repeat = new Timer(40, 0, 0, 1);
 
     public Player(int x, int y, String name) {
 	super(Hitbox.PLAYER);
@@ -45,10 +48,12 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	inv = new Inventory("", 10, 4);
 	EventManager.registerEventListener(this);
 	InputManager.registerKeyControlHandler(this, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
-		KeyControlOption.ROTATE_SELECTED_BLOCK, 
-		KeyControlOption.SLOT_1, KeyControlOption.SLOT_2, KeyControlOption.SLOT_3, KeyControlOption.SLOT_4, KeyControlOption.SLOT_5, KeyControlOption.SLOT_6, KeyControlOption.SLOT_7, KeyControlOption.SLOT_8,
-		KeyControlOption.GIVE_CONVEYOR_BELT, KeyControlOption.DROP_ITEM);
+		KeyControlOption.ROTATE_SELECTED_BLOCK,
+		KeyControlOption.SLOT_1, KeyControlOption.SLOT_2, KeyControlOption.SLOT_3, KeyControlOption.SLOT_4, KeyControlOption.SLOT_5, KeyControlOption.SLOT_6, KeyControlOption.SLOT_7,
+		KeyControlOption.SLOT_8,
+		KeyControlOption.GIVE_CONVEYOR_BELT, KeyControlOption.DROP_ITEM, KeyControlOption.OPEN_PLAYER_INVENTORY);
 	InputManager.registerMouseControlHandler(this, MouseControlOption.PLACE_BLOCK, MouseControlOption.REMOVE_BLOCK);
+	this.invGui = new PlayerInventoryGUI();
     }
 
     public Player(int x, int y) {
@@ -60,18 +65,22 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	long time = 0;
 	int mouseXPixel = InputManager.getMouseLevelXPixel();
 	int mouseYPixel = InputManager.getMouseLevelYPixel();
-	if(Game.showUpdateTimes)
+	if (Game.showUpdateTimes)
 	    time = System.nanoTime();
 	if (velX != 0 || velY != 0)
 	    move();
 	if (getHeldItem() != null && getHeldItem().isPlaceable()) {
+	    Item item = getHeldItem();
 	    if (mouseXPixel != lastMouseXPixel || mouseYPixel != lastMouseYPixel) {
 		int xTile = mouseXPixel >> 4;
 		int yTile = mouseYPixel >> 4;
-		if (Level.level.spaceForBlock(getHeldItem().type.getPlacedBlock(), xTile, yTile))
-		    block.placeable = true;
+		if (item.getPlacedBlock().isSolid())
+		    if (Level.level.spaceForBlock(getHeldItem().type.getPlacedBlock(), xTile, yTile))
+			block.placeable = true;
+		    else
+			block.placeable = false;
 		else
-		    block.placeable = false;
+		    block.placeable = true;
 		block.xTile = xTile;
 		block.yTile = yTile;
 		lastMouseXPixel = mouseXPixel;
@@ -82,7 +91,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	} else {
 	    block.render = false;
 	}
-	if(Game.showUpdateTimes)
+	if (Game.showUpdateTimes)
 	    System.out.println("Updating player took:        " + (System.nanoTime() - time) + " ns");
     }
 
@@ -93,6 +102,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
     @Override
     public void render() {
 	Screen.screen.renderTexturedObject(this);
+	hud.render();
+	if (invOpen)
+	    invGui.render();
 	if (Game.game.showHitboxes())
 	    renderHitbox();
     }
@@ -135,56 +147,56 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
     public void handleKeyControlPress(KeyPress p) {
 	switch (p.getOption()) {
 	    case SLOT_1:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			hud.setSelectedSlotNum(0);
 			break;
 		}
 		break;
 	    case SLOT_2:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			hud.setSelectedSlotNum(1);
 			break;
 		}
 		break;
 	    case SLOT_3:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			hud.setSelectedSlotNum(2);
 			break;
 		}
 		break;
 	    case SLOT_4:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			hud.setSelectedSlotNum(3);
 			break;
 		}
 		break;
 	    case SLOT_5:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			hud.setSelectedSlotNum(4);
 			break;
 		}
 		break;
 	    case SLOT_6:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			hud.setSelectedSlotNum(5);
 			break;
 		}
 		break;
 	    case SLOT_7:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			hud.setSelectedSlotNum(6);
 			break;
 		}
 		break;
 	    case SLOT_8:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			hud.setSelectedSlotNum(7);
 			break;
@@ -194,15 +206,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			if (sprinting)
-			    addVel(0, -2);
+			    addVel(0, -SPRINT_SPEED);
 			else
-			    addVel(0, -1);
+			    addVel(0, -MOVE_SPEED);
 			break;
 		    case REPEAT:
 			if (sprinting)
-			    addVel(0, -2);
+			    addVel(0, -SPRINT_SPEED);
 			else
-			    addVel(0, -1);
+			    addVel(0, -MOVE_SPEED);
 			break;
 		    default:
 			break;
@@ -212,15 +224,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			if (sprinting)
-			    addVel(0, 2);
+			    addVel(0, SPRINT_SPEED);
 			else
-			    addVel(0, 1);
+			    addVel(0, MOVE_SPEED);
 			break;
 		    case REPEAT:
 			if (sprinting)
-			    addVel(0, 2);
+			    addVel(0, SPRINT_SPEED);
 			else
-			    addVel(0, 1);
+			    addVel(0, MOVE_SPEED);
 			break;
 		    default:
 			break;
@@ -242,15 +254,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			if (sprinting)
-			    addVel(-2, 0);
+			    addVel(-SPRINT_SPEED, 0);
 			else
-			    addVel(-1, 0);
+			    addVel(-MOVE_SPEED, 0);
 			break;
 		    case REPEAT:
 			if (sprinting)
-			    addVel(-2, 0);
+			    addVel(-SPRINT_SPEED, 0);
 			else
-			    addVel(-1, 0);
+			    addVel(-MOVE_SPEED, 0);
 			break;
 		    default:
 			break;
@@ -272,15 +284,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			if (sprinting)
-			    addVel(2, 0);
+			    addVel(SPRINT_SPEED, 0);
 			else
-			    addVel(1, 0);
+			    addVel(MOVE_SPEED, 0);
 			break;
 		    case REPEAT:
 			if (sprinting)
-			    addVel(2, 0);
+			    addVel(SPRINT_SPEED, 0);
 			else
-			    addVel(1, 0);
+			    addVel(MOVE_SPEED, 0);
 			break;
 		    default:
 			break;
@@ -311,10 +323,15 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			inv.giveItem(ItemType.CONVEYOR_BELT, 1);
+			repeat.play();
+			repeat.setStopOnFinish(true);
 			break;
 		    case REPEAT:
-			inv.giveItem(ItemType.CONVEYOR_BELT, 1);
+			if (repeat.getCurrentTick() == 1)
+			    inv.giveItem(ItemType.CONVEYOR_BELT, 1);
 			break;
+		    case RELEASED:
+			repeat.resetAll();
 		    default:
 			break;
 		}
@@ -325,6 +342,13 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 			inv.giveItem(ItemType.ORE_MINER, 1);
 			break;
 		    default:
+			break;
+		}
+		break;
+	    case OPEN_PLAYER_INVENTORY:
+		switch(p.getType()) {
+		    case PRESSED:
+			invOpen = !invOpen;
 			break;
 		}
 		break;
@@ -366,6 +390,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 			break;
 		    case REPEAT:
 			if (removing.getCurrentTick() == 1) {
+			    System.out.println("should remove");
 			    Level.level.tryRemoveBlock(InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
 			    removing.resetTimes();
 			}

@@ -8,11 +8,11 @@ public enum StaticTextureCollection {
     StaticTextureCollectionUnit[] textures;
 
     private StaticTextureCollection(ImageCollection col) {
-	textures = new StaticTextureCollectionUnit[col.pixels.length];
+	textures = new StaticTextureCollectionUnit[col.getPixels().length];
 	width = col.getWidth();
 	height = col.getHeight();
-	for(int i = 0; i < col.pixels.length; i++) {
-	    textures[i] = new StaticTextureCollectionUnit(col.pixels[i], col.hasTransparency[i]);
+	for(int i = 0; i < col.getPixels().length; i++) {
+	    textures[i] = new StaticTextureCollectionUnit(col.getPixels()[i], col.hasTransparency()[i]);
 	}
     }
 

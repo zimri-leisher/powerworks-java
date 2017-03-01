@@ -1,6 +1,5 @@
 package powerworks.moving;
 
-import java.awt.Rectangle;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
 import powerworks.data.PhysicalObject;
@@ -8,7 +7,6 @@ import powerworks.event.EventManager;
 import powerworks.event.ViewMoveEvent;
 import powerworks.graphics.Screen;
 import powerworks.level.Level;
-import powerworks.moving.droppeditem.DroppedItem;
 import powerworks.moving.entity.Player;
 
 public abstract class Moving implements PhysicalObject, Collidable {
@@ -26,7 +24,7 @@ public abstract class Moving implements PhysicalObject, Collidable {
     }
     
     protected boolean getCollision(int moveX, int moveY) {
-	for (Collidable col : Collidable.collidables.getIntersecting(x + moveX, y + moveY, hitbox.width, hitbox.height)) {
+	for (Collidable col : Collidable.collidables.getIntersecting(x + moveX + hitbox.xStart, y + moveY + hitbox.yStart, hitbox.width, hitbox.height)) {
 	    if(col != this)
 		return true;
 	}
@@ -143,13 +141,4 @@ public abstract class Moving implements PhysicalObject, Collidable {
 	return hitbox;
     }
     
-    @Override
-    public int getWidthPixels() {
-	return hitbox.width;
-    }
-    
-    @Override
-    public int getHeightPixels() {
-	return hitbox.height;
-    }
 }

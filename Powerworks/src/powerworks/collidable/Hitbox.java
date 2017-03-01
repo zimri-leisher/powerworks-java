@@ -23,4 +23,9 @@ public enum Hitbox {
     private Hitbox(boolean solid) {
 	this.solid = solid;
     }
+    
+    @Override
+    public String toString() {
+	return "(" + xStart + ", " + yStart +") - (" + (xStart + width) + ", " + (yStart + height) + ")";
+    }
 }

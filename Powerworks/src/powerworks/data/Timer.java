@@ -29,6 +29,7 @@ public class Timer {
 	this.tickOffset = tickOffset;
 	this.minTicks = minTicks;
 	this.maxTicks = maxTicks;
+	timers.add(this);
     }
 
     /**

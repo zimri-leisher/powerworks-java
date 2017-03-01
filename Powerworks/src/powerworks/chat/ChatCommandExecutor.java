@@ -26,6 +26,13 @@ public class ChatCommandExecutor {
 	} else if(command.equals("printstats")) {
 	    Game.logger.logData(Statistic.FPS);
 	    Game.logger.logData(Statistic.UPS);
+	} else if(command.equals("setmovespeed")) {
+	    Player.MOVE_SPEED = Integer.parseInt(args[0]);
+	} else if(command.equals("setsprintspeed")) {
+	    Player.SPRINT_SPEED = Integer.parseInt(args[0]);
+	} else if(command.equals("setplayerinvpos")) {
+	    Game.getMainPlayer().invGui.setXPixel(Integer.parseInt(args[0]));
+	    Game.getMainPlayer().invGui.setYPixel(Integer.parseInt(args[1]));
 	}
     }
 }

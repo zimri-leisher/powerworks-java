@@ -1,18 +1,13 @@
 package powerworks.graphics.gui;
 
-import powerworks.graphics.StaticTexture;
 
-public class GUITextField {
+public class GUITextField extends GUIElement {
 
-    StaticTexture background;
-    StaticTexture corners;
-    StaticTexture edges;
-    /**
-     * In tiles
-     */
-    int width, height;
-    /**
-     * In pixels
-     */
-    int x, y;
+    protected GUITextField(int xPixel, int yPixel, GUI parent) {
+	super(xPixel, yPixel, parent);
+    }
+
+    @Override
+    public void render() {
+    }
 }

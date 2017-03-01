@@ -1,6 +1,5 @@
 package powerworks.inventory;
 
-import powerworks.graphics.gui.GUIPane;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
 
@@ -10,7 +9,6 @@ public class Inventory {
     String name;
     int width;
     int height;
-    GUIPane gui;
 
     public Inventory(Item[] items, String name, int width, int height) {
 	this.items = items;
@@ -36,6 +34,18 @@ public class Inventory {
      */
     public void setItem(ItemType type, int index) {
 	items[index] = new Item(type);
+    }
+    
+    public int getSize() {
+	return items.length;
+    }
+    
+    public int getWidth() {
+	return width;
+    }
+    
+    public int getHeight() {
+	return height;
     }
 
     /**

@@ -26,7 +26,7 @@ public class GhostBlock implements TexturedObject {
 
     @Override
     public Texture getTexture() {
-	return type.getTexture();
+	return (placeable) ? type.getPlaceableTexture() : type.getNotPlaceableTexture();
     }
 
     @Override
@@ -47,15 +47,5 @@ public class GhostBlock implements TexturedObject {
     @Override
     public double getScale() {
 	return 1;
-    }
-
-    @Override
-    public int getWidthPixels() {
-	return type.getHitbox().width;
-    }
-
-    @Override
-    public int getHeightPixels() {
-	return type.getHitbox().height;
     }
 }

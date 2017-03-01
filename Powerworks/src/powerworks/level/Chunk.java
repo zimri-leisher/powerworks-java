@@ -29,7 +29,7 @@ public class Chunk {
 	        }
 	        for(int i = 0; i < 64; i++) {
 	            int xTile = i & 15;
-	            c.tiles[i] = new Tile(TileType.getTileType(Integer.parseInt(split[i])), xTile + c.xTile, (i - xTile) / 16 + c.yTile);
+	            c.tiles[i] = new Tile(TileType.getTileType(Integer.parseInt(split[i])), xTile + c.xTile, xTile >> 4 + c.yTile);
 	        }
 	    }
 	} catch (IOException e) {

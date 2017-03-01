@@ -21,7 +21,6 @@ public class ConveyorBeltBlock extends Block {
     @Override
     public void update() {
 	for (Entity entity : Entity.entities.getIntersecting(xPixel, yPixel, 16, 16)) {
-	    System.out.println(entity);
 	    //entity.addVel((moveDir == 3) ? -CONVEYOR_BELT_ACCELERATION : (moveDir == 1) ? CONVEYOR_BELT_ACCELERATION : 0,
 		    //(moveDir == 2) ? CONVEYOR_BELT_ACCELERATION : (moveDir == 0) ? -CONVEYOR_BELT_ACCELERATION : 0);
 	}

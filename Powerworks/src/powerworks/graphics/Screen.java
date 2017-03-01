@@ -3,6 +3,7 @@ package powerworks.graphics;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import powerworks.collidable.Collidable;
+import powerworks.level.Level;
 import powerworks.main.Game;
 
 public class Screen {
@@ -14,6 +15,7 @@ public class Screen {
     public int[] objects;
     public int[] overlay;
     public int xOffset, yOffset;
+    Graphics2D g2d;
 
     public Screen(int width, int height, int[] objects, int[] overlay) {
 	this.originalHeight = height;
@@ -30,6 +32,14 @@ public class Screen {
 	this.objects = pixels;
     }
 
+    public void feed(Graphics2D g2d) {
+	this.g2d = g2d;
+    }
+    
+    public boolean isHungry() {
+	return g2d == null;
+    }
+    
     /**
      * Sets offset for the screen (used for movement of camera)
      * 
@@ -39,8 +49,8 @@ public class Screen {
      *            the y pixel to offset the screen
      */
     public void setOffset(int xOffset, int yOffset) {
-	if(xOffset - width / 2 >= 0) this.xOffset = xOffset;
-	if(yOffset - height / 2 >= 0) this.yOffset = yOffset;
+	if(xOffset - width / 2 >= 0 && xOffset + Screen.screen.width < Level.level.getWidthPixels()) this.xOffset = xOffset;
+	if(yOffset - height / 2 >= 0 && yOffset + Screen.screen.height < Level.level.getHeightPixels()) this.yOffset = yOffset;
     }
 
     public void renderHitbox(Collidable col) {
@@ -136,10 +146,11 @@ public class Screen {
 		    int pixel = objPixels[xc + yc];
 		    int coord = xa + ya;
 		    int alpha = (pixel >> 24) & 0xFF;
+		    int oPixel = overlay[coord];
 		    if (alpha == 255)
 			overlay[coord] = pixel;
 		    else if (alpha != 0)
-			overlay[coord] = combineColors(pixel, overlay[coord]);
+			overlay[coord] = combineColors(pixel, oPixel);
 		}
 	    }
 	} else {
@@ -195,7 +206,6 @@ public class Screen {
 		else
 		    pixel = objPixels[(15 - xc) * widthPixels + yc];
 		int alpha = (pixel >> 24) & 0xFF;
-		
 		if (alpha == 255)
 		    objects[coord2] = pixel;
 		else if (alpha != 0)
@@ -204,10 +214,11 @@ public class Screen {
 	}
     }
 
-    public void renderText(String text, int color, int xPixel, int yPixel, Graphics2D g2d) {
+    public void renderText(Object o, int color, int xPixel, int yPixel) {
+	if(isHungry()) return;
 	g2d.setFont(Game.font);
 	g2d.setColor(new Color(color));
-	g2d.drawString(text, xPixel * Game.scale, yPixel * Game.scale);
+	g2d.drawString(o.toString(), xPixel * Game.scale, yPixel * Game.scale);
     }
 
     public static int combineColors(int foregroundColor, int backgroundColor) {

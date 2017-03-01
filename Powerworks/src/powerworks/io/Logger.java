@@ -134,7 +134,9 @@ public class Logger {
 	    addData(e.getKey(), e.getValue());
 	}
 	if (toLog.size() != 0) {
+	    log("--------------------------------------");
 	    log("Writing all data that was told to wait");
+	    log("--------------------------------------");
 	    for (Statistic s : toLog) {
 		logData(s);
 	    }

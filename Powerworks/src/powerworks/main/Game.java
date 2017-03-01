@@ -20,6 +20,7 @@ import java.util.Scanner;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import powerworks.chat.ChatCommandExecutor;
+import powerworks.data.Timer;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
 import powerworks.event.EventManager;
@@ -27,7 +28,9 @@ import powerworks.event.ViewMoveEvent;
 import powerworks.event.ZoomEvent;
 import powerworks.graphics.Mouse;
 import powerworks.graphics.Screen;
+import powerworks.graphics.StaticTexture;
 import powerworks.graphics.SynchronizedAnimatedTexture;
+import powerworks.graphics.gui.GUI;
 import powerworks.io.ControlPressType;
 import powerworks.io.InputManager;
 import powerworks.io.KeyControlHandler;
@@ -79,13 +82,13 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static boolean showUpdateTimes = false;
 
     private Game() {
+	loadFont();
 	setPreferredSize(new Dimension(width * scale, height * scale));
 	frame = new JFrame();
 	logger = new Logger();
 	input = new InputManager();
 	mouse = new Mouse();
 	player = new Player(Level.level.getWidthPixels() / 2, Level.level.getHeightPixels() / 2);
-	System.out.println(player.getTexture().getWidthPixels());
 	scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
 	scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
 	allPlayerNames = new ArrayList<String>();
@@ -96,7 +99,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	addMouseWheelListener(input);
 	addMouseListener(input);
 	addMouseMotionListener(input);
-	loadFont();
 	setCursor(Toolkit.getDefaultToolkit().createCustomCursor(
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
@@ -185,6 +187,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	Task.update();
 	Level.level.update();
 	mouse.update();
+	Timer.update();
 	SynchronizedAnimatedTexture.update();
 	if (showUpdateTimes) {
 	    System.out.println("TOTAL:                       " + (System.nanoTime() - time) + " ns");
@@ -203,19 +206,19 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    time = startTime = System.nanoTime();
 	}
 	do {
-	    if (StateManager.state == StateManager.INGAME) {
-		do {
+	    do {
+		Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
+		if (showRenderTimes) {
+		    long diff = System.nanoTime() - time;
+		    logger.addAndLog(Statistic.GET_DRAW_GRAPHICS, (int) diff, true);
+		    time = System.nanoTime();
+		}
+		if (StateManager.state == StateManager.INGAME) {
 		    for (int i = 0; i < overlay.length; i++)
 			overlay[i] = 0;
 		    if (showRenderTimes) {
 			long diff = System.nanoTime() - time;
 			logger.addAndLog(Statistic.OVERLAY_CLEAR, (int) diff, true);
-			time = System.nanoTime();
-		    }
-		    Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
-		    if (showRenderTimes) {
-			long diff = System.nanoTime() - time;
-			logger.addAndLog(Statistic.GET_DRAW_GRAPHICS, (int) diff, true);
 			time = System.nanoTime();
 		    }
 		    Level.level.render(scrollHelperX1, scrollHelperY1, player);
@@ -227,27 +230,21 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 			Game.logger.addAndLog(Statistic.RENDER_OBJECTS_TO_GRAPHICS, (int) diff, true);
 			time = System.nanoTime();
 		    }
-		    player.hud.render(g2d);
-		    if (showRenderTimes) {
-			long diff = System.nanoTime() - time;
-			Game.logger.addAndLog(Statistic.DRAW_HUD, (int) diff, true);
-			time = System.nanoTime();
-		    }
 		    mouse.render();
 		    if (showRenderTimes) {
 			long diff = System.nanoTime() - time;
 			Game.logger.addAndLog(Statistic.DRAW_MOUSE, (int) diff, true);
 			time = System.nanoTime();
 		    }
+		    
 		    g2d.drawImage(layer2, 0, 0, getWidth(), getHeight(), null);
 		    if (showRenderTimes) {
 			long diff = System.nanoTime() - time;
 			Game.logger.addAndLog(Statistic.RENDER_OVERLAY_TO_GRAPHICS, (int) diff, true);
 			time = System.nanoTime();
 		    }
-		    g2d.dispose();
-		    showRenderTimes = false;
-		} while (bufferStrat.contentsRestored());
+		} else if (StateManager.state == StateManager.MAIN_MENU) {
+		}
 		if (showRenderTimes)
 		    time = System.nanoTime();
 		bufferStrat.show();
@@ -255,8 +252,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		    Game.logger.addAndLog(Statistic.SHOW_BUFFER_STRAT, (int) (System.nanoTime() - time), true);
 		    Game.logger.addAndLog(Statistic.TOTAL_RENDER_TIME, (int) (System.nanoTime() - startTime), true);
 		}
-	    } else if (StateManager.state == StateManager.MAIN_MENU) {
-	    }
+	    } while (bufferStrat.contentsRestored());
+	    showRenderTimes = false;
 	} while (bufferStrat.contentsLost());
     }
 
@@ -303,6 +300,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
+	try {
 	frame.setResizable(false);
 	frame.setTitle("Powerworks - Loading");
 	frame.add(game);
@@ -327,6 +325,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    }
 	}
 	scanner.close();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	    logger.close();
+	}
     }
 
     public boolean showHitboxes() {
@@ -367,7 +369,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		}
 		break;
 	    case ZOOM_OUT:
-		if (zoomFactor < 5) {
+		if (zoomFactor < 4) {
 		    zoomFactor *= 1.1;
 		    zoomedWidth = (int) (width * zoomFactor);
 		    zoomedHeight = (int) (height * zoomFactor);
@@ -408,8 +410,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case SHOW_RENDER_TIMES:
 		switch (pressType) {
 		    case PRESSED:
-			System.out.println(getDeviceConfigurationString(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()));
-			// showRenderTimes = true;
+			//System.out.println(getDeviceConfigurationString(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()));
+			showRenderTimes = true;
 		    default:
 			break;
 		}

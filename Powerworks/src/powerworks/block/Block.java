@@ -14,22 +14,11 @@ public class Block implements TexturedObject, Collidable {
     BlockType type;
     boolean requiresUpdate = true;
     
-    /**
-     * Instantiates a Block object
-     * 
-     * @param type
-     *            the BlockType to use
-     * @param xTile
-     *            the x tile
-     * @param yTile
-     *            the y tile
-     */
     public Block(BlockType type, int xTile, int yTile) {
 	this.xPixel = xTile << 4;
 	this.yPixel = yTile << 4;
 	this.type = type;
 	requiresUpdate = type.defaultRequiresUpdate;
-	System.out.println("test");
 	if (type.hitbox.solid)
 	    Collidable.collidables.add(this);
     }
@@ -53,6 +42,10 @@ public class Block implements TexturedObject, Collidable {
 
     public boolean isPlaceable() {
 	return type.placeable;
+    }
+    
+    public boolean isSolid() {
+	return type.hitbox.solid;
     }
 
     @Override
@@ -86,16 +79,6 @@ public class Block implements TexturedObject, Collidable {
     @Override
     public int getYPixel() {
 	return yPixel;
-    }
-    
-    @Override
-    public int getWidthPixels() {
-	return type.hitbox.width;
-    }
-    
-    @Override
-    public int getHeightPixels() {
-	return type.hitbox.height;
     }
 
     @Override

@@ -15,13 +15,6 @@ public class Tile implements Collidable, TexturedObject{
     public TileType type;
     private int rotation;
 
-    /**
-     * Instantiates a new Tile object
-     * @param type the TileType
-     * @param xTile the x tile
-     * @param yTile the y tile
-     * @param rotation the rotation of the tile
-     */
     public Tile(TileType type, int xTile, int yTile, int rotation) {
 	this.type = type;
 	this.xPixel = xTile << 4;
@@ -32,12 +25,6 @@ public class Tile implements Collidable, TexturedObject{
 	    Collidable.collidables.add(this);
     }
 
-    /**
-     * Instantiates a new Tile object
-     * @param type the TileType
-     * @param xTile the x tile
-     * @param yTile the y tile
-     */
     public Tile(TileType type, int xTile, int yTile) {
 	this.type = type;
 	this.xPixel = xTile << 4;
@@ -53,11 +40,6 @@ public class Tile implements Collidable, TexturedObject{
 	    Collidable.collidables.add(this);
     }
 
-    /**
-     * Gets the texture
-     * 
-     * @return the texture
-     */
     @Override
     public Texture getTexture() {
 	return texture;
@@ -73,53 +55,25 @@ public class Tile implements Collidable, TexturedObject{
 	return rotation;
     }
 
-    /**
-     * Converts this to a string
-     * 
-     * @return the name of the material
-     */
     @Override
     public String toString() {
 	return type.name;
     }
 
-    /**
-     * Renders this
-     * 
-     * @param screen
-     *            the screen to render it on
-     */
     public void render() {
 	Screen.screen.renderTexturedObject(this);
 	if (Game.game.showHitboxes() && type.hitbox.solid)
 	    renderHitbox();
     }
 
-    /**
-     * Checks if this can be broken
-     * 
-     * @return true if breakable, false otherwise
-     */
     public boolean isBreakable() {
 	return type.breakable;
     }
 
-    /**
-     * Checks if this is solid
-     * 
-     * @return true if solid, false otherwise
-     */
     public boolean isSolid() {
 	return type.hitbox.solid;
     }
 
-    /**
-     * Sets the material of this
-     * 
-     * @param type
-     *            the material to set it to
-     * @return
-     */
     public void setType(TileType type) {
 	this.type = type;
 	if (type.rotateRandomly) {
@@ -158,15 +112,5 @@ public class Tile implements Collidable, TexturedObject{
     @Override
     public double getScale() {
 	return 1;
-    }
-
-    @Override
-    public int getWidthPixels() {
-	return type.hitbox.width;
-    }
-
-    @Override
-    public int getHeightPixels() {
-	return type.hitbox.height;
     }
 }

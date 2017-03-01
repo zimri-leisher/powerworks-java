@@ -18,25 +18,22 @@ public enum StaticTexture implements Texture{
     
     CONVEYOR_BELT_ITEM(Image.CONVEYOR_BELT_ITEM),
     
-    CONVEYOR_BELT_PLACEABLE(ImageCollection.CONVEYOR_BELT_CONNECTED_LEFT.getPixels()[0], true, ImageCollection.CONVEYOR_BELT_CONNECTED_LEFT.getWidth(), ImageCollection.CONVEYOR_BELT_CONNECTED_LEFT.getHeight()),
-    CONVEYOR_BELT_NOT_PLACEABLE(ImageCollection.CONVEYOR_BELT_CONNECTED_LEFT.getPixels()[0], false, ImageCollection.CONVEYOR_BELT_CONNECTED_LEFT.getWidth(), ImageCollection.CONVEYOR_BELT_CONNECTED_LEFT.getHeight());
+    CONVEYOR_BELT_PLACEABLE(ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getPixels()[0], true, ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getWidth(), ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getHeight()),
+    CONVEYOR_BELT_NOT_PLACEABLE(ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getPixels()[0], false, ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getWidth(), ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getHeight()),
     
+    ITEM_SLOT(Image.ITEM_SLOT),
+    ITEM_SLOT_HIGHTLIGHT(ImageModifier.modify(Image.ITEM_SLOT_HIGHLIGHT, ImageModifier.SCALE, 16), 16, 16, true),
+    
+    PLAYER_INVENTORY(ImageModifier.modify(Image.PLAYER_INVENTORY.getPixels(), Image.PLAYER_INVENTORY.getWidthPixels(), Image.PLAYER_INVENTORY.getHeightPixels(), ImageModifier.SCALE, 2), Image.PLAYER_INVENTORY.getWidthPixels() * 2, Image.PLAYER_INVENTORY.getHeightPixels() * 2, Image.PLAYER_INVENTORY.hasTransparency());
     private int[] pixels;
-    private final int width, height;
+    private final int widthPixels, heightPixels;
     private final boolean hasTransparency;
     
     private StaticTexture(Image image) {
 	this.pixels = image.getPixels();
-	this.width = image.getWidth();
-	this.height = image.getHeight();
+	this.widthPixels = image.getWidthPixels();
+	this.heightPixels = image.getHeightPixels();
 	this.hasTransparency = image.hasTransparency();
-    }
-    
-    private StaticTexture(int[] pixels, final int height, final int width, final boolean HAS_TRANSPARENCY) {
-	this.pixels = pixels;
-	this.width = width;
-	this.height = height;
-	this.hasTransparency = HAS_TRANSPARENCY;
     }
     
     /**
@@ -45,10 +42,24 @@ public enum StaticTexture implements Texture{
      * @param hue the hue (true is green, false is red)
      */
     private StaticTexture(int[] pixels, boolean hue, int width, int height) {
-	pixels = ImageModifier.setAlpha((hue) ? ImageModifier.getPixelsInGreen(pixels) : ImageModifier.getPixelsInRed(pixels), 127);
+	this.pixels = ImageModifier.modify(ImageModifier.modify(pixels, width, height, (hue) ? ImageModifier.TO_GREEN : ImageModifier.TO_RED, -1), width, height, ImageModifier.SET_ALPHA, 0.5);
 	this.hasTransparency = true;
-	this.width = width;
-	this.height = height;
+	this.widthPixels = width;
+	this.heightPixels = height;
+    }
+    
+    private StaticTexture(int[] pixels, int width, int height, boolean hasTransparency) {
+	this.pixels = pixels;
+	this.hasTransparency = hasTransparency;
+	this.widthPixels = width;
+	this.heightPixels = height;
+    }
+    
+    private StaticTexture(int[] pixels, Image copyStatsFrom) {
+	this.pixels = pixels;
+	this.hasTransparency = copyStatsFrom.hasTransparency();
+	this.widthPixels = copyStatsFrom.getWidthPixels();
+	this.heightPixels = copyStatsFrom.getHeightPixels();
     }
 
     @Override
@@ -58,12 +69,12 @@ public enum StaticTexture implements Texture{
 
     @Override
     public int getHeightPixels() {
-	return height;
+	return heightPixels;
     }
     
     @Override
     public int getWidthPixels() {
-	return width;
+	return widthPixels;
     }
     
     @Override

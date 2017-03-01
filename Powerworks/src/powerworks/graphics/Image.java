@@ -13,11 +13,14 @@ public enum Image {
     CURSOR_LEFT_CLICK("/textures/cursor/cursor_left_click.png"), 
     IRON_ORE_ITEM("/textures/items/iron_ore_raw.png"), 
     CONVEYOR_BELT_ITEM("/textures/items/conveyor_belt.png"), 
-    IRON_INGOT("/textures/items/iron_ingot.png");
-
-    int width, height;
-    int[] pixels;
-    boolean hasTransparency;
+    IRON_INGOT("/textures/items/iron_ingot.png"),
+    ITEM_SLOT("/textures/gui/item_slot.png"),
+    ITEM_SLOT_HIGHLIGHT("/textures/gui/item_slot_highlight.png"),
+    PLAYER_INVENTORY("/textures/gui/player_inventory.png");
+    
+    private int width, height;
+    private int[] pixels;
+    private boolean hasTransparency;
 
     private Image(String path) {
 	load(path);
@@ -36,16 +39,16 @@ public enum Image {
 	    e.printStackTrace();
 	}
     }
-
+    
     public int[] getPixels() {
 	return pixels;
     }
 
-    public int getHeight() {
+    public int getHeightPixels() {
 	return height;
     }
 
-    public int getWidth() {
+    public int getWidthPixels() {
 	return width;
     }
 
