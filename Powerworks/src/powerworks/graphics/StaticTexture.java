@@ -1,5 +1,6 @@
 package powerworks.graphics;
 
+import powerworks.graphics.ImageModifier.ModImage;
 
 public enum StaticTexture implements Texture{
     
@@ -22,9 +23,9 @@ public enum StaticTexture implements Texture{
     CONVEYOR_BELT_NOT_PLACEABLE(ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getPixels()[0], false, ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getWidth(), ImageCollection.CONVEYOR_BELT_CONNECTED_UP.getHeight()),
     
     ITEM_SLOT(Image.ITEM_SLOT),
-    ITEM_SLOT_HIGHTLIGHT(ImageModifier.modify(Image.ITEM_SLOT_HIGHLIGHT, ImageModifier.SCALE, 16), 16, 16, true),
+    ITEM_SLOT_HIGHTLIGHT(ImageModifier.modify(Image.ITEM_SLOT_HIGHLIGHT, ImageModifier.SCALE, 16)),
     
-    PLAYER_INVENTORY(ImageModifier.modify(Image.PLAYER_INVENTORY.getPixels(), Image.PLAYER_INVENTORY.getWidthPixels(), Image.PLAYER_INVENTORY.getHeightPixels(), ImageModifier.SCALE, 2), Image.PLAYER_INVENTORY.getWidthPixels() * 2, Image.PLAYER_INVENTORY.getHeightPixels() * 2, Image.PLAYER_INVENTORY.hasTransparency());
+    PLAYER_INVENTORY(ImageModifier.modify(Image.PLAYER_INVENTORY, ImageModifier.SCALE, 4));
     private int[] pixels;
     private final int widthPixels, heightPixels;
     private final boolean hasTransparency;
@@ -42,10 +43,14 @@ public enum StaticTexture implements Texture{
      * @param hue the hue (true is green, false is red)
      */
     private StaticTexture(int[] pixels, boolean hue, int width, int height) {
-	this.pixels = ImageModifier.modify(ImageModifier.modify(pixels, width, height, (hue) ? ImageModifier.TO_GREEN : ImageModifier.TO_RED, -1), width, height, ImageModifier.SET_ALPHA, 0.5);
-	this.hasTransparency = true;
-	this.widthPixels = width;
-	this.heightPixels = height;
+	this(ImageModifier.modify(ImageModifier.modify(pixels, width, height, true, (hue) ? ImageModifier.TO_GREEN : ImageModifier.TO_RED, -1), ImageModifier.SET_ALPHA, 0.5));
+    }
+    
+    private StaticTexture(ModImage m) {
+	this.pixels = m.pixels;
+	this.hasTransparency = m.hasTransparency;
+	this.widthPixels = m.widthPixels;
+	this.heightPixels = m.heightPixels;
     }
     
     private StaticTexture(int[] pixels, int width, int height, boolean hasTransparency) {

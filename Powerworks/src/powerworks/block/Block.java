@@ -5,6 +5,7 @@ import powerworks.collidable.Hitbox;
 import powerworks.graphics.Screen;
 import powerworks.graphics.Texture;
 import powerworks.graphics.TexturedObject;
+import powerworks.inventory.item.ItemType;
 import powerworks.main.Game;
 
 public class Block implements TexturedObject, Collidable {
@@ -28,6 +29,21 @@ public class Block implements TexturedObject, Collidable {
 	if (Game.game.showHitboxes())
 	    Screen.screen.renderHitbox(this);
     }
+    
+    /**
+     * @return the item that the block should drop as
+     */
+    public ItemType getDestroyedItem() {
+	return ItemType.valueOf(type.item);
+    }
+    
+    public int getWidthTiles() {
+	return type.getWidthTiles();
+    }
+    
+    public int getHeightTiles() {
+	return type.getHeightTiles();
+    }
 
     public int getXTile() {
 	return xPixel >> 4;
@@ -35,6 +51,10 @@ public class Block implements TexturedObject, Collidable {
 
     public int getYTile() {
 	return yPixel >> 4;
+    }
+    
+    public BlockType getType() {
+	return type;
     }
 
     public void update() {

@@ -235,20 +235,19 @@ public class Level {
     public boolean tryPlaceBlock(BlockType type, int xTile, int yTile) {
 	if (spaceForBlock(type, xTile, yTile)) {
 	    Block block = type.createInstance(xTile, yTile);
-	    for(int y = 0; y < type.getHeightTiles(); y++) {
+	    for (int y = 0; y < type.getHeightTiles(); y++) {
 		int yc = y + yTile;
-		for(int x = 0; x < type.getWidthTiles(); x++) {
+		for (int x = 0; x < type.getWidthTiles(); x++) {
 		    int xc = x + xTile;
 		    blocks[xc + yc * width] = block;
 		    EventManager.sendEvent(new PlaceBlockEvent(block, xc, yc));
 		}
 	    }
-	    
 	    return true;
 	}
 	return false;
     }
-    
+
     public void setBlock(BlockType type, int xTile, int yTile) {
 	blocks[xTile + yTile * width] = type.createInstance(xTile, yTile);
     }
@@ -256,25 +255,42 @@ public class Level {
     /**
      * Removes a Block object from the level, does nothing if it does not exist
      * 
-     * @param xTile
-     * @param yTile
+     * @param b
+     *            the block to remove
+     * @return true if a block was removed, false otherwise
      */
-    public void tryRemoveBlock(int xTile, int yTile) {
-	int coord = xTile + yTile * width;
-	if (blocks[coord] != null) {
-	    blocks[coord] = null;
+    public boolean tryRemoveBlock(Block b) {
+	boolean used = false;
+	for (int y = 0; y < b.getHeightTiles(); y++) {
+	    int ya = y + b.getYTile();
+	    for (int x = 0; x < b.getWidthTiles(); x++) {
+		int xa = x + b.getXTile();
+		int coord = xa + ya * width;
+		if (blocks[coord] != null && blocks[coord] == b) {
+		    blocks[coord] = null;
+		    used = true;
+		}
+	    }
 	}
+	if(used && b.isSolid())
+	    Collidable.collidables.remove(b);
+	return used;
     }
-    
+
     /**
      * Checks the boundaries of the block to see if it is able to be placed
-     * @param type the type to check for
-     * @param xTile the x tile of the top left corner
-     * @param yTile the y tile of the top left corner
+     * 
+     * @param type
+     *            the type to check for
+     * @param xTile
+     *            the x tile of the top left corner
+     * @param yTile
+     *            the y tile of the top left corner
      * @return true if able to place, false otherwise
      */
     public boolean spaceForBlock(BlockType type, int xTile, int yTile) {
-	if(xTile < 0 || xTile >= width || yTile < 0 || yTile >= height) return false;
+	if (xTile < 0 || xTile >= width || yTile < 0 || yTile >= height)
+	    return false;
 	for (int y = 0; y < type.getHeightTiles(); y++) {
 	    for (int x = 0; x < type.getWidthTiles(); x++) {
 		if (Level.level.getBlockFromTile(x + xTile, y + yTile) != null || Level.level.getTileFromTile(x + xTile, y + yTile).isSolid()) {
@@ -282,7 +298,6 @@ public class Level {
 		}
 	    }
 	}
-	
 	int xPixel = xTile << 4;
 	int yPixel = yTile << 4;
 	boolean ret = !(Collidable.collidables.anyIntersecting(xPixel, yPixel, type.getHitbox().width, type.getHitbox().height));

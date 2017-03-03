@@ -3,6 +3,7 @@ package powerworks.graphics;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import powerworks.collidable.Collidable;
+import powerworks.io.InputManager;
 import powerworks.level.Level;
 import powerworks.main.Game;
 
@@ -35,11 +36,11 @@ public class Screen {
     public void feed(Graphics2D g2d) {
 	this.g2d = g2d;
     }
-    
+
     public boolean isHungry() {
 	return g2d == null;
     }
-    
+
     /**
      * Sets offset for the screen (used for movement of camera)
      * 
@@ -49,8 +50,19 @@ public class Screen {
      *            the y pixel to offset the screen
      */
     public void setOffset(int xOffset, int yOffset) {
-	if(xOffset - width / 2 >= 0 && xOffset + Screen.screen.width < Level.level.getWidthPixels()) this.xOffset = xOffset;
-	if(yOffset - height / 2 >= 0 && yOffset + Screen.screen.height < Level.level.getHeightPixels()) this.yOffset = yOffset;
+	boolean used = false;
+	if (xOffset - width / 2 >= 0 && xOffset + Screen.screen.width < Level.level.getWidthPixels()) {
+	    if(this.xOffset != xOffset)
+		used = true;
+	    this.xOffset = xOffset;
+	}
+	if (yOffset - height / 2 >= 0 && yOffset + Screen.screen.height < Level.level.getHeightPixels()) {
+	    if(this.yOffset != yOffset)
+		used = true;
+	    this.yOffset = yOffset;
+	}
+	if(used)
+	    InputManager.screenMoved();
     }
 
     public void renderHitbox(Collidable col) {
@@ -77,7 +89,7 @@ public class Screen {
 	final double absoluteWidthPixels = scale * widthPixels * widthTiles;
 	final double widthScaleFactor = widthTiles * scale;
 	final double heightScaleFactor = heightTiles * scale;
-	if(affectedByCamera) {
+	if (affectedByCamera) {
 	    xPixel -= xOffset;
 	    yPixel -= yOffset;
 	}
@@ -128,49 +140,47 @@ public class Screen {
 	int[] objPixels = tex.getPixels();
 	final int widthPixels = tex.getWidthPixels();
 	final int heightPixels = tex.getHeightPixels();
-	if(affectedByCamera) {
+	if (affectedByCamera) {
 	    xPixel -= xOffset;
 	    yPixel -= yOffset;
 	}
 	if (!affectedByZoom) {
 	    for (int y = 0; y < heightPixels; y++) {
-		int ya = (yPixel + y) * originalWidth;
-		int yc = y * heightPixels;
+		final int ya = (yPixel + y) * this.originalWidth;
+		final int yc = y * widthPixels;
 		for (int x = 0; x < widthPixels; x++) {
 		    int xa = xPixel + x;
 		    int xc = x;
-		    if (xa < -widthPixels || xa >= originalWidth || ya < 0 || ya >= overlay.length)
+		    if (xa < -widthPixels || xa >= this.originalWidth || ya < 0 || ya >= overlay.length)
 			break;
 		    if (xa < 0)
 			xa = 0;
-		    int pixel = objPixels[xc + yc];
-		    int coord = xa + ya;
-		    int alpha = (pixel >> 24) & 0xFF;
-		    int oPixel = overlay[coord];
+		    final int coord2 = xa + ya;
+		    final int pixel = objPixels[xc + yc];
+		    final int alpha = (pixel >> 24) & 0xFF;
 		    if (alpha == 255)
-			overlay[coord] = pixel;
+			overlay[coord2] = pixel;
 		    else if (alpha != 0)
-			overlay[coord] = combineColors(pixel, oPixel);
+			overlay[coord2] = combineColors(pixel, overlay[coord2]);
 		}
 	    }
 	} else {
 	    for (int y = 0; y < heightPixels; y++) {
-		int ya = (yPixel + y) * width;
-		int yc = y * heightPixels;
+		final int ya = (yPixel + y) * width;
+		final int yc = y * widthPixels;
 		for (int x = 0; x < widthPixels; x++) {
 		    int xa = xPixel + x;
-		    int xc = x;
 		    if (xa < -widthPixels || xa >= width || ya < 0 || ya >= objects.length)
 			break;
 		    if (xa < 0)
 			xa = 0;
-		    int pixel = objPixels[xc + yc];
-		    int coord = xa + ya;
-		    int alpha = (pixel >> 24) & 0xFF;
+		    final int coord2 = xa + ya;
+		    final int pixel = objPixels[x + yc];
+		    final int alpha = (pixel >> 24) & 0xFF;
 		    if (alpha == 255)
-			objects[coord] = pixel;
+			objects[coord2] = pixel;
 		    else if (alpha != 0)
-			objects[coord] = combineColors(pixel, objects[coord]);
+			objects[coord2] = combineColors(pixel, objects[coord2]);
 		}
 	    }
 	}
@@ -197,11 +207,11 @@ public class Screen {
 		    xa = 0;
 		int coord2 = xa + ya;
 		int pixel = 0;
-		if(obj.getRotation() == 0)
+		if (obj.getRotation() == 0)
 		    pixel = objPixels[xc + yc * widthPixels];
-		else if(obj.getRotation() == 1)
+		else if (obj.getRotation() == 1)
 		    pixel = objPixels[(15 - yc) * widthPixels + xc];
-		else if(obj.getRotation() == 2)
+		else if (obj.getRotation() == 2)
 		    pixel = objPixels[xc * widthPixels + yc];
 		else
 		    pixel = objPixels[(15 - xc) * widthPixels + yc];
@@ -215,7 +225,8 @@ public class Screen {
     }
 
     public void renderText(Object o, int color, int xPixel, int yPixel) {
-	if(isHungry()) return;
+	if (isHungry())
+	    return;
 	g2d.setFont(Game.font);
 	g2d.setColor(new Color(color));
 	g2d.drawString(o.toString(), xPixel * Game.scale, yPixel * Game.scale);

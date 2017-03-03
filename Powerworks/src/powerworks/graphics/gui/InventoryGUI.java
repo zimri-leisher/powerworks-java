@@ -1,5 +1,6 @@
 package powerworks.graphics.gui;
 
+import powerworks.graphics.StaticTexture;
 import powerworks.graphics.Texture;
 
 public abstract class InventoryGUI extends GUI{
@@ -23,11 +24,10 @@ public abstract class InventoryGUI extends GUI{
 	super(xPixel, yPixel);
 	items = new GUIItemSlot[itemSlotWidth * itemSlotHeight];
 	this.background = new GUIBackground(0, 0, this, background);
-	System.out.println(name);
 	this.name = new GUIText(xPixel + nameXPixelOffset, yPixel + nameYPixelOffset, this, nameColor, name);
 	for(int y = 0; y < itemSlotHeight; y++) {
 	    for(int x = 0; x < itemSlotWidth; x++) {
-		items[x + y * itemSlotWidth] = new GUIItemSlot(itemAreaXPixelOffset + x * 16, itemAreaYPixelOffset + y * 16, this);
+		items[x + y * itemSlotWidth] = new GUIItemSlot(itemAreaXPixelOffset + x * 16, itemAreaYPixelOffset + y * 16, this, null);
 	    }
 	}
     }

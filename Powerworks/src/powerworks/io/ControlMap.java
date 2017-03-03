@@ -9,7 +9,8 @@ import java.util.regex.Pattern;
 import powerworks.graphics.ImageCollection;
 
 public class ControlMap {
-    public static final ControlMap DEFAULT = new ControlMap("/settings/binds.txt");
+    public static final ControlMap DEFAULT = new ControlMap("/settings/binds_default.txt");
+    public static final ControlMap PLAYER_INVENTORY = new ControlMap("/settings/binds_player_inventory.txt");
     
     HashMap<KeyMapping, KeyControlOption> keyBinds = new HashMap<KeyMapping, KeyControlOption>();
     HashMap<MouseMapping, MouseControlOption> mouseBinds = new HashMap<MouseMapping, MouseControlOption>();
@@ -103,6 +104,9 @@ public class ControlMap {
     }
     
     private ControlMap(String path) {
+	InputManager.keyHandlers.put(this, new HashMap<KeyControlHandler, KeyControlOption[]>());
+	InputManager.mouseHandlers.put(this, new HashMap<MouseControlHandler, MouseControlOption[]>());
+	InputManager.mouseWheelHandlers.put(this, new HashMap<MouseWheelControlHandler, MouseWheelControlOption[]>());
 	try {
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(ImageCollection.class.getResourceAsStream(path)));
 	    String line, first, last;

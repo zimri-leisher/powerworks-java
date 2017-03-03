@@ -19,7 +19,7 @@ public class Logger {
     HashMap<Statistic, Integer> toAdd = new HashMap<Statistic, Integer>();
     ArrayList<Statistic> toLog = new ArrayList<Statistic>();
     File f;
-    boolean used;
+    boolean used, closed;
 
     public Logger() {
 	try {
@@ -130,6 +130,8 @@ public class Logger {
     }
 
     public void close() {
+	if(closed) return;
+	closed = true;
 	for (Entry<Statistic, Integer> e : toAdd.entrySet()) {
 	    addData(e.getKey(), e.getValue());
 	}

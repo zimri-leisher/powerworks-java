@@ -1,5 +1,6 @@
 package powerworks.moving.entity;
 
+import powerworks.block.Block;
 import powerworks.collidable.Hitbox;
 import powerworks.data.Timer;
 import powerworks.event.EventHandler;
@@ -14,12 +15,14 @@ import powerworks.graphics.gui.PlayerInventoryGUI;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
+import powerworks.io.ControlMap;
 import powerworks.io.InputManager;
 import powerworks.io.KeyControlHandler;
 import powerworks.io.KeyControlOption;
 import powerworks.io.KeyPress;
 import powerworks.io.MouseControlHandler;
 import powerworks.io.MouseControlOption;
+import powerworks.io.MouseMovementDetector;
 import powerworks.io.MousePress;
 import powerworks.level.Level;
 import powerworks.main.Game;
@@ -35,6 +38,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
     String name;
     public GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
     int lastMouseXPixel = 0, lastMouseYPixel = 0;
+    MouseMovementDetector mouseMovementDetector = InputManager.newDetector();
     boolean moving, sprinting;
     Timer removing = new Timer(96, 0, 0, 1), repeat = new Timer(40, 0, 0, 1);
 
@@ -45,14 +49,14 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	this.name = name;
 	textures = StaticTextureCollection.PLAYER;
 	hud = new HUD();
-	inv = new Inventory("", 10, 4);
+	inv = new Inventory(8, 2);
 	EventManager.registerEventListener(this);
-	InputManager.registerKeyControlHandler(this, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
+	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
 		KeyControlOption.ROTATE_SELECTED_BLOCK,
 		KeyControlOption.SLOT_1, KeyControlOption.SLOT_2, KeyControlOption.SLOT_3, KeyControlOption.SLOT_4, KeyControlOption.SLOT_5, KeyControlOption.SLOT_6, KeyControlOption.SLOT_7,
 		KeyControlOption.SLOT_8,
 		KeyControlOption.GIVE_CONVEYOR_BELT, KeyControlOption.DROP_ITEM, KeyControlOption.OPEN_PLAYER_INVENTORY);
-	InputManager.registerMouseControlHandler(this, MouseControlOption.PLACE_BLOCK, MouseControlOption.REMOVE_BLOCK);
+	InputManager.registerMouseControlHandler(this, ControlMap.DEFAULT, MouseControlOption.PLACE_BLOCK, MouseControlOption.REMOVE_BLOCK);
 	this.invGui = new PlayerInventoryGUI();
     }
 
@@ -71,7 +75,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	    move();
 	if (getHeldItem() != null && getHeldItem().isPlaceable()) {
 	    Item item = getHeldItem();
-	    if (mouseXPixel != lastMouseXPixel || mouseYPixel != lastMouseYPixel) {
+	    if (mouseMovementDetector.hasMovedRelativeToLevel()) {
 		int xTile = mouseXPixel >> 4;
 		int yTile = mouseYPixel >> 4;
 		if (item.getPlacedBlock().isSolid())
@@ -346,7 +350,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		}
 		break;
 	    case OPEN_PLAYER_INVENTORY:
-		switch(p.getType()) {
+		switch (p.getType()) {
 		    case PRESSED:
 			invOpen = !invOpen;
 			break;
@@ -390,8 +394,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 			break;
 		    case REPEAT:
 			if (removing.getCurrentTick() == 1) {
-			    System.out.println("should remove");
-			    Level.level.tryRemoveBlock(InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
+			    Block b = Level.level.getBlockFromPixel(InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel());
+			    inv.giveItem(b.getDestroyedItem(), 1);
+			    Level.level.tryRemoveBlock(b);
 			    removing.resetTimes();
 			}
 			break;

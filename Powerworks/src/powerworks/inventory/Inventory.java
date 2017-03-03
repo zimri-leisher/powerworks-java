@@ -6,20 +6,17 @@ import powerworks.inventory.item.ItemType;
 public class Inventory {
 
     Item[] items;
-    String name;
     int width;
     int height;
 
-    public Inventory(Item[] items, String name, int width, int height) {
+    public Inventory(Item[] items, int width, int height) {
 	this.items = items;
-	this.name = name;
 	this.width = width;
 	this.height = height;
     }
 
-    public Inventory(String name, int width, int height) {
+    public Inventory(int width, int height) {
 	this.items = new Item[width * height];
-	this.name = name;
 	this.width = width;
 	this.height = height;
     }

@@ -31,6 +31,7 @@ import powerworks.graphics.Screen;
 import powerworks.graphics.StaticTexture;
 import powerworks.graphics.SynchronizedAnimatedTexture;
 import powerworks.graphics.gui.GUI;
+import powerworks.io.ControlMap;
 import powerworks.io.ControlPressType;
 import powerworks.io.InputManager;
 import powerworks.io.KeyControlHandler;
@@ -76,6 +77,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static List<String> allPlayerNames;
     private static List<Player> allPlayers;
     public static InputManager input;
+    private static ChatCommandExecutor chatCmdExecutor;
     public static Mouse mouse;
     public static Logger logger;
     public static boolean showRenderTimes = false;
@@ -88,6 +90,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	logger = new Logger();
 	input = new InputManager();
 	mouse = new Mouse();
+	chatCmdExecutor = new ChatCommandExecutor();
 	player = new Player(Level.level.getWidthPixels() / 2, Level.level.getHeightPixels() / 2);
 	scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
 	scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
@@ -103,8 +106,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
 	EventManager.registerEventListener(this);
-	InputManager.registerKeyControlHandler(this, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES, KeyControlOption.RENDER_HITBOX);
-	InputManager.registerMouseWheelControlHandler(this, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
+	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES, KeyControlOption.RENDER_HITBOX);
+	InputManager.registerMouseWheelControlHandler(this, ControlMap.DEFAULT, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
     }
 
     private synchronized void start() {
@@ -319,7 +322,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		for (int i = 0; i < commandArgs.length; i++) {
 		    commandArgs[i].trim();
 		}
-		ChatCommandExecutor.executeCommand(next.substring(0, next.indexOf(" ")).trim(), commandArgs, player);
+		chatCmdExecutor.executeCommand(next.substring(0, next.indexOf(" ")).trim(), commandArgs, player);
 	    } catch (StringIndexOutOfBoundsException e) {
 		System.out.println("Invalid command");
 	    }
@@ -329,6 +332,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    e.printStackTrace();
 	    logger.close();
 	}
+	logger.close();
     }
 
     public boolean showHitboxes() {
@@ -420,6 +424,9 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		switch (pressType) {
 		    case PRESSED:
 			showHitboxes = !showHitboxes;
+			break;
+		    default:
+			break;
 		}
 	    default:
 		break;

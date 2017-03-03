@@ -20,6 +20,14 @@ public abstract class GUI {
     public void setYPixel(int yPixel) {
 	this.yPixel = yPixel;
     }
+    
+    public int getXPixel() {
+	return xPixel;
+    }
+    
+    public int getYPixel() {
+	return yPixel;
+    }
 
     public void render() {
 	elements.sort((GUIElement e, GUIElement e1) -> {

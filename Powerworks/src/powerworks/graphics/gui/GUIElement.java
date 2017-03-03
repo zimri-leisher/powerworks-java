@@ -3,7 +3,7 @@ package powerworks.graphics.gui;
 public abstract class GUIElement {
 
     int level = 0;
-    boolean active = true;
+    boolean active = true, requiresUpdate = true;
     int xPixel, yPixel;
     GUI parent;
 
@@ -21,6 +21,12 @@ public abstract class GUIElement {
     public void setActive(boolean active) {
 	this.active = active;
     }
+    
+    public void setRequiresUpdate(boolean requiresUpdate) {
+	this.requiresUpdate = requiresUpdate;
+    }
 
     public abstract void render();
+    
+    public abstract void update();
 }

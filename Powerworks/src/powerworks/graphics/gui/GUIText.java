@@ -23,4 +23,9 @@ public class GUIText extends GUIElement {
 	Screen.screen.renderText(text, color, xPixel + parent.xPixel, yPixel + parent.yPixel);
     }
     
+    @Override
+    public void update() {
+	
+    }
+    
 }

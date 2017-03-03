@@ -6,6 +6,6 @@ import powerworks.main.Game;
 public class PlayerInventoryGUI extends InventoryGUI{
 
     public PlayerInventoryGUI() {
-	super(86, 11, 20, 20, 0, 0, "Inventory", 0xFFFFFF, 5, 30, StaticTexture.PLAYER_INVENTORY);
+	super(82, 11, 4, 32, 16, 16, "Inventory", 0xFFFFFF, 5, 30, StaticTexture.PLAYER_INVENTORY);
     }
 }

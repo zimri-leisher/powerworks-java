@@ -16,4 +16,9 @@ public class GUIBackground extends GUIElement {
     public void render() {
 	Screen.screen.renderTexture(background, xPixel + parent.xPixel, yPixel + parent.yPixel, false, false);
     }
+    
+    @Override
+    public void update() {
+	
+    }
 }
