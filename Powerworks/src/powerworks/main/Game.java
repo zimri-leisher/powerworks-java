@@ -18,7 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JFrame;
+import kuusisto.tinysound.TinySound;
+import powerworks.audio.AudioManager;
 import powerworks.chat.ChatCommandExecutor;
 import powerworks.data.Timer;
 import powerworks.event.EventHandler;
@@ -28,9 +32,7 @@ import powerworks.event.ViewMoveEvent;
 import powerworks.event.ZoomEvent;
 import powerworks.graphics.Mouse;
 import powerworks.graphics.Screen;
-import powerworks.graphics.StaticTexture;
 import powerworks.graphics.SynchronizedAnimatedTexture;
-import powerworks.graphics.gui.GUI;
 import powerworks.io.ControlMap;
 import powerworks.io.ControlPressType;
 import powerworks.io.InputManager;
@@ -119,6 +121,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     private synchronized void stop() {
 	logger.close();
 	Level.level.saveLevel();
+	TinySound.shutdown();
 	System.exit(0);
 	try {
 	    gameThread.join();
@@ -191,6 +194,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	Level.level.update();
 	mouse.update();
 	Timer.update();
+	AudioManager.update();
 	SynchronizedAnimatedTexture.update();
 	if (showUpdateTimes) {
 	    System.out.println("TOTAL:                       " + (System.nanoTime() - time) + " ns");
@@ -239,7 +243,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 			Game.logger.addAndLog(Statistic.DRAW_MOUSE, (int) diff, true);
 			time = System.nanoTime();
 		    }
-		    
 		    g2d.drawImage(layer2, 0, 0, getWidth(), getHeight(), null);
 		    if (showRenderTimes) {
 			long diff = System.nanoTime() - time;
@@ -297,6 +300,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     public static void main(String[] args) {
 	System.out.println("Starting game...");
+	TinySound.init();
 	game = new Game();
 	try {
 	    frame.setIconImage(ImageIO.read(Game.class.getResource("/textures/misc/logo.png")));
@@ -304,35 +308,34 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    e.printStackTrace();
 	}
 	try {
-	frame.setResizable(false);
-	frame.setTitle("Powerworks - Loading");
-	frame.add(game);
-	frame.pack();
-	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	frame.setLocationRelativeTo(null);
-	game.requestFocusInWindow();
-	frame.setVisible(true);
-	System.out.println("Welcome back, " + player.getName());
-	game.start();
-	Scanner scanner = new Scanner(System.in);
-	while (scanner.hasNext()) {
-	    String next = scanner.nextLine();
-	    try {
-		String[] commandArgs = next.substring(next.indexOf(" ") + 1).split(" ");
-		for (int i = 0; i < commandArgs.length; i++) {
-		    commandArgs[i].trim();
+	    frame.setResizable(false);
+	    frame.setTitle("Powerworks - Loading");
+	    frame.add(game);
+	    frame.pack();
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    frame.setLocationRelativeTo(null);
+	    game.requestFocusInWindow();
+	    frame.setVisible(true);
+	    System.out.println("Welcome back, " + player.getName());
+	    game.start();
+	    Scanner scanner = new Scanner(System.in);
+	    while (scanner.hasNext()) {
+		String next = scanner.nextLine();
+		try {
+		    String[] commandArgs = next.substring(next.indexOf(" ") + 1).split(" ");
+		    for (int i = 0; i < commandArgs.length; i++) {
+			commandArgs[i].trim();
+		    }
+		    chatCmdExecutor.executeCommand(next.substring(0, next.indexOf(" ")).trim(), commandArgs, player);
+		} catch (StringIndexOutOfBoundsException e) {
+		    System.out.println("Invalid command");
 		}
-		chatCmdExecutor.executeCommand(next.substring(0, next.indexOf(" ")).trim(), commandArgs, player);
-	    } catch (StringIndexOutOfBoundsException e) {
-		System.out.println("Invalid command");
 	    }
-	}
-	scanner.close();
+	    scanner.close();
 	} catch (Exception e) {
 	    e.printStackTrace();
 	    logger.close();
 	}
-	logger.close();
     }
 
     public boolean showHitboxes() {
@@ -414,7 +417,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case SHOW_RENDER_TIMES:
 		switch (pressType) {
 		    case PRESSED:
-			//System.out.println(getDeviceConfigurationString(GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()));
 			showRenderTimes = true;
 		    default:
 			break;

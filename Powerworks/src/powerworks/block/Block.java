@@ -1,5 +1,6 @@
 package powerworks.block;
 
+import powerworks.audio.Sound;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
 import powerworks.graphics.Screen;
@@ -10,9 +11,10 @@ import powerworks.main.Game;
 
 public class Block implements TexturedObject, Collidable {
 
-    int rotation;
-    int xPixel, yPixel;
-    BlockType type;
+    protected int rotation;
+    protected int xPixel;
+    protected int yPixel;
+    protected BlockType type;
     boolean requiresUpdate = true;
     
     public Block(BlockType type, int xTile, int yTile) {
@@ -28,6 +30,15 @@ public class Block implements TexturedObject, Collidable {
 	Screen.screen.renderTexturedObject(this);
 	if (Game.game.showHitboxes())
 	    Screen.screen.renderHitbox(this);
+    }
+    
+    public void remove() {
+	if(type.hitbox.solid)
+	    Collidable.collidables.remove(this);
+    }
+    
+    public Sound getFootstepSound() {
+	return type.footstep;
     }
     
     /**
@@ -80,7 +91,7 @@ public class Block implements TexturedObject, Collidable {
     public Texture getNotPlaceableTexture() {
 	return type.notPlaceableTexture;
     }
-
+    
     @Override
     public String toString() {
 	return type.name;

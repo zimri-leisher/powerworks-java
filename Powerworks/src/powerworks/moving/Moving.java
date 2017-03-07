@@ -1,5 +1,7 @@
 package powerworks.moving;
 
+import powerworks.audio.AudioManager;
+import powerworks.block.Block;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
 import powerworks.data.PhysicalObject;
@@ -13,62 +15,73 @@ public abstract class Moving implements PhysicalObject, Collidable {
 
     public static final int AIR_DRAG = 4;
     public static final int DEFAULT_MAX_SPEED = 20;
-    protected int x, y, lastX, lastY;
+    protected int xPixel, yPixel, lastX, lastY;
     protected int velX, velY;
     protected Hitbox hitbox;
+    private int footstepDistance = 0;
     protected boolean hasMoved = false;
-    
+
     public Moving(Hitbox hitbox) {
 	this.hitbox = hitbox;
-	Collidable.collidables.add(this);
+	if (hitbox.solid)
+	    Collidable.collidables.add(this);
     }
-    
+
     protected boolean getCollision(int moveX, int moveY) {
-	for (Collidable col : Collidable.collidables.getIntersecting(x + moveX + hitbox.xStart, y + moveY + hitbox.yStart, hitbox.width, hitbox.height)) {
-	    if(col != this)
+	for (Collidable col : Collidable.collidables.getIntersecting(xPixel + moveX + hitbox.xStart, yPixel + moveY + hitbox.yStart, hitbox.width, hitbox.height)) {
+	    if (col != this)
 		return true;
 	}
 	return false;
     }
-    
+
     public void update() {
 	move();
     }
-    
+
     public abstract void render();
 
     protected void move() {
-	if (velX + x + hitbox.xStart + hitbox.width > Level.level.getWidthPixels())
-	    x = -hitbox.xStart;
-	if (velY + y + hitbox.yStart + hitbox.height > Level.level.getHeightPixels())
-	    y = -hitbox.yStart;
-	if (velX + x + hitbox.xStart < 0)
-	    x = Level.level.getWidthPixels() - (hitbox.xStart + hitbox.width);
-	if (velY + y + hitbox.yStart < 0)
-	    y = Level.level.getHeightPixels() - (hitbox.yStart + hitbox.height);
-	int pVelX = velX, pVelY = velY;
+	if (velX + xPixel + hitbox.xStart + hitbox.width > Level.level.getWidthPixels())
+	    xPixel = -hitbox.xStart;
+	if (velY + yPixel + hitbox.yStart + hitbox.height > Level.level.getHeightPixels())
+	    yPixel = -hitbox.yStart;
+	if (velX + xPixel + hitbox.xStart < 0)
+	    xPixel = Level.level.getWidthPixels() - (hitbox.xStart + hitbox.width);
+	if (velY + yPixel + hitbox.yStart < 0)
+	    yPixel = Level.level.getHeightPixels() - (hitbox.yStart + hitbox.height);
+	int pXPixel = xPixel, pYPixel = yPixel;
 	if (velX != 0 || velY != 0) {
 	    if (!getCollision(velX, velY)) {
-		x += velX;
-		y += velY;
+		xPixel += velX;
+		yPixel += velY;
 		if (this instanceof Player)
-		    EventManager.sendEvent(new ViewMoveEvent(x, y));
+		    EventManager.sendEvent(new ViewMoveEvent(xPixel, yPixel));
 	    } else {
 		if (!getCollision(velX, 0)) {
-		    x += velX;
+		    xPixel += velX;
 		    if (this instanceof Player)
-			EventManager.sendEvent(new ViewMoveEvent(x, y));
+			EventManager.sendEvent(new ViewMoveEvent(xPixel, yPixel));
 		}
 		if (!getCollision(0, velY)) {
-		    y += velY;
+		    yPixel += velY;
 		    if (this instanceof Player)
-			EventManager.sendEvent(new ViewMoveEvent(x, y));
+			EventManager.sendEvent(new ViewMoveEvent(xPixel, yPixel));
 		}
 	    }
 	}
-	if (pVelX != velX || pVelY != velY)
+	if (pXPixel != xPixel || pYPixel != yPixel) {
 	    hasMoved = true;
-	else
+	    footstepDistance += Math.sqrt(Math.pow(xPixel - pXPixel, 2) + Math.pow(yPixel - pYPixel, 2));
+	    if (footstepDistance > 20) {
+		Block b = Level.level.getBlockFromPixel(xPixel, yPixel);
+		if (b != null) {
+		    AudioManager.playSound(b.getFootstepSound(), xPixel, yPixel, 1.0);
+		} else
+		    AudioManager.playSound(Level.level.getTileFromPixel(xPixel, yPixel).getFootstepSound(), xPixel, yPixel, 1.0);
+		footstepDistance = 0;
+	    }
+	} else
 	    hasMoved = false;
 	velX /= AIR_DRAG;
 	velY /= AIR_DRAG;
@@ -123,22 +136,21 @@ public abstract class Moving implements PhysicalObject, Collidable {
 
     @Override
     public int getXPixel() {
-	return x;
+	return xPixel;
     }
 
     @Override
     public int getYPixel() {
-	return y;
+	return yPixel;
     }
-    
+
     @Override
     public void renderHitbox() {
 	Screen.screen.renderHitbox(this);
     }
-    
+
     @Override
     public Hitbox getHitbox() {
 	return hitbox;
     }
-    
 }

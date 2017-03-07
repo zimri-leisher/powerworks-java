@@ -11,7 +11,7 @@ import powerworks.graphics.GhostBlock;
 import powerworks.graphics.HUD;
 import powerworks.graphics.Screen;
 import powerworks.graphics.StaticTextureCollection;
-import powerworks.graphics.gui.PlayerInventoryGUI;
+import powerworks.gui.PlayerInventoryGUI;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
@@ -27,6 +27,7 @@ import powerworks.io.MousePress;
 import powerworks.level.Level;
 import powerworks.main.Game;
 import powerworks.moving.droppeditem.DroppedItem;
+import powerworks.task.Task;
 
 public class Player extends Entity implements KeyControlHandler, EventListener, MouseControlHandler {
 
@@ -40,16 +41,35 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
     int lastMouseXPixel = 0, lastMouseYPixel = 0;
     MouseMovementDetector mouseMovementDetector = InputManager.newDetector();
     boolean moving, sprinting;
-    Timer removing = new Timer(96, 0, 0, 1), repeat = new Timer(40, 0, 0, 1);
+    Timer removing = new Timer(96, 1), repeat = new Timer(40, 1);
 
     public Player(int x, int y, String name) {
 	super(Hitbox.PLAYER);
-	this.x = x;
-	this.y = y;
+	this.xPixel = x;
+	this.yPixel = y;
 	this.name = name;
 	textures = StaticTextureCollection.PLAYER;
 	hud = new HUD();
 	inv = new Inventory(8, 2);
+	removing.runTaskOnFinish(new Task() {
+
+	    @Override
+	    public void run() {
+		Block b = Level.level.getBlockFromPixel(InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel());
+		if (b != null) {
+		    inv.giveItem(b.getDestroyedItem(), 1);
+		    Level.level.tryRemoveBlock(b);
+		    removing.resetTimes();
+		    block.placeable = true;
+		}
+	    }
+	});
+	repeat.runTaskOnFinish(new Task() {
+
+	    @Override
+	    public void run() {
+	    }
+	});
 	EventManager.registerEventListener(this);
 	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
 		KeyControlOption.ROTATE_SELECTED_BLOCK,
@@ -73,24 +93,21 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 	    time = System.nanoTime();
 	if (velX != 0 || velY != 0)
 	    move();
-	if (getHeldItem() != null && getHeldItem().isPlaceable()) {
-	    Item item = getHeldItem();
+	Item item = getHeldItem();
+	if (item != null && getHeldItem().isPlaceable()) {
 	    if (mouseMovementDetector.hasMovedRelativeToLevel()) {
 		int xTile = mouseXPixel >> 4;
 		int yTile = mouseYPixel >> 4;
-		if (item.getPlacedBlock().isSolid())
-		    if (Level.level.spaceForBlock(getHeldItem().type.getPlacedBlock(), xTile, yTile))
-			block.placeable = true;
-		    else
-			block.placeable = false;
-		else
+		if (Level.level.spaceForBlock(item.type.getPlacedBlock(), xTile, yTile))
 		    block.placeable = true;
+		else
+		    block.placeable = false;
 		block.xTile = xTile;
 		block.yTile = yTile;
 		lastMouseXPixel = mouseXPixel;
 		lastMouseYPixel = mouseYPixel;
 	    }
-	    block.type = getHeldItem().getPlacedBlock();
+	    block.type = item.getPlacedBlock();
 	    block.render = true;
 	} else {
 	    block.render = false;
@@ -327,15 +344,9 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			inv.giveItem(ItemType.CONVEYOR_BELT, 1);
-			repeat.play();
-			repeat.setStopOnFinish(true);
 			break;
 		    case REPEAT:
-			if (repeat.getCurrentTick() == 1)
-			    inv.giveItem(ItemType.CONVEYOR_BELT, 1);
-			break;
-		    case RELEASED:
-			repeat.resetAll();
+			inv.giveItem(ItemType.CONVEYOR_BELT, 1);
 		    default:
 			break;
 		}
@@ -368,14 +379,14 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			if (getHeldItem() != null && getHeldItem().isPlaceable() && block.placeable) {
-			    Level.level.setBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
+			    Level.level.tryPlaceBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
 			    block.placeable = false;
 			    inv.takeItem(getHeldItem().type, 1);
 			}
 			break;
 		    case REPEAT:
 			if (getHeldItem() != null && getHeldItem().isPlaceable() && block.placeable) {
-			    Level.level.setBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
+			    Level.level.tryPlaceBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4);
 			    block.placeable = false;
 			    inv.takeItem(getHeldItem().type, 1);
 			}
@@ -390,15 +401,7 @@ public class Player extends Entity implements KeyControlHandler, EventListener, 
 			removing.play();
 			break;
 		    case RELEASED:
-			removing.resetAll();
-			break;
-		    case REPEAT:
-			if (removing.getCurrentTick() == 1) {
-			    Block b = Level.level.getBlockFromPixel(InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel());
-			    inv.giveItem(b.getDestroyedItem(), 1);
-			    Level.level.tryRemoveBlock(b);
-			    removing.resetTimes();
-			}
+			removing.resetTimes();
 			break;
 		    default:
 			break;

@@ -1,6 +1,8 @@
 package powerworks.block;
 
 import java.lang.reflect.InvocationTargetException;
+import powerworks.audio.Sound;
+import powerworks.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.Hitbox;
 import powerworks.graphics.StaticTexture;
 import powerworks.graphics.SynchronizedAnimatedTexture;
@@ -9,7 +11,7 @@ import powerworks.inventory.item.ItemType;
 
 public enum BlockType {
     ERROR(Hitbox.TILE, StaticTexture.ERROR, "ERROR", StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Error", 0, false, ErrorBlock.class), 
-    CONVEYOR_BELT_CONNECTED_UP(Hitbox.TILE,
+    CONVEYOR_BELT_CONNECTED_UP(Hitbox.NONE,
 	    SynchronizedAnimatedTexture.CONVEYOR_BELT_CONNECTED_UP, "CONVEYOR_BELT", StaticTexture.CONVEYOR_BELT_PLACEABLE, StaticTexture.CONVEYOR_BELT_NOT_PLACEABLE, 1, 1, "Conveyor Belt", 1,
 	    true, ConveyorBeltBlock.class), 
     ORE_MINER(Hitbox.TILE, StaticTexture.ERROR, "ORE_MINER", StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Ore Miner", 2, true, OreMinerBlock.class);
@@ -24,10 +26,11 @@ public enum BlockType {
     boolean placeable;
     boolean defaultRequiresUpdate = true;
     int id;
+    Sound footstep;
     Class<? extends Block> instantiator;
 
     private BlockType(Hitbox hitbox, Texture texture, String item, StaticTexture placeableTexture, StaticTexture notPlaceableTexture, int width, int height, String name, int id, boolean placeable,
-	    Class<? extends Block> instantiator) {
+	    Class<? extends Block> instantiator, Sound footstep) {
 	this.hitbox = hitbox;
 	this.texture = texture;
 	this.width = width;
@@ -39,10 +42,20 @@ public enum BlockType {
 	this.id = id;
 	this.instantiator = instantiator;
 	this.item = item;
+	this.footstep = footstep;
+    }
+    
+    private BlockType(Hitbox hitbox, Texture texture, String item, StaticTexture placeableTexture, StaticTexture notPlaceableTexture, int width, int height, String name, int id, boolean placeable,
+	    Class<? extends Block> instantiator) {
+	this(hitbox, texture, item, placeableTexture, notPlaceableTexture, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
     }
 
     public boolean defaultRequiresUpdate() {
 	return defaultRequiresUpdate;
+    }
+    
+    public Sound getFootstepSound() {
+	return footstep;
     }
 
     /**

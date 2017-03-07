@@ -1,6 +1,5 @@
 package powerworks.moving.droppeditem;
 
-import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
 import powerworks.data.SpatialOrganizer;
 import powerworks.graphics.Screen;
@@ -31,12 +30,11 @@ public class DroppedItem extends Moving implements TexturedObject {
     public DroppedItem(ItemType type, int xPixel, int yPixel) {
 	super(type.getDroppedHitbox());
 	this.type = type;
-	this.x = xPixel;
-	this.y = yPixel;
-	Collidable.collidables.add(this);
+	this.xPixel = xPixel;
+	this.yPixel = yPixel;
 	droppedItems.add(this);
     }
-
+    
     @Override
     public void render() {
 	Screen.screen.renderTexturedObject(this);
@@ -65,25 +63,25 @@ public class DroppedItem extends Moving implements TexturedObject {
 
     @Override
     protected void move() {
-	if (velX + x + hitbox.xStart + hitbox.width > Level.level.getWidthPixels())
-	    x = -hitbox.xStart;
-	if (velY + y + hitbox.yStart + hitbox.height > Level.level.getHeightPixels())
-	    y = -hitbox.yStart;
-	if (velX + x + hitbox.xStart < 0)
-	    x = Level.level.getWidthPixels() - (hitbox.xStart + hitbox.width);
-	if (velY + y + hitbox.yStart < 0)
-	    y = Level.level.getHeightPixels() - (hitbox.yStart + hitbox.height);
+	if (velX + xPixel + hitbox.xStart + hitbox.width > Level.level.getWidthPixels())
+	    xPixel = -hitbox.xStart;
+	if (velY + yPixel + hitbox.yStart + hitbox.height > Level.level.getHeightPixels())
+	    yPixel = -hitbox.yStart;
+	if (velX + xPixel + hitbox.xStart < 0)
+	    xPixel = Level.level.getWidthPixels() - (hitbox.xStart + hitbox.width);
+	if (velY + yPixel + hitbox.yStart < 0)
+	    yPixel = Level.level.getHeightPixels() - (hitbox.yStart + hitbox.height);
 	int pVelX = velX, pVelY = velY;
 	if (velX != 0 || velY != 0) {
 	    if (!getCollision(velX, velY)) {
-		x += velX;
-		y += velY;
+		xPixel += velX;
+		yPixel += velY;
 	    } else {
 		if (!getCollision(velX, 0)) {
-		    x += velX;
+		    xPixel += velX;
 		}
 		if (!getCollision(0, velY)) {
-		    y += velY;
+		    yPixel += velY;
 		}
 	    }
 	}

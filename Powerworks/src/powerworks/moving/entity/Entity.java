@@ -10,11 +10,17 @@ import powerworks.moving.Moving;
 public abstract class Entity extends Moving implements TexturedObject {
 
     public static final SpatialOrganizer<Entity> entities = new SpatialOrganizer<Entity>();
-    int dir;
+    int dir, footstepDistance;
     StaticTextureCollection textures;
 
     protected Entity(Hitbox hitbox) {
 	super(hitbox);
+	entities.add(this);
+    }
+    
+    protected Entity(Hitbox hitbox, int footstepDistance) {
+	super(hitbox);
+	this.footstepDistance = footstepDistance;
 	entities.add(this);
     }
     
