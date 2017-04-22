@@ -1,53 +1,55 @@
 package powerworks.block;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import powerworks.audio.Sound;
-import powerworks.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.Hitbox;
-import powerworks.graphics.StaticTexture;
-import powerworks.graphics.SynchronizedAnimatedTexture;
+import powerworks.graphics.Image;
 import powerworks.graphics.Texture;
-import powerworks.inventory.item.ItemType;
 
-public enum BlockType {
-    ERROR(Hitbox.TILE, StaticTexture.ERROR, "ERROR", StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Error", 0, false, ErrorBlock.class), 
-    CONVEYOR_BELT_CONNECTED_UP(Hitbox.NONE,
-	    SynchronizedAnimatedTexture.CONVEYOR_BELT_CONNECTED_UP, "CONVEYOR_BELT", StaticTexture.CONVEYOR_BELT_PLACEABLE, StaticTexture.CONVEYOR_BELT_NOT_PLACEABLE, 1, 1, "Conveyor Belt", 1,
-	    true, ConveyorBeltBlock.class), 
-    ORE_MINER(Hitbox.TILE, StaticTexture.ERROR, "ORE_MINER", StaticTexture.ERROR, StaticTexture.ERROR, 1, 1, "Ore Miner", 2, true, OreMinerBlock.class);
+public class BlockType {
 
+    private static HashMap<String, BlockType> types = new HashMap<String, BlockType>();
+    
+    public static final BlockType ERROR = new BlockType(Hitbox.TILE, Image.ERROR, "Error", 1, 1, "Error", 0, false, ErrorBlock.class);
+    
     Hitbox hitbox;
     Texture texture;
-    StaticTexture notPlaceableTexture;
-    StaticTexture placeableTexture;
-    int width, height;
+    int widthTiles, heightTiles;
     String item;
     String name;
     boolean placeable;
     boolean defaultRequiresUpdate = true;
     int id;
     Sound footstep;
+    int texXPixelOffset, texYPixelOffset;
     Class<? extends Block> instantiator;
 
-    private BlockType(Hitbox hitbox, Texture texture, String item, StaticTexture placeableTexture, StaticTexture notPlaceableTexture, int width, int height, String name, int id, boolean placeable,
+    protected BlockType(Hitbox hitbox, Texture texture, int texXPixelOffset, int texYPixelOffset, String item, int widthTiles, int heightTiles, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator, Sound footstep) {
 	this.hitbox = hitbox;
 	this.texture = texture;
-	this.width = width;
-	this.height = height;
+	this.widthTiles = widthTiles;
+	this.heightTiles = heightTiles;
 	this.name = name;
-	this.placeableTexture = placeableTexture;
-	this.notPlaceableTexture = notPlaceableTexture;
 	this.placeable = placeable;
 	this.id = id;
 	this.instantiator = instantiator;
 	this.item = item;
 	this.footstep = footstep;
+	this.texXPixelOffset = texXPixelOffset;
+	this.texYPixelOffset = texYPixelOffset;
+	types.put(name, this);
     }
     
-    private BlockType(Hitbox hitbox, Texture texture, String item, StaticTexture placeableTexture, StaticTexture notPlaceableTexture, int width, int height, String name, int id, boolean placeable,
+    protected BlockType(Hitbox hitbox, Texture texture, String item, int width, int height, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator) {
-	this(hitbox, texture, item, placeableTexture, notPlaceableTexture, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
+	this(hitbox, texture, 0, 0, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
+    }
+    
+    protected BlockType(Hitbox hitbox, Texture texture, int texXPixelOffset, int texYPixelOffset, String item, int width, int height, String name, int id, boolean placeable,
+	    Class<? extends Block> instantiator) {
+	this(hitbox, texture, texXPixelOffset, texYPixelOffset, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
     }
 
     public boolean defaultRequiresUpdate() {
@@ -58,23 +60,24 @@ public enum BlockType {
 	return footstep;
     }
 
-    /**
-     * @return the item that the block should drop as
-     */
-    public ItemType getDestroyedItem() {
-	return ItemType.valueOf(item);
-    }
-
     public Texture getTexture() {
 	return texture;
     }
+    
+    public int getTextureXPixelOffset() {
+	return texXPixelOffset;
+    }
+    
+    public int getTextureYPixelOffset() {
+	return texYPixelOffset;
+    }
 
     public int getWidthTiles() {
-	return width;
+	return widthTiles;
     }
 
     public int getHeightTiles() {
-	return height;
+	return heightTiles;
     }
 
     public String getName() {
@@ -93,18 +96,18 @@ public enum BlockType {
 	return hitbox;
     }
 
-    public Texture getPlaceableTexture() {
-	return placeableTexture;
-    }
-
-    public Texture getNotPlaceableTexture() {
-	return notPlaceableTexture;
-    }
-
     public boolean isSolid() {
-	return hitbox.solid;
+	return hitbox.isSolid();
+    }
+    
+    public static BlockType getBlockType(String t) {
+	return types.get(t);
     }
 
+    public static HashMap<String, BlockType> getBlockTypes() {
+	return types;
+    }
+    
     /**
      * Creates an instance of a Block based on the BlockType using the correct
      * class - note: this does not add it to the level

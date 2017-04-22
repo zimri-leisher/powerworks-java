@@ -1,57 +1,62 @@
 package powerworks.block;
 
 import powerworks.audio.Sound;
+import powerworks.block.machine.OreMinerBlock;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
-import powerworks.graphics.Screen;
 import powerworks.graphics.Texture;
-import powerworks.graphics.TexturedObject;
-import powerworks.inventory.item.ItemType;
 import powerworks.main.Game;
 
-public class Block implements TexturedObject, Collidable {
+public class Block extends Collidable {
 
-    protected int rotation;
-    protected int xPixel;
-    protected int yPixel;
     protected BlockType type;
-    boolean requiresUpdate = true;
-    
+    private boolean requiresUpdate = true;
+    private int rotation;
+
     public Block(BlockType type, int xTile, int yTile) {
-	this.xPixel = xTile << 4;
-	this.yPixel = yTile << 4;
+	super(xTile << 4, yTile << 4, type.getTextureXPixelOffset(), type.getTextureYPixelOffset(), type.hitbox);
 	this.type = type;
 	requiresUpdate = type.defaultRequiresUpdate;
-	if (type.hitbox.solid)
-	    Collidable.collidables.add(this);
+	if (type.hitbox.isSolid())
+	    Game.getLevel().getCollidables().add(this);
+    }
+
+    @Override
+    public int getRotation() {
+	return rotation;
     }
 
     public void render() {
-	Screen.screen.renderTexturedObject(this);
-	if (Game.game.showHitboxes())
-	    Screen.screen.renderHitbox(this);
+	Game.getRenderEngine().renderLevelObject(this);
+	if (Game.showHitboxes())
+	    renderHitbox();
     }
-    
+
     public void remove() {
-	if(type.hitbox.solid)
-	    Collidable.collidables.remove(this);
+	if (type.hitbox.isSolid())
+	    Game.getLevel().getCollidables().remove(this);
+	Block[] blocks = Game.getLevel().getBlocks();
+	for (int y = 0; y < type.heightTiles; y++) {
+	    int ya = y + yPixel >> 4;
+	    for (int x = 0; x < type.widthTiles; x++) {
+		int xa = x + xPixel >> 4;
+		blocks[xa + ya * Game.getLevel().getWidthTiles()] = null;
+	    }
+	}
     }
-    
+
+    public void setRotation(int rotation) {
+	this.rotation = rotation;
+    }
+
     public Sound getFootstepSound() {
 	return type.footstep;
     }
-    
-    /**
-     * @return the item that the block should drop as
-     */
-    public ItemType getDestroyedItem() {
-	return ItemType.valueOf(type.item);
-    }
-    
+
     public int getWidthTiles() {
 	return type.getWidthTiles();
     }
-    
+
     public int getHeightTiles() {
 	return type.getHeightTiles();
     }
@@ -63,7 +68,7 @@ public class Block implements TexturedObject, Collidable {
     public int getYTile() {
 	return yPixel >> 4;
     }
-    
+
     public BlockType getType() {
 	return type;
     }
@@ -74,9 +79,9 @@ public class Block implements TexturedObject, Collidable {
     public boolean isPlaceable() {
 	return type.placeable;
     }
-    
+
     public boolean isSolid() {
-	return type.hitbox.solid;
+	return type.hitbox.isSolid();
     }
 
     @Override
@@ -84,14 +89,6 @@ public class Block implements TexturedObject, Collidable {
 	return type.texture;
     }
 
-    public Texture getPlaceableTexture() {
-	return type.placeableTexture;
-    }
-
-    public Texture getNotPlaceableTexture() {
-	return type.notPlaceableTexture;
-    }
-    
     @Override
     public String toString() {
 	return type.name;
@@ -112,26 +109,7 @@ public class Block implements TexturedObject, Collidable {
 	return yPixel;
     }
 
-    @Override
-    public int getRotation() {
-	return rotation;
-    }
-
-    @Override
-    public void renderHitbox() {
-	Screen.screen.renderHitbox(this);
-    }
-
-    public boolean hasTransparency() {
-	return type.texture.hasTransparency();
-    }
-
     public boolean requiresUpdate() {
 	return requiresUpdate;
-    }
-
-    @Override
-    public double getScale() {
-	return 1;
     }
 }

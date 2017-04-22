@@ -1,6 +1,7 @@
 package powerworks.task;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import powerworks.main.Game;
 
@@ -11,27 +12,29 @@ public abstract class Task {
 
     public static void update() {
 	long time = 0;
-	if (Game.showUpdateTimes)
+	if (Game.showUpdateTimes())
 	    time = System.nanoTime();
 	int size = scheduled.size();
-	if (size != 0)
-	    for (int i = 0; i < scheduled.size(); i++) {
-		Task r = scheduled.get(i);
+	if (size != 0) {
+	    Iterator<Task> i = scheduled.iterator();
+	    while(i.hasNext()) {
+		Task r = i.next();
 		if (r.cancel)
-		    scheduled.remove(r);
+		    i.remove();
 		else {
 		    if (r.delay == 0) {
 			r.run();
 			if (r.repeat) {
 			    r.delay = r.original;
 			} else
-			    scheduled.remove(r);
+			    i.remove();
 		    } else {
 			r.delay--;
 		    }
 		}
 	    }
-	if (Game.showUpdateTimes)
+	}
+	if (Game.showUpdateTimes())
 	    System.out.println("Updating tasks took:         " + (System.nanoTime() - time) + " ns");
     }
 
@@ -46,6 +49,10 @@ public abstract class Task {
 	scheduled.add(this);
     }
 
+    /**
+     * @param timeToRun delay before running
+     * @param cycleTime time in between repetitions
+     */
     public void repeat(int timeToRun, int cycleTime) {
 	repeat = true;
 	original = cycleTime;

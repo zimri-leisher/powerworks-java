@@ -1,9 +1,7 @@
 package powerworks.audio;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -11,8 +9,10 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import kuusisto.tinysound.TinySound;
 
 public enum Sound {
-    TEST("/sounds/misc/test.wav"), GRASS_FOOTSTEP("/sounds/footstep/grass.wav");
-
+    TEST("/sounds/misc/test.wav"), 
+    GRASS_FOOTSTEP("/sounds/footstep/grass.wav"),
+    CONVEYOR_BELT("/sounds/block/machine/conveyor_belt.wav");
+    
     kuusisto.tinysound.Sound tsSound;
     /**
      * In 60ths of second
@@ -28,7 +28,7 @@ public enum Sound {
     int loopIteration = -1;
 
     private Sound(String path) {
-	tsSound = TinySound.loadSound(path);
+	//tsSound = TinySound.loadSound(path);
 	AudioInputStream audioInputStream;
 	try {
 	    File f = new File(Sound.class.getResource(path).getFile());

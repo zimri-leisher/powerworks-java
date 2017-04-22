@@ -29,7 +29,7 @@ public class Logger {
 		f = new File("data/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-" + count + ".txt");
 		count++;
 	    }
-	    writer = new BufferedWriter(new FileWriter(f.getAbsolutePath()));
+	    writer = new BufferedWriter(new FileWriter(f.getCanonicalPath()));
 	} catch (FileNotFoundException e) {
 	    e.printStackTrace();
 	} catch (IOException e) {

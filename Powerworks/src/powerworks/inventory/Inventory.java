@@ -76,12 +76,12 @@ public class Inventory {
      * @param item
      *            the item to check for
      * @param quantity
-     *            the amount to check for
-     * @return true if present, false otherwise
+     *            the amount to check for (more will return true also)
+     * @return true if present in the quantity specified or more, false otherwise
      */
     public boolean hasItem(ItemType item, int quantity) {
 	for (int i = 0; i < items.length; i++) {
-	    if (items[i] != null && items[i].getID() == item.getID() && items[i].quantity >= quantity)
+	    if (items[i] != null && items[i].getID() == item.getID() && items[i].getQuantity() >= quantity)
 		return true;
 	}
 	return false;
@@ -94,24 +94,7 @@ public class Inventory {
      *            the item to give
      */
     public void giveItem(Item item) {
-	int leftToAdd = item.quantity;
-	loop: for (int i = 0; i < items.length; i++) {
-	    if (items[i] != null && items[i].getID() == item.getID() && items[i].quantity != items[i].getMaxStack()) {
-		if (items[i].quantity + item.quantity > items[i].getMaxStack()) {
-		    leftToAdd = items[i].getMaxStack() - items[i].quantity;
-		    items[i].quantity = items[i].getMaxStack();
-		    break loop;
-		}
-		items[i].quantity += leftToAdd;
-		return;
-	    }
-	}
-	for (int i = 0; i < items.length; i++) {
-	    if (items[i] == null) {
-		items[i] = item;
-		return;
-	    }
-	}
+	giveItem(item.getType(), item.getQuantity());
     }
     
     /**
@@ -122,13 +105,13 @@ public class Inventory {
     public void giveItem(ItemType type, int quantity) {
 	int leftToAdd = quantity;
 	loop: for (int i = 0; i < items.length; i++) {
-	    if (items[i] != null && items[i].getID() == type.getID() && items[i].quantity != items[i].getMaxStack()) {
-		if (items[i].quantity + quantity > items[i].getMaxStack()) {
-		    leftToAdd = items[i].getMaxStack() - items[i].quantity;
-		    items[i].quantity = items[i].getMaxStack();
+	    if (items[i] != null && items[i].getID() == type.getID() && items[i].getQuantity() != items[i].getMaxStack()) {
+		if (items[i].getQuantity() + quantity > items[i].getMaxStack()) {
+		    leftToAdd = items[i].getMaxStack() - items[i].getQuantity();
+		    items[i].setQuantity(items[i].getMaxStack());;
 		    break loop;
 		}
-		items[i].quantity += leftToAdd;
+		items[i].setQuantity(items[i].getQuantity() + leftToAdd);
 		return;
 	    }
 	}
@@ -147,14 +130,14 @@ public class Inventory {
      *            the item to remove
      */
     public void takeItem(Item item) {
-	int leftToSubtract = item.quantity;
-	for (int i = 0; i < items.length; i++) {
+	int leftToSubtract = item.getQuantity();
+	for (int i = items.length - 1; i >= 0; i--) {
 	    if (items[i] != null && items[i].getID() == item.getID()) {
-		if (items[i].quantity - leftToSubtract <= 0) {
-		    leftToSubtract -= items[i].quantity;
+		if (items[i].getQuantity() - leftToSubtract <= 0) {
+		    leftToSubtract -= items[i].getQuantity();
 		    items[i] = null;
 		} else {
-		    items[i].quantity -= leftToSubtract;
+		    items[i].setQuantity(items[i].getQuantity() - leftToSubtract);;
 		}
 	    }
 	}
@@ -171,15 +154,15 @@ public class Inventory {
     public void takeItem(ItemType type, int quantity) {
 	int leftToSubtract = quantity;
 	for (int i = items.length - 1; i >= 0; i--) {
-	    if (items[i] != null && items[i].getID() == type.getID() && items[i].quantity - quantity <= 0) {
-		leftToSubtract -= items[i].quantity;
+	    if (items[i] != null && items[i].getID() == type.getID() && items[i].getQuantity() - quantity <= 0) {
+		leftToSubtract -= items[i].getQuantity();
 		items[i] = null;
 	    }
 	}
 	for (int i = items.length - 1; i >= 0; i--) {
 	    if (items[i] != null && items[i].getID() == type.getID()) {
-		if (items[i].quantity - leftToSubtract > 0) {
-		    items[i].quantity -= leftToSubtract;
+		if (items[i].getQuantity() - leftToSubtract > 0) {
+		    items[i].setQuantity(items[i].getQuantity() - leftToSubtract);
 		    return;
 		}
 	    }
@@ -196,13 +179,6 @@ public class Inventory {
 	items[index] = null;
     }
 
-    /**
-     * Gets an item from an inventory
-     * 
-     * @param index
-     *            the index of the item
-     * @return the item
-     */
     public Item getItem(int index) {
 	return items[index];
     }

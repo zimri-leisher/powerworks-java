@@ -1,90 +1,96 @@
 package powerworks.moving;
 
-import powerworks.audio.AudioManager;
 import powerworks.block.Block;
+import powerworks.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
-import powerworks.data.PhysicalObject;
+import powerworks.data.SpatialOrganizer;
 import powerworks.event.EventManager;
 import powerworks.event.ViewMoveEvent;
-import powerworks.graphics.Screen;
-import powerworks.level.Level;
-import powerworks.moving.entity.Player;
+import powerworks.graphics.ImageCollection;
+import powerworks.graphics.Texture;
+import powerworks.main.Game;
+import powerworks.moving.living.Player;
 
-public abstract class Moving implements PhysicalObject, Collidable {
+public abstract class Moving extends Collidable {
 
     public static final int AIR_DRAG = 4;
     public static final int DEFAULT_MAX_SPEED = 20;
-    protected int xPixel, yPixel, lastX, lastY;
+    protected int lastX, lastY;
     protected int velX, velY;
-    protected Hitbox hitbox;
-    private int footstepDistance = 0;
     protected boolean hasMoved = false;
+    protected ImageCollection textures;
+    protected int dir = 0;
 
-    public Moving(Hitbox hitbox) {
-	this.hitbox = hitbox;
-	if (hitbox.solid)
-	    Collidable.collidables.add(this);
+    public Moving(int xPixel, int yPixel, Hitbox hitbox) {
+	super(xPixel, yPixel, hitbox);
+	Game.getLevel().getMovingEntities().add(this);
     }
 
     protected boolean getCollision(int moveX, int moveY) {
-	for (Collidable col : Collidable.collidables.getIntersecting(xPixel + moveX + hitbox.xStart, yPixel + moveY + hitbox.yStart, hitbox.width, hitbox.height)) {
+	for (Collidable col : Game.getLevel().getCollidables().getIntersecting(xPixel + moveX + hitbox.getXStart(), yPixel + moveY + hitbox.getYStart(), hitbox.getWidthPixels(), hitbox.getHeightPixels())) {
 	    if (col != this)
 		return true;
 	}
 	return false;
     }
 
+    @Override
     public void update() {
-	move();
+	Block b = Game.getLevel().getBlockFromPixel(xPixel + hitbox.getXStart() + hitbox.getWidthPixels() / 2, yPixel + hitbox.getYStart() + hitbox.getHeightPixels() / 2);
+	if(b instanceof ConveyorBeltBlock) {
+	    int xVel = (b.getRotation() == 1) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 3) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
+	    int yVel = (b.getRotation() == 0) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 2) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
+	    addVel(xVel, yVel);
+	}
+	if (velX != 0 || velY != 0)
+	    move();
     }
 
-    public abstract void render();
-
     protected void move() {
-	if (velX + xPixel + hitbox.xStart + hitbox.width > Level.level.getWidthPixels())
-	    xPixel = -hitbox.xStart;
-	if (velY + yPixel + hitbox.yStart + hitbox.height > Level.level.getHeightPixels())
-	    yPixel = -hitbox.yStart;
-	if (velX + xPixel + hitbox.xStart < 0)
-	    xPixel = Level.level.getWidthPixels() - (hitbox.xStart + hitbox.width);
-	if (velY + yPixel + hitbox.yStart < 0)
-	    yPixel = Level.level.getHeightPixels() - (hitbox.yStart + hitbox.height);
+	if (velX > 0 && dir != 1)
+	    dir = 1;
+	if (velX < 0 && dir != 3)
+	    dir = 3;
+	if (velY > 0 && dir != 2)
+	    dir = 2;
+	if (velY < 0 && dir != 0)
+	    dir = 0;
+	if (velX + xPixel + hitbox.getXStart() + hitbox.getWidthPixels() > Game.getLevel().getWidthPixels())
+	    xPixel = -hitbox.getXStart();
+	if (velY + yPixel + hitbox.getYStart() + hitbox.getHeightPixels() > Game.getLevel().getHeightPixels())
+	    yPixel = -hitbox.getYStart();
+	if (velX + xPixel + hitbox.getXStart() < 0)
+	    xPixel = Game.getLevel().getWidthPixels() - (hitbox.getXStart() + hitbox.getWidthPixels());
+	if (velY + yPixel + hitbox.getYStart() < 0)
+	    yPixel = Game.getLevel().getHeightPixels() - (hitbox.getYStart() + hitbox.getHeightPixels());
 	int pXPixel = xPixel, pYPixel = yPixel;
 	if (velX != 0 || velY != 0) {
 	    if (!getCollision(velX, velY)) {
 		xPixel += velX;
 		yPixel += velY;
-		if (this instanceof Player)
-		    EventManager.sendEvent(new ViewMoveEvent(xPixel, yPixel));
 	    } else {
 		if (!getCollision(velX, 0)) {
 		    xPixel += velX;
-		    if (this instanceof Player)
-			EventManager.sendEvent(new ViewMoveEvent(xPixel, yPixel));
 		}
 		if (!getCollision(0, velY)) {
 		    yPixel += velY;
-		    if (this instanceof Player)
-			EventManager.sendEvent(new ViewMoveEvent(xPixel, yPixel));
 		}
 	    }
 	}
 	if (pXPixel != xPixel || pYPixel != yPixel) {
+	    if (this == Game.getMainPlayer())
+		Game.getRenderEngine().setOffset(xPixel - Game.getRenderEngine().getWidthPixels() / 2, yPixel - Game.getRenderEngine().getHeightPixels() / 2);
 	    hasMoved = true;
-	    footstepDistance += Math.sqrt(Math.pow(xPixel - pXPixel, 2) + Math.pow(yPixel - pYPixel, 2));
-	    if (footstepDistance > 20) {
-		Block b = Level.level.getBlockFromPixel(xPixel, yPixel);
-		if (b != null) {
-		    AudioManager.playSound(b.getFootstepSound(), xPixel, yPixel, 1.0);
-		} else
-		    AudioManager.playSound(Level.level.getTileFromPixel(xPixel, yPixel).getFootstepSound(), xPixel, yPixel, 1.0);
-		footstepDistance = 0;
-	    }
 	} else
 	    hasMoved = false;
 	velX /= AIR_DRAG;
 	velY /= AIR_DRAG;
+    }
+
+    @Override
+    public Texture getTexture() {
+	return textures.getTexture(dir);
     }
 
     public int getVelX() {
@@ -132,25 +138,5 @@ public abstract class Moving implements PhysicalObject, Collidable {
 		    this.velY = newVelY;
 	    }
 	}
-    }
-
-    @Override
-    public int getXPixel() {
-	return xPixel;
-    }
-
-    @Override
-    public int getYPixel() {
-	return yPixel;
-    }
-
-    @Override
-    public void renderHitbox() {
-	Screen.screen.renderHitbox(this);
-    }
-
-    @Override
-    public Hitbox getHitbox() {
-	return hitbox;
     }
 }

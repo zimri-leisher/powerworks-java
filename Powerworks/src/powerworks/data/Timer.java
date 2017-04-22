@@ -18,6 +18,10 @@ public class Timer {
 	timers.add(this);
     }
     
+    public int getCurrentUpdate() {
+	return updateCount;
+    }
+    
     public void play() {
 	playing = true;
     }
@@ -53,7 +57,7 @@ public class Timer {
 	onFinish = t;
     }
 
-    void nextUpdate() {
+    private void nextUpdate() {
 	updateCount++;
 	if(nUpdates > 0 && updateCount % nUpdates == 0)
 	    perNUpdates.run();

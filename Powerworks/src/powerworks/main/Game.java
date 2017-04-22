@@ -9,30 +9,34 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.Transparency;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.image.VolatileImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JFrame;
 import kuusisto.tinysound.TinySound;
-import powerworks.audio.AudioManager;
 import powerworks.chat.ChatCommandExecutor;
+import powerworks.chat.ChatManager;
+import powerworks.collidable.Collidable;
 import powerworks.data.Timer;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
 import powerworks.event.EventManager;
 import powerworks.event.ViewMoveEvent;
 import powerworks.event.ZoomEvent;
-import powerworks.graphics.Mouse;
-import powerworks.graphics.Screen;
-import powerworks.graphics.SynchronizedAnimatedTexture;
+import powerworks.graphics.ImageCollection;
+import powerworks.graphics.Renderer;
+import powerworks.graphics.SyncAnimation;
+import powerworks.graphics.screen.HUD;
+import powerworks.graphics.screen.gui.GUIManager;
 import powerworks.io.ControlMap;
 import powerworks.io.ControlPressType;
 import powerworks.io.InputManager;
@@ -44,46 +48,51 @@ import powerworks.io.MouseWheelControlHandler;
 import powerworks.io.MouseWheelControlOption;
 import powerworks.io.MouseWheelPress;
 import powerworks.io.Statistic;
-import powerworks.level.Level;
-import powerworks.moving.entity.Player;
+import powerworks.moving.droppeditem.DroppedItem;
+import powerworks.moving.living.Player;
 import powerworks.task.Task;
+import powerworks.world.World;
+import powerworks.world.WorldManager;
+import powerworks.world.level.Level;
+import powerworks.world.level.SimplexLevel;
 
 public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler, MouseWheelControlHandler {
 
     public static Game game;
     private static final long serialVersionUID = 1L;
     public static final float UPDATES_PER_SECOND = 60.0f;
-    public static final float FRAMES_PER_SECOND = 1000.0f;
+    public static final float FRAMES_PER_SECOND = 1000000.0f;
     public static final float MS_PER_UPDATE = 1000 / UPDATES_PER_SECOND;
     public static final float MS_PER_FRAME = 1000 / FRAMES_PER_SECOND;
     public static final float NS_PER_UPDATE = 1000000000 / UPDATES_PER_SECOND;
     public static final float NS_PER_FRAME = 1000000000 / FRAMES_PER_SECOND;
+    public static boolean FPS_MODE = false;
     public static final int MAX_UPDATES_BEFORE_RENDER = 5;
-    public static int width = 300, zoomedWidth = width;
-    public static int height = width / 16 * 9, zoomedHeight = height;
-    public static int scale = 4;
-    public static double zoomFactor = 1;
+    private static int width = 300, zoomedWidth = width;
+    private static int height = width / 16 * 9, zoomedHeight = height;
+    private static int scale = 4;
+    private int prevFrameWidth = 0;
+    private int prevFrameHeight = 0;
     private static Player player;
-    public static int scrollHelperX1;
-    public static int scrollHelperY1;
-    private boolean showHitboxes = false;
-    public static Thread gameThread;
+    private static boolean showHitboxes = false;
+    private static Thread gameThread;
     private static JFrame frame;
-    public static Font font = null;
+    private static Renderer render;
+    private static Font mainFont = null;
+    private static HashMap<Integer, Font> fonts = new HashMap<Integer, Font>();
     private boolean running = false;
-    private VolatileImage img = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleVolatileImage(width, height);
-    private static BufferedImage layer1 = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-    public static int[] objects = ((DataBufferInt) layer1.getRaster().getDataBuffer()).getData();
-    private static BufferedImage layer2 = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-    public static int[] overlay = ((DataBufferInt) layer2.getRaster().getDataBuffer()).getData();
-    public static List<String> allPlayerNames;
+    private static GraphicsConfiguration gConf = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+    private static List<String> allPlayerNames;
     private static List<Player> allPlayers;
-    public static InputManager input;
+    private static World world;
+    private static GUIManager guiManager;
+    private static HUD hud;
+    private static InputManager input;
     private static ChatCommandExecutor chatCmdExecutor;
-    public static Mouse mouse;
-    public static Logger logger;
-    public static boolean showRenderTimes = false;
-    public static boolean showUpdateTimes = false;
+    private static ChatManager chatManager;
+    private static Logger logger;
+    private static boolean showRenderTimes = false;
+    private static boolean showUpdateTimes = false;
 
     private Game() {
 	loadFont();
@@ -91,15 +100,19 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	frame = new JFrame();
 	logger = new Logger();
 	input = new InputManager();
-	mouse = new Mouse();
+	long seed = (new Random()).nextInt(4096);
+	world = WorldManager.genWorld(256, 256, seed);
 	chatCmdExecutor = new ChatCommandExecutor();
-	player = new Player(Level.level.getWidthPixels() / 2, Level.level.getHeightPixels() / 2);
-	scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
-	scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
+	render = new Renderer(width, height);
+	player = new Player(world.getWidthPixels() / 2, world.getHeightPixels() / 2);
+	render.setOffset(player.getXPixel() - width / 2, player.getYPixel() - height / 2);
 	allPlayerNames = new ArrayList<String>();
 	allPlayerNames.add(player.getName());
 	allPlayers = new ArrayList<Player>();
 	allPlayers.add(player);
+	guiManager = new GUIManager();
+	hud = new HUD();
+	chatManager = new ChatManager();
 	addKeyListener(input);
 	addMouseWheelListener(input);
 	addMouseListener(input);
@@ -108,7 +121,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
 	EventManager.registerEventListener(this);
-	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES, KeyControlOption.RENDER_HITBOX);
+	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES, KeyControlOption.RENDER_HITBOX,
+		KeyControlOption.TOGGLE_FPS_MODE);
 	InputManager.registerMouseWheelControlHandler(this, ControlMap.DEFAULT, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
     }
 
@@ -120,7 +134,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     private synchronized void stop() {
 	logger.close();
-	Level.level.saveLevel();
+	world.getLevel().saveLevel();
 	TinySound.shutdown();
 	System.exit(0);
 	try {
@@ -128,6 +142,39 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	} catch (InterruptedException e) {
 	    e.printStackTrace();
 	}
+    }
+
+    public static GUIManager getGUIManager() {
+	return guiManager;
+    }
+
+    public static ChatManager getChatManager() {
+	return chatManager;
+    }
+
+    public static HUD getHUD() {
+	return hud;
+    }
+
+    public static Renderer getRenderEngine() {
+	return render;
+    }
+
+    public static List<String> getAllPlayerNames() {
+	return allPlayerNames;
+    }
+
+    public static Font getFont(int size) {
+	if (fonts.containsKey(size))
+	    return fonts.get(size);
+	System.out.println("loaded " + size);
+	Font newFont = mainFont.deriveFont(Font.PLAIN, size);
+	fonts.put(size, newFont);
+	return newFont;
+    }
+
+    public static GraphicsConfiguration getGraphicsConf() {
+	return gConf;
     }
 
     public static Player getMainPlayer() {
@@ -140,6 +187,50 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		return player;
 	}
 	return null;
+    }
+
+    /**
+     * The main game level. More may well be implemented, but for now this is
+     * where the magic happens
+     */
+    public static Level getLevel() {
+	return world.getLevel();
+    }
+
+    /**
+     * The main logger for the game. Used for statistic/data gathering, error
+     * saving for debugging, etc.
+     */
+    public static Logger getLogger() {
+	return logger;
+    }
+
+    public static int getScreenWidth() {
+	return width;
+    }
+
+    public static int getScreenHeight() {
+	return height;
+    }
+
+    public static int getScreenScale() {
+	return scale;
+    }
+
+    public static ChatCommandExecutor getCommandExecutor() {
+	return chatCmdExecutor;
+    }
+
+    public static InputManager getInputManager() {
+	return input;
+    }
+
+    public static boolean showUpdateTimes() {
+	return showUpdateTimes;
+    }
+
+    public static boolean showRenderTimes() {
+	return showRenderTimes;
     }
 
     @Override
@@ -166,38 +257,44 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    lastRenderTime = now;
 	    int thisSecond = (int) (lastUpdateTime / 1000000000);
 	    if (thisSecond > lastSecondTime) {
-		frame.setTitle("Powerworks - " + frameCount + " fps, " + updateCount + " ups");
+		frame.setTitle("Powerworks Industries - " + frameCount + " fps, " + updateCount + " ups");
 		lastSecondTime = thisSecond;
 		logger.addData(Statistic.FPS, frameCount);
 		logger.addData(Statistic.UPS, updateCount);
 		frameCount = 0;
 		updateCount = 0;
-	    }
-	    while (now - lastRenderTime < NS_PER_FRAME && now - lastUpdateTime < NS_PER_UPDATE) {
-		Thread.yield();
-		try {
-		    Thread.sleep(1);
-		} catch (Exception e) {
+		Dimension d = getSize();
+		int newFrameWidth = (int) d.getWidth();
+		int newFrameHeight = (int) d.getHeight();
+		if (newFrameWidth != prevFrameWidth || newFrameHeight != prevFrameHeight) {
+		    render.setSize(newFrameWidth / scale, newFrameHeight / scale);
+		    prevFrameWidth = newFrameWidth;
+		    prevFrameHeight = newFrameHeight;
+		    render.setOffset(player.getXPixel() - Game.getRenderEngine().getWidthPixels() / 2, player.getYPixel() - Game.getRenderEngine().getHeightPixels() / 2);
 		}
-		now = System.nanoTime();
 	    }
+	    if (!FPS_MODE)
+		while (now - lastRenderTime < NS_PER_FRAME && now - lastUpdateTime < NS_PER_UPDATE) {
+		    Thread.yield();
+		    try {
+			Thread.sleep(1);
+		    } catch (Exception e) {
+		    }
+		    now = System.nanoTime();
+		}
 	}
 	stop();
     }
 
     public void update() {
-	long time = System.nanoTime();
-	InputManager.update();
-	if (showUpdateTimes)
-	    System.out.println("----------");
-	Task.update();
-	Level.level.update();
-	mouse.update();
-	Timer.update();
-	AudioManager.update();
-	SynchronizedAnimatedTexture.update();
-	if (showUpdateTimes) {
-	    System.out.println("TOTAL:                       " + (System.nanoTime() - time) + " ns");
+	if (State.CURRENT_STATE == State.INGAME) {
+	    InputManager.update();
+	    Task.update();
+	    render.update();
+	    world.update();
+	    Timer.update();
+	    SyncAnimation.update();
+	} else if (State.CURRENT_STATE == State.MAIN_MENU) {
 	}
 	showUpdateTimes = false;
     }
@@ -208,55 +305,16 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    createBufferStrategy(3);
 	    return;
 	}
-	long time = 0, startTime = 0;
-	if (showRenderTimes) {
-	    time = startTime = System.nanoTime();
-	}
 	do {
 	    do {
-		Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
-		if (showRenderTimes) {
-		    long diff = System.nanoTime() - time;
-		    logger.addAndLog(Statistic.GET_DRAW_GRAPHICS, (int) diff, true);
-		    time = System.nanoTime();
-		}
-		if (StateManager.state == StateManager.INGAME) {
-		    for (int i = 0; i < overlay.length; i++)
-			overlay[i] = 0;
-		    if (showRenderTimes) {
-			long diff = System.nanoTime() - time;
-			logger.addAndLog(Statistic.OVERLAY_CLEAR, (int) diff, true);
-			time = System.nanoTime();
-		    }
-		    Level.level.render(scrollHelperX1, scrollHelperY1, player);
-		    if (showRenderTimes)
-			time = System.nanoTime();
-		    g2d.drawImage(layer1, 0, 0, getWidth(), getHeight(), null);
-		    if (showRenderTimes) {
-			long diff = System.nanoTime() - time;
-			Game.logger.addAndLog(Statistic.RENDER_OBJECTS_TO_GRAPHICS, (int) diff, true);
-			time = System.nanoTime();
-		    }
-		    mouse.render();
-		    if (showRenderTimes) {
-			long diff = System.nanoTime() - time;
-			Game.logger.addAndLog(Statistic.DRAW_MOUSE, (int) diff, true);
-			time = System.nanoTime();
-		    }
-		    g2d.drawImage(layer2, 0, 0, getWidth(), getHeight(), null);
-		    if (showRenderTimes) {
-			long diff = System.nanoTime() - time;
-			Game.logger.addAndLog(Statistic.RENDER_OVERLAY_TO_GRAPHICS, (int) diff, true);
-			time = System.nanoTime();
-		    }
-		} else if (StateManager.state == StateManager.MAIN_MENU) {
-		}
-		if (showRenderTimes)
-		    time = System.nanoTime();
-		bufferStrat.show();
-		if (showRenderTimes) {
-		    Game.logger.addAndLog(Statistic.SHOW_BUFFER_STRAT, (int) (System.nanoTime() - time), true);
-		    Game.logger.addAndLog(Statistic.TOTAL_RENDER_TIME, (int) (System.nanoTime() - startTime), true);
+		if (State.CURRENT_STATE == State.INGAME) {
+		    Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
+		    render.feed(g2d);
+		    world.render();
+		    guiManager.render();
+		    hud.render();
+		    g2d.dispose();
+		    bufferStrat.show();
 		}
 	    } while (bufferStrat.contentsRestored());
 	    showRenderTimes = false;
@@ -268,7 +326,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    Font font = Font.createFont(Font.TRUETYPE_FONT, Game.class.getResourceAsStream("/font/MunroSmall.ttf")).deriveFont(Font.PLAIN, 28);
 	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 	    ge.registerFont(font);
-	    Game.font = font;
+	    mainFont = font;
+	    fonts.put(28, font);
 	} catch (FontFormatException | IOException ex) {
 	    ex.printStackTrace();
 	}
@@ -300,7 +359,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     public static void main(String[] args) {
 	System.out.println("Starting game...");
-	TinySound.init();
+	// TinySound.init();
 	game = new Game();
 	try {
 	    frame.setIconImage(ImageIO.read(Game.class.getResource("/textures/misc/logo.png")));
@@ -308,7 +367,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    e.printStackTrace();
 	}
 	try {
-	    frame.setResizable(false);
+	    frame.setResizable(true);
 	    frame.setTitle("Powerworks - Loading");
 	    frame.add(game);
 	    frame.pack();
@@ -320,16 +379,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    game.start();
 	    Scanner scanner = new Scanner(System.in);
 	    while (scanner.hasNext()) {
-		String next = scanner.nextLine();
-		try {
-		    String[] commandArgs = next.substring(next.indexOf(" ") + 1).split(" ");
-		    for (int i = 0; i < commandArgs.length; i++) {
-			commandArgs[i].trim();
-		    }
-		    chatCmdExecutor.executeCommand(next.substring(0, next.indexOf(" ")).trim(), commandArgs, player);
-		} catch (StringIndexOutOfBoundsException e) {
-		    System.out.println("Invalid command");
-		}
+		chatCmdExecutor.executeCommand(scanner.nextLine(), player);
 	    }
 	    scanner.close();
 	} catch (Exception e) {
@@ -338,58 +388,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	}
     }
 
-    public boolean showHitboxes() {
+    public static boolean showHitboxes() {
 	return showHitboxes;
-    }
-
-    @EventHandler
-    public void handleZoomEvent(ZoomEvent e) {
-	zoomedWidth = (int) (width * e.zoomFactor);
-	zoomedHeight = (int) (height * e.zoomFactor);
-	layer1 = new BufferedImage(zoomedWidth, zoomedHeight, BufferedImage.TYPE_INT_ARGB);
-	objects = ((DataBufferInt) layer1.getRaster().getDataBuffer()).getData();
-	Screen.screen.set(zoomedWidth, zoomedHeight, objects);
-	scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
-	scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
-    }
-
-    @EventHandler
-    public void handleViewMoveEvent(ViewMoveEvent e) {
-	scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
-	scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
-    }
-
-    @Override
-    public void handleMouseWheelPress(MouseWheelPress p) {
-	MouseWheelControlOption option = p.getOption();
-	switch (option) {
-	    case ZOOM_IN:
-		if (zoomFactor > 0.89) {
-		    zoomFactor /= 1.1;
-		    zoomedWidth = (int) (width * zoomFactor);
-		    zoomedHeight = (int) (height * zoomFactor);
-		    layer1 = new BufferedImage(zoomedWidth, zoomedHeight, BufferedImage.TYPE_INT_ARGB);
-		    objects = ((DataBufferInt) layer1.getRaster().getDataBuffer()).getData();
-		    Screen.screen.set(zoomedWidth, zoomedHeight, objects);
-		    scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
-		    scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
-		}
-		break;
-	    case ZOOM_OUT:
-		if (zoomFactor < 4) {
-		    zoomFactor *= 1.1;
-		    zoomedWidth = (int) (width * zoomFactor);
-		    zoomedHeight = (int) (height * zoomFactor);
-		    layer1 = new BufferedImage(zoomedWidth, zoomedHeight, BufferedImage.TYPE_INT_ARGB);
-		    objects = ((DataBufferInt) layer1.getRaster().getDataBuffer()).getData();
-		    Screen.screen.set(zoomedWidth, zoomedHeight, objects);
-		    scrollHelperX1 = (player.getXPixel() + (player.getTexture().getWidthPixels() / 2)) - Screen.screen.width / 2 + player.getTexture().getWidthPixels() / 2;
-		    scrollHelperY1 = player.getYPixel() - Screen.screen.height / 2 + player.getTexture().getHeightPixels() / 2;
-		}
-		break;
-	    default:
-		break;
-	}
     }
 
     @Override
@@ -425,13 +425,31 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case RENDER_HITBOX:
 		switch (pressType) {
 		    case PRESSED:
+			//render.setZoom(render.getZoom() + 0.1);
+			//System.out.println(render.getCurrentViewArea());
+			chatManager.sendMessage("Hitbox rendering toggled to: " + !showHitboxes);
 			showHitboxes = !showHitboxes;
 			break;
 		    default:
 			break;
 		}
+		break;
+	    case TOGGLE_FPS_MODE:
+		switch(pressType) {
+		    case PRESSED:
+			chatManager.sendMessage("Maximum FPS mode toggled to: " + !FPS_MODE);
+			FPS_MODE = !FPS_MODE;
+			break;
+		    default:
+			break;
+		}
+		break;
 	    default:
 		break;
 	}
+    }
+
+    @Override
+    public void handleMouseWheelPress(MouseWheelPress press) {
     }
 }

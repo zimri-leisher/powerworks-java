@@ -2,15 +2,16 @@ package powerworks.collidable;
 
 public enum Hitbox {
 
-    PLAYER(8, 16, 16, 16), 
+    PLAYER(-8, 0, 16, 16), 
     TILE(0, 0, 16, 16),
     CONVEYOR_BELT_ITEM(1, 0, 14, 16),
     IRON_ORE_ITEM(0, 1, 16, 15),
+    TWO_BY_TWO_TILE(0, 0, 32, 32),
     NONE(false);
     
-    public int width, height;
-    public int xStart, yStart;
-    public boolean solid;
+    private int width, height;
+    private int xStart, yStart;
+    private boolean solid;
 
     private Hitbox(int xStart, int yStart, int width, int height) {
 	this.width = width;
@@ -22,6 +23,26 @@ public enum Hitbox {
 
     private Hitbox(boolean solid) {
 	this.solid = solid;
+    }
+    
+    public boolean isSolid() {
+	return solid;
+    }
+    
+    public int getWidthPixels() {
+	return width;
+    }
+    
+    public int getHeightPixels() {
+	return height;
+    }
+    
+    public int getXStart() {
+	return xStart;
+    }
+    
+    public int getYStart() {
+	return yStart;
     }
     
     @Override

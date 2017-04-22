@@ -4,8 +4,8 @@ import powerworks.block.BlockType;
 import powerworks.graphics.Texture;
 
 public class Item{
-    public int quantity;
-    public ItemType type;
+    private int quantity;
+    private ItemType type;
     
     public Item(ItemType type, int quantity) {
 	this.type = type;
@@ -14,6 +14,22 @@ public class Item{
     
     public Item(ItemType itemtype) {
 	this(itemtype, 1);
+    }
+    
+    public void setQuantity(int quantity) {
+	this.quantity = quantity;
+    }
+    
+    public void setType(ItemType type) {
+	this.type = type;
+    }
+    
+    public int getQuantity() {
+	return quantity;
+    }
+    
+    public ItemType getType() {
+	return type;
     }
     
     public int getID() {

@@ -1,135 +1,172 @@
 package powerworks.graphics;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Transparency;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBufferInt;
+import powerworks.main.Game;
 
 public class ImageModifier {
 
+    public static final int SCALE = 0;
+    public static final int SCALE_WIDTH = 1;
+    public static final int SCALE_HEIGHT = 2;
     /**
-     * Value = 0.0 -> alpha = 0, value = 1.0 -> alpha = 255
+     * Sets alpha for entire image, value is from 0-255, 0 being fully transparent, 255 being opaque
      */
-    public static final int SET_ALPHA = 0;
+    public static final int SET_ALPHA = 3;
     /**
-     * Any value will be accepted for args, it makes no difference on end result
+     * Converts entire image entirely to red. Value is ignored
      */
-    public static final int TO_GREEN = 1;
+    public static final int TO_RED = 4;
     /**
-     * Any value will be accepted for args, it makes no difference on end result
+     * Converts entire image entirely to green. Value is ignored
      */
-    public static final int TO_RED = 2;
+    public static final int TO_GREEN = 5;
     /**
-     * Value = 0.5 -> width and height are halved, value = 2 -> width and height
-     * are doubled
+     * Converts entire image entirely to blue. Value is ignored
      */
-    public static final int SCALE = 3;
+    public static final int TO_BLUE = 6;
+    /**
+     * Value is from 0-255, 0 being no red, 255 being full red
+     */
+    public static final int SET_RED = 7;
+    /**
+     * Value is from 0-255, 0 being no green, 255 being full green
+     */
+    public static final int SET_GREEN = 8;
+    /**
+     * Value is from 0-255, 0 being no blue, 255 being full blue
+     */
+    public static final int SET_BLUE = 9;
 
-    public static ModImage modify(int[] pixels, int widthPixels, int heightPixels, boolean hasTransparency, int key, double value) {
-	switch (key) {
-	    case SET_ALPHA:
-		return setAlpha(pixels, widthPixels, heightPixels, hasTransparency, value);
-	    case TO_GREEN:
-		return getPixelsInGreen(pixels, widthPixels, heightPixels, hasTransparency);
-	    case TO_RED:
-		return getPixelsInRed(pixels, widthPixels, heightPixels, hasTransparency);
-	    case SCALE:
-		return scale(pixels, widthPixels, heightPixels, hasTransparency, value);
-	    default:
-		throw new IllegalArgumentException("Invalid key");
-	}
+    /**
+     * Modifies an image based on the key and value pair inputted
+     * @param image image to modify
+     * @param key the key from ImageModifier. Ex: <tt> ImageModifier.SCALE </tt>
+     * @param value the value. What it does depends on key, check key description for more information
+     * @param interpolationType key from the AffineTransformOp class (<tt>TYPE_BICUBIC, TYPE_BILINEAR </tt>and<tt> TYPE_NEAREST_NEIGHBOR</tt>)
+     * @return the new BufferedImage in compatible form to the default graphics configuration
+     */
+    public static BufferedImage modify(Image image, int key, double value, int interpolationType) {
+	return modify(image.getImage(), key, value, interpolationType);
     }
-
-    public static ModImage modify(ModImage m, int key, double value) {
-	return modify(m.pixels, m.widthPixels, m.heightPixels, m.hasTransparency, key, value);
+    
+    /**
+     * Modifies an image based on the key and value pair inputted
+     * @param image image to modify
+     * @param key the key from ImageModifier. Ex: <tt> ImageModifier.SCALE </tt>
+     * @param value the value. What it does depends on key, check key description for more information. If it involves scaling/other such transforms, nearest neighbor will be used
+     * @return the new BufferedImage in compatible form to the default graphics configuration
+     */
+    public static BufferedImage modify(Image image, int key, double value) {
+	return modify(image, key, value, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
     }
-
-    public static ModImage modify(Image image, int key, double value) {
-	return modify(image.getPixels(), image.getWidthPixels(), image.getHeightPixels(), image.hasTransparency(), key, value);
+    
+    /**
+     * Modifies an image based on the key and value pair inputted
+     * @param image image to modify
+     * @param key the key from ImageModifier. Ex: <tt> ImageModifier.SCALE </tt>
+     * @param value the value. What it does depends on key, check key description for more information. If it involves scaling/other such transforms, nearest neighbor will be used
+     * @return the new BufferedImage in compatible form to the default graphics configuration
+     */
+    public static BufferedImage modify(Texture texture, int key, double value) {
+	return modify(texture.getImage(), key, value, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
     }
-
-    static class ModImage {
-
-	int[] pixels;
-	int widthPixels, heightPixels;
-	boolean hasTransparency;
-
-	private ModImage(int[] pixels, int width, int height, boolean hasTransparency) {
-	    this.pixels = pixels;
-	    this.widthPixels = width;
-	    this.heightPixels = height;
-	    this.hasTransparency = hasTransparency;
-	}
+    
+    public static BufferedImage modify(BufferedImage image, int key, double value) {
+	return modify(image, key, value, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
     }
-
-    public static ModImage scale(int[] pixels, int widthPixels, int heightPixels, boolean hasTransparency, double scale) {
-	int[] newPixels = new int[(int) (pixels.length * scale * scale)];
-	final double absoluteHeightPixels = scale * heightPixels;
-	final double absoluteWidthPixels = scale * widthPixels;
-	for (int y = 0; y < absoluteHeightPixels; y++) {
-	    final int ya = (int) (y * absoluteWidthPixels);
-	    final int yc = (int) (y / scale) * widthPixels;
-	    for (int x = 0; x < absoluteWidthPixels; x++) {
-		int xa = x;
-		int xc = (int) (x / scale);
-		final int coord2 = xa + ya;
-		newPixels[coord2] = pixels[xc + yc];
+    
+    /**
+     * @param interpolationType
+     *            the key from the AffineTransformOp class
+     */
+    public static BufferedImage modify(BufferedImage image, int key, double value, int interpolationType) {
+	BufferedImage newImg = null;
+	if (key == SCALE) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage((int) (image.getWidth() * value), (int) (image.getHeight() * value), Transparency.TRANSLUCENT);
+	    Graphics2D g2d = newImg.createGraphics();
+	    g2d.drawImage(image, 0, 0, (int) (image.getWidth() * value), (int) (image.getHeight() * value), null);
+	    g2d.dispose();
+	} else if (key == SCALE_WIDTH) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage((int) (image.getWidth() * value), image.getHeight(), Transparency.TRANSLUCENT);
+	    Graphics2D g2d = newImg.createGraphics();
+	    g2d.drawImage(image, 0, 0, (int) (image.getWidth() * value), image.getHeight(), null);
+	    g2d.dispose();
+	} else if (key == SCALE_HEIGHT) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage(image.getWidth(), (int) (image.getHeight() * value), Transparency.TRANSLUCENT);
+	    Graphics2D g2d = newImg.createGraphics();
+	    g2d.drawImage(image, 0, 0, image.getWidth(), (int) (image.getHeight() * value), null);
+	    g2d.dispose();
+	} else if (key == TO_RED) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.TRANSLUCENT);
+	    for(int y = 0; y < image.getHeight(); y++) {
+		for(int x = 0; x < image.getWidth(); x++) {
+		    Color c = new Color(image.getRGB(x, y));
+		    Color newC = new Color(c.getRed(), 0, 0, (c.getRGB() >> 24) & 0xFF);
+		    newImg.setRGB(x, y, newC.getRGB());
+		}
+	    }
+	} else if (key == TO_GREEN) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.TRANSLUCENT);
+	    for(int y = 0; y < image.getHeight(); y++) {
+		for(int x = 0; x < image.getWidth(); x++) {
+		    Color c = new Color(image.getRGB(x, y), true);
+		    Color newC = new Color(0, c.getGreen(), 0, c.getAlpha());
+		    newImg.setRGB(x, y, newC.getRGB());
+		}
+	    }
+	} else if (key == TO_BLUE) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.TRANSLUCENT);
+	    for(int y = 0; y < image.getHeight(); y++) {
+		for(int x = 0; x < image.getWidth(); x++) {
+		    Color c = new Color(image.getRGB(x, y));
+		    Color newC = new Color(0, 0, c.getBlue(), (c.getRGB() >> 24) & 0xFF);
+		    newImg.setRGB(x, y, newC.getRGB());
+		}
+	    }
+	} else if(key == SET_RED) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.TRANSLUCENT);
+	    for(int y = 0; y < image.getHeight(); y++) {
+		for(int x = 0; x < image.getWidth(); x++) {
+		    Color c = new Color(image.getRGB(x, y));
+		    Color newC = new Color((int) value, c.getGreen(), c.getBlue(), (c.getRGB() >> 24) & 0xFF);
+		    newImg.setRGB(x, y, newC.getRGB());
+		}
+	    }
+	} else if(key == SET_GREEN) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.TRANSLUCENT);
+	    for(int y = 0; y < image.getHeight(); y++) {
+		for(int x = 0; x < image.getWidth(); x++) {
+		    Color c = new Color(image.getRGB(x, y));
+		    Color newC = new Color(c.getRed(), (int) value, c.getBlue(), (c.getRGB() >> 24) & 0xFF);
+		    newImg.setRGB(x, y, newC.getRGB());
+		}
+	    }
+	} else if(key == SET_BLUE) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.TRANSLUCENT);
+	    for(int y = 0; y < image.getHeight(); y++) {
+		for(int x = 0; x < image.getWidth(); x++) {
+		    Color c = new Color(image.getRGB(x, y));
+		    Color newC = new Color(c.getRed(), c.getGreen(), (int) value, (c.getRGB() >> 24) & 0xFF);
+		    newImg.setRGB(x, y, newC.getRGB());
+		}
+	    }
+	} else if(key == SET_ALPHA) {
+	    newImg = Game.getGraphicsConf().createCompatibleImage(image.getWidth(), image.getHeight(), Transparency.TRANSLUCENT);
+	    for(int y = 0; y < image.getHeight(); y++) {
+		for(int x = 0; x < image.getWidth(); x++) {
+		    Color c = new Color(image.getRGB(x, y), true);
+		    Color newC = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (value * (c.getAlpha() / 255)));
+		    newImg.setRGB(x, y, newC.getRGB());
+		}
 	    }
 	}
-	ModImage m = new ModImage(newPixels, (int) (widthPixels * scale), (int) (heightPixels * scale), hasTransparency);
-	return m;
-    }
-
-    /**
-     * Sets the alpha value of the image
-     * 
-     * @param pixels
-     *            the pixels to modify
-     * 
-     * @param alpha
-     *            the alpha value (1 being opaque, 0 being transparent) to set
-     *            to
-     */
-    public static ModImage setAlpha(int[] pixels, int widthPixels, int heightPixels, boolean hasTransparency, double alpha) {
-	if (alpha > 1 || alpha < 0)
-	    throw new IllegalArgumentException("Invalid key");
-	int[] newPixels = new int[pixels.length];
-	for (int i = 0; i < pixels.length; i++) {
-	    Color c = new Color(pixels[i]);
-	    newPixels[i] = (new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (alpha * 255))).getRGB();
-	}
-	ModImage m = new ModImage(newPixels, widthPixels, heightPixels, hasTransparency);
-	return m;
-    }
-
-    /**
-     * Sets the hue of the image to green
-     * 
-     * @param pixels
-     *            the pixels to modify
-     * 
-     */
-    public static ModImage getPixelsInGreen(int[] pixels, int widthPixels, int heightPixels, boolean hasTransparency) {
-	int[] newPixels = new int[pixels.length];
-	for (int i = 0; i < pixels.length; i++) {
-	    Color c = new Color(pixels[i]);
-	    newPixels[i] = (new Color(0, c.getGreen(), 0, c.getAlpha())).getRGB();
-	}
-	ModImage m = new ModImage(newPixels, widthPixels, heightPixels, hasTransparency);
-	return m;
-    }
-
-    /**
-     * Sets the hue of the image to red
-     * 
-     * @param pixels
-     *            the pixels to modify
-     * 
-     */
-    public static ModImage getPixelsInRed(int[] pixels, int widthPixels, int heightPixels, boolean hasTransparency) {
-	int[] newPixels = new int[pixels.length];
-	for (int i = 0; i < pixels.length; i++) {
-	    Color c = new Color(pixels[i]);
-	    newPixels[i] = (new Color(c.getRed(), 0, 0, c.getAlpha())).getRGB();
-	}
-	ModImage m = new ModImage(newPixels, widthPixels, heightPixels, hasTransparency);
-	return m;
+	return newImg;
     }
 }

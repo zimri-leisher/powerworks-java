@@ -1,58 +1,74 @@
 package powerworks.graphics;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import powerworks.main.Game;
 
-public enum Image {
-    ERROR("/textures/misc/error.png"), 
-    HOTBAR_SLOT("/textures/gui/hotbar_slot.png"), 
-    HOTBAR_SLOT_SELECTED("/textures/gui/hotbar_slot_selected.png"), 
-    CURSOR_DEFAULT("/textures/cursor/cursor_default.png"), 
-    CURSOR_LEFT_CLICK("/textures/cursor/cursor_left_click.png"), 
-    IRON_ORE_ITEM("/textures/items/iron_ore_raw.png"), 
-    CONVEYOR_BELT_ITEM("/textures/items/conveyor_belt.png"), 
-    IRON_INGOT("/textures/items/iron_ingot.png"),
-    ITEM_SLOT("/textures/gui/item_slot.png"),
-    ITEM_SLOT_HIGHLIGHT("/textures/gui/item_slot_highlight.png"),
-    PLAYER_INVENTORY("/textures/gui/player_inventory.png");
+public class Image implements Texture {
+
+    public static final Image ERROR = new Image("/textures/misc/error.png");
+    public static final Image BLOCK_PLACEABLE = new Image("/textures/block/placeable.png");
+    public static final Image BLOCK_NOT_PLACEABLE = new Image("/textures/block/not_placeable.png");
+    public static final Image HOTBAR_SLOT = new Image("/textures/gui/hotbar_slot.png");
+    public static final Image HOTBAR_SLOT_SELECTED = new Image("/textures/gui/hotbar_slot_selected.png");
+    public static final Image CURSOR_DEFAULT = new Image("/textures/cursor/cursor_default.png");
+    public static final Image CURSOR_LEFT_CLICK = new Image("/textures/cursor/cursor_left_click.png");
+    public static final Image IRON_ORE_ITEM = new Image("/textures/item/iron_ore_raw.png");
+    public static final Image CONVEYOR_BELT_ITEM = new Image("/textures/item/conveyor_belt.png");
+    public static final Image IRON_INGOT = new Image("/textures/item/iron_ingot.png");
+    public static final Image ITEM_SLOT = new Image("/textures/gui/item_slot.png");
+    public static final Image ITEM_SLOT_HIGHLIGHT = new Image(ImageModifier.modify(new Image("/textures/gui/item_slot_highlight.png"), ImageModifier.SCALE, 16));
+    public static final Image PLAYER_INVENTORY = new Image("/textures/gui/player_inventory.png");
+    public static final Image CHAT_BAR = new Image(ImageModifier.modify(ImageModifier.modify(new Image("/textures/gui/chat_bar.png"), ImageModifier.SCALE_WIDTH, 180), ImageModifier.SCALE_HEIGHT, 10));
+    public static final Image ARROW = new Image(ImageModifier.modify(new Image("/textures/misc/arrow.png"), ImageModifier.SET_ALPHA, 50));
+    public static final Image VOID = new Image(new Color(0));
+    public static final Image ORE_MINER = new Image(ImageModifier.modify(new Image("/textures/block/ore_miner.png"), ImageModifier.SCALE, 1));
     
-    private int width, height;
-    private int[] pixels;
-    private boolean hasTransparency;
+    private BufferedImage image;
 
     private Image(String path) {
-	load(path);
-    }
-
-    void load(String path) {
-	System.out.println("Loading Image " + toString());
 	try {
-	    BufferedImage image = ImageIO.read(Image.class.getResource(path));
-	    width = image.getWidth();
-	    height = image.getHeight();
-	    pixels = new int[width * height];
-	    image.getRGB(0, 0, width, height, pixels, 0, width);
-	    hasTransparency = image.getTransparency() != Transparency.OPAQUE;
+	    BufferedImage src = ImageIO.read(Image.class.getResource(path));
+	    BufferedImage dest = Game.getGraphicsConf().createCompatibleImage(src.getWidth(), src.getHeight(), Transparency.TRANSLUCENT);
+	    Graphics2D g = dest.createGraphics();
+	    g.setComposite(AlphaComposite.SrcOver);
+	    g.drawImage(src, 0, 0, null);
+	    g.dispose();
+	    image = dest;
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
     }
     
-    public int[] getPixels() {
-	return pixels;
+    private Image(BufferedImage image) {
+	this.image = image;
+    }
+    
+    /**
+     * 1x1 pixel of the color
+     */
+    private Image(Color c) {
+	image = Game.getGraphicsConf().createCompatibleImage(1, 1);
+	Graphics2D g2d = image.createGraphics();
+	g2d.setColor(c);
+	g2d.fillRect(0, 0, image.getWidth(), image.getHeight());
+	g2d.dispose();
     }
 
-    public int getHeightPixels() {
-	return height;
+    public BufferedImage getImage() {
+	return image;
     }
 
     public int getWidthPixels() {
-	return width;
+	return image.getWidth();
     }
 
-    public boolean hasTransparency() {
-	return hasTransparency;
+    public int getHeightPixels() {
+	return image.getHeight();
     }
 }
