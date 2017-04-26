@@ -32,7 +32,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static HashMap<ControlMap, HashMap<MouseWheelControlHandler, MouseWheelControlOption[]>> mouseWheelHandlers = new HashMap<ControlMap, HashMap<MouseWheelControlHandler, MouseWheelControlOption[]>>();
     static List<MouseMovementDetector> mouseDetectors = new ArrayList<MouseMovementDetector>();
     static TextListener textListener = null;
-    static ControlMap map = ControlMap.DEFAULT;
+    static ControlMap map = ControlMap.MAIN_MENU;
 
     public static void registerKeyControlHandler(KeyControlHandler h, ControlMap map, KeyControlOption... wantedControls) {
 	keyHandlers.get(map).put(h, wantedControls);
@@ -162,7 +162,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     public static void screenMoved() {
-	mouseLevelXPixel = (int) ((mouseXPixel - 5) + Game.getRenderEngine().getXPixelOffset());
+	mouseLevelXPixel = (int) ((mouseXPixel - 3) + Game.getRenderEngine().getXPixelOffset());
 	mouseLevelYPixel = (int) (mouseYPixel + Game.getRenderEngine().getYPixelOffset());
 	mouseDetectors.forEach((MouseMovementDetector m) -> m.setLevel(true));
     }
@@ -212,7 +212,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	mouseX = e.getX();
 	mouseYPixel = mouseY / Game.getScreenScale();
 	mouseXPixel = mouseX / Game.getScreenScale();
-	mouseLevelXPixel = (int) ((mouseXPixel - 5) + Game.getRenderEngine().getXPixelOffset());
+	mouseLevelXPixel = (int) ((mouseXPixel - 3) + Game.getRenderEngine().getXPixelOffset());
 	mouseLevelYPixel = (int) (mouseYPixel + Game.getRenderEngine().getYPixelOffset());
 	mouseDetectors.forEach((MouseMovementDetector d) -> {
 	    d.setScreen(true);
@@ -228,7 +228,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	mouseX = e.getX();
 	mouseYPixel = mouseY / Game.getScreenScale();
 	mouseXPixel = mouseX / Game.getScreenScale();
-	mouseLevelXPixel = (int) ((mouseXPixel - 5) + Game.getRenderEngine().getXPixelOffset());
+	mouseLevelXPixel = (int) ((mouseXPixel - 3) + Game.getRenderEngine().getXPixelOffset());
 	mouseLevelYPixel = (int) (mouseYPixel + Game.getRenderEngine().getYPixelOffset());
 	mouseDetectors.forEach((MouseMovementDetector d) -> {
 	    d.setScreen(true);
@@ -258,12 +258,14 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	    Game.getLogger().log("Bound mouse button " + modifier + ":" + e.getButton() + " to " + mouseBinding);
 	    Game.getChatManager().sendMessage("Bound mouse button " + modifier + ":" + e.getButton() + " to " + mouseBinding);
 	    mouseBinding = null;
-	} else if (!Game.getRenderEngine().onClick(mouseXPixel, mouseYPixel) && mouseButton == -1) {
+	} else if (mouseButton == -1) {
+	    if (!Game.getRenderEngine().onClick(mouseXPixel - 3, mouseYPixel)) {
+		MouseControlOption option = map.getMouseControl(mouseButton);
+		MousePress press = new MousePress(ControlPressType.PRESSED, option);
+		if (option != null && !queue.contains(press))
+		    queue.add(press);
+	    }
 	    mouseButton = e.getButton();
-	    MouseControlOption option = map.getMouseControl(mouseButton);
-	    MousePress press = new MousePress(ControlPressType.PRESSED, option);
-	    if (option != null && !queue.contains(press))
-		queue.add(press);
 	}
     }
 
@@ -271,7 +273,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     public void mouseReleased(MouseEvent e) {
 	modifier = e.getModifiers();
 	if (mouseButton != -1) {
-	    Game.getRenderEngine().onRelease(mouseXPixel, mouseYPixel);
+	    Game.getRenderEngine().onRelease(mouseXPixel - 3, mouseYPixel);
 	    MouseControlOption option = map.getMouseControl(mouseButton);
 	    mouseButton = -1;
 	    MousePress press = new MousePress(ControlPressType.RELEASED, option);

@@ -9,11 +9,11 @@ public class GUIManager {
 
     List<GUI> guis = new ArrayList<GUI>();
 
-    public void open(GUI gui) {
+    void open(GUI gui) {
 	guis.add(gui);
     }
 
-    public void close(GUI gui) {
+    void close(GUI gui) {
 	guis.remove(gui);
     }
 

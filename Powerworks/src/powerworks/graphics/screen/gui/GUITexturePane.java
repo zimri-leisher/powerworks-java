@@ -37,17 +37,12 @@ public class GUITexturePane extends GUIElement{
 	    widthScale = widthPixels / (float) getTexture().getWidthPixels();
 	    heightScale = heightPixels / (float) getTexture().getHeightPixels();
 	}
-	Game.getRenderEngine().renderTexture(getTexture(), xPixel + parent.xPixel, yPixel + parent.yPixel, 1, widthScale, heightScale, 0, 1, true);
+	Game.getRenderEngine().renderTexture(getTexture(), xPixel, yPixel, 1, widthScale, heightScale, 0, 1, true);
     }
 
     @Override
     public void onClick(int xPixel, int yPixel) {
 	highlight = true;
-    }
-
-    @Override
-    public void whileMouseOver() {
-	
     }
 
     @Override
@@ -67,6 +62,21 @@ public class GUITexturePane extends GUIElement{
 
     @Override
     public void onRelease(int xPixel, int yPixel) {
+	
+    }
+    
+    @Override
+    public String toString() {
+	return "GUI texture pane at " + xPixel + ", " + yPixel + ", width: " + widthPixels + ", height: " + heightPixels + ", open: " + open + ", texture: " + getTexture().toString() + ", stretch to fit: " + stretchToFit;
+    }
+
+    @Override
+    public void onMouseEnter() {
+	
+    }
+
+    @Override
+    public void onMouseLeave() {
 	
     }
 }

@@ -62,5 +62,8 @@ public abstract class ScreenObject {
     
     public abstract void update();
     
+    /**
+     * Used for keeping things like the hotbar at the bottom of the screen if the size changes
+     */
     public abstract void onScreenSizeChange();
 }

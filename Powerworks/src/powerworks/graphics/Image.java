@@ -28,6 +28,10 @@ public class Image implements Texture {
     public static final Image ARROW = new Image(ImageModifier.modify(new Image("/textures/misc/arrow.png"), ImageModifier.SET_ALPHA, 50));
     public static final Image VOID = new Image(new Color(0));
     public static final Image ORE_MINER = new Image(ImageModifier.modify(new Image("/textures/block/ore_miner.png"), ImageModifier.SCALE, 1));
+    public static final Image GUI_BUTTON = new Image("/textures/gui/button.png");
+    public static final Image GUI_BUTTON_HIGHLIGHT = new Image("/textures/gui/button_highlight.png");
+    public static final Image GUI_BUTTON_CLICK = new Image("/textures/gui/button_click.png");
+    public static final Image MAIN_MENU_BACKGROUND = new Image(new Color(0x666666));
     
     private BufferedImage image;
 

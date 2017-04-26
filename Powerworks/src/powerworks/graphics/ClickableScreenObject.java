@@ -5,6 +5,13 @@ public abstract class ClickableScreenObject extends ScreenObject {
 
     protected int widthPixels, heightPixels;
     
+    protected boolean open = false;
+    
+    /**
+     * Don't forget about this!
+     */
+    protected boolean mouseOn = false;
+    
     /**
      * @param xPixel relative to screen
      * @param yPixel relative to screen
@@ -25,8 +32,24 @@ public abstract class ClickableScreenObject extends ScreenObject {
 	return heightPixels;
     }
     
+    public boolean isOpen() {
+	return open;
+    }
+    
+    public void open() {
+	open = true;
+    }
+    
+    public void close() {
+	open = false;
+    }
+    
+    public void toggle() {
+	open = !open;
+    }
+    
     /**
-     * X and Y pixel are relative to this render component
+     * X pixel and Y pixel are not relative
      */
     public abstract void onClick(int xPixel, int yPixel);
     
@@ -35,10 +58,12 @@ public abstract class ClickableScreenObject extends ScreenObject {
      */
     public abstract void onClickOff();
     
-    public abstract void whileMouseOver();
+    public abstract void onMouseEnter();
+    
+    public abstract void onMouseLeave();
     
     /**
-     * X and Y pixel are relative to this render component
+     * X pixel and Y pixel are not relative
      */
     public abstract void onRelease(int xPixel, int yPixel);
 }

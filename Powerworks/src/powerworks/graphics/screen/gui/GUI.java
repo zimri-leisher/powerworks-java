@@ -20,11 +20,13 @@ public abstract class GUI {
 
     public void open() {
 	Game.getGUIManager().open(this);
+	elements.forEach(GUIElement::open);
 	open = true;
     }
 
     public void close() {
 	open = false;
+	elements.forEach(GUIElement::close);
 	Game.getGUIManager().close(this);
     }
 

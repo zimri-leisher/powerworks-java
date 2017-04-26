@@ -22,15 +22,11 @@ public class GUIText extends GUIElement {
 
     @Override
     public void render() {
-	Game.getRenderEngine().renderText(text, xPixel + parent.xPixel, yPixel + parent.yPixel, size, color);
+	Game.getRenderEngine().renderText(text, xPixel, yPixel, size, color);
     }
 
     @Override
     public void onClick(int xPixel, int yPixel) {
-    }
-
-    @Override
-    public void whileMouseOver() {
     }
 
     @Override
@@ -48,6 +44,22 @@ public class GUIText extends GUIElement {
 
     @Override
     public void onRelease(int xPixel, int yPixel) {
+	
+    }
+    
+    @Override
+    public String toString() {
+	return "GUI text at " + xPixel + ", " + yPixel + ", width: " + widthPixels + ", height: " + heightPixels + ", open: " + open + " text: " + text + ", color: " + Integer.toHexString(color) + ", size: " + size;
+    
+    }
+
+    @Override
+    public void onMouseEnter() {
+	
+    }
+
+    @Override
+    public void onMouseLeave() {
 	
     }
 }

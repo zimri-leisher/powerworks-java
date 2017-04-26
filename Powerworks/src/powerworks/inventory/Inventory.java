@@ -1,5 +1,6 @@
 package powerworks.inventory;
 
+import java.util.Iterator;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
 
@@ -9,79 +10,42 @@ public class Inventory {
     int width;
     int height;
 
-    public Inventory(Item[] items, int width, int height) {
-	this.items = items;
-	this.width = width;
-	this.height = height;
-    }
-
     public Inventory(int width, int height) {
 	this.items = new Item[width * height];
 	this.width = width;
 	this.height = height;
     }
 
-    /**
-     * Sets an item in the inventory
-     * 
-     * @param index
-     *            the index
-     * @param type
-     *            the type to set the index to
-     */
-    public void setItem(ItemType type, int index) {
-	items[index] = new Item(type);
+    public void setItem(Item item, int index) {
+	items[index] = item;
     }
-    
+
+    public void setItem(ItemType type, int quantity, int index) {
+	setItem(new Item(type, quantity), index);
+    }
+
     public int getSize() {
 	return items.length;
     }
-    
+
     public int getWidth() {
 	return width;
     }
-    
+
     public int getHeight() {
 	return height;
     }
 
-    /**
-     * Sets an item in the inventory to the given type and quantity
-     * 
-     * @param type
-     *            the type to set the index to
-     * @param quantity
-     *            the quantity of the item
-     * @param index
-     *            the index
-     */
-    public void setItem(ItemType type, int quantity, int index) {
-	items[index] = new Item(type, quantity);
-    }
-
-    /**
-     * Checks if the inventory has the item (looks at id)
-     * 
-     * @param item
-     *            the item to check for both id and quantity
-     * @return true if item id is present in inventory, false otherwise
-     */
     public boolean hasItem(ItemType item) {
 	return hasItem(item, 1);
     }
 
     /**
-     * Checks if an inventory has the item in the specified quantity
-     * 
-     * @param item
-     *            the item to check for
-     * @param quantity
-     *            the amount to check for (more will return true also)
-     * @return true if present in the quantity specified or more, false otherwise
+     * Checks if an inventory has the item in the specified quantity or less
      */
-    public boolean hasItem(ItemType item, int quantity) {
-	for (int i = 0; i < items.length; i++) {
-	    if (items[i] != null && items[i].getID() == item.getID() && items[i].getQuantity() >= quantity)
+    public boolean hasItem(ItemType type, int quantity) {
+	for (Item item : items) {
+	    if (item.getType() == type && item.getQuantity() >= quantity)
 		return true;
 	}
 	return false;
@@ -96,32 +60,60 @@ public class Inventory {
     public void giveItem(Item item) {
 	giveItem(item.getType(), item.getQuantity());
     }
-    
+
     /**
      * Gives an Item object to the inventory
-     * @param type the type of the item
-     * @param quantity the quantity to give
+     * 
+     * @return false if the inventory was unable to accept the item (it is full)
      */
-    public void giveItem(ItemType type, int quantity) {
-	int leftToAdd = quantity;
-	loop: for (int i = 0; i < items.length; i++) {
-	    if (items[i] != null && items[i].getID() == type.getID() && items[i].getQuantity() != items[i].getMaxStack()) {
-		if (items[i].getQuantity() + quantity > items[i].getMaxStack()) {
-		    leftToAdd = items[i].getMaxStack() - items[i].getQuantity();
-		    items[i].setQuantity(items[i].getMaxStack());;
-		    break loop;
+    public boolean giveItem(ItemType type, int quantity) {
+	int left = quantity;
+	int max = type.getMaxStackSize();
+	for (int i = 0; i < items.length; i++) {
+	    if (items[i] != null && items[i].getType() == type && items[i].getQuantity() < items[i].getMaxStack()) {
+		if (items[i].getQuantity() + left <= max) {
+		    items[i].setQuantity(items[i].getQuantity() + left);
+		    return true;
+		} else {
+		    left -= (max - items[i].getQuantity());
+		    items[i].setQuantity(max);
+		    if (items[i + 1] != null && items[i + 1].getType() != type) {
+			if (shiftRight(i + 1)) {
+			    items[i] = new Item(type, left);
+			} else {
+			    return false;
+			}
+		    }
 		}
-		items[i].setQuantity(items[i].getQuantity() + leftToAdd);
-		return;
 	    }
 	}
 	for (int i = 0; i < items.length; i++) {
 	    if (items[i] == null) {
-		items[i] = new Item(type, quantity);
-		return;
+		items[i] = new Item(type, left);
+		return true;
 	    }
 	}
+	return false;
     }
+
+    /**
+     * Shifts the inventory after the given index one to the right, inclusive
+     * 
+     * @return false if unable to do this
+     */
+    public boolean shiftRight(int index) {
+	if (items[items.length - 1] != null)
+	    return false;
+	Item[] temp = items.clone();
+	for (int i = index + 1; i < items.length; i++) {
+	    temp[i] = items[i - 1];
+	}
+	temp[index] = null;
+	items = temp;
+	return true;
+    }
+    
+    
 
     /**
      * Takes an item from the inventory
@@ -130,43 +122,29 @@ public class Inventory {
      *            the item to remove
      */
     public void takeItem(Item item) {
-	int leftToSubtract = item.getQuantity();
-	for (int i = items.length - 1; i >= 0; i--) {
-	    if (items[i] != null && items[i].getID() == item.getID()) {
-		if (items[i].getQuantity() - leftToSubtract <= 0) {
-		    leftToSubtract -= items[i].getQuantity();
-		    items[i] = null;
-		} else {
-		    items[i].setQuantity(items[i].getQuantity() - leftToSubtract);;
-		}
-	    }
-	}
+	takeItem(item.getType(), item.getQuantity());
     }
 
     /**
      * Takes an item from the inventory
      * 
-     * @param type
-     *            the type to remove
-     * @param quantity
-     *            the quantity to remove
+     * @return true if was able to remove the specified type and quantity, false
+     *         otherwise
      */
-    public void takeItem(ItemType type, int quantity) {
-	int leftToSubtract = quantity;
+    public boolean takeItem(ItemType type, int quantity) {
+	int left = quantity;
 	for (int i = items.length - 1; i >= 0; i--) {
-	    if (items[i] != null && items[i].getID() == type.getID() && items[i].getQuantity() - quantity <= 0) {
-		leftToSubtract -= items[i].getQuantity();
-		items[i] = null;
-	    }
-	}
-	for (int i = items.length - 1; i >= 0; i--) {
-	    if (items[i] != null && items[i].getID() == type.getID()) {
-		if (items[i].getQuantity() - leftToSubtract > 0) {
-		    items[i].setQuantity(items[i].getQuantity() - leftToSubtract);
-		    return;
+	    if (items[i] != null && items[i].getType() == type) {
+		if (items[i].getQuantity() > left) {
+		    items[i].setQuantity(items[i].getQuantity() - left);
+		    return true;
+		} else {
+		    left -= items[i].getQuantity();
+		    items[i] = null;
 		}
 	    }
 	}
+	return false;
     }
 
     /**
@@ -181,5 +159,10 @@ public class Inventory {
 
     public Item getItem(int index) {
 	return items[index];
+    }
+
+    @Override
+    public String toString() {
+	return "Inventory with width " + width + " and height " + height;
     }
 }

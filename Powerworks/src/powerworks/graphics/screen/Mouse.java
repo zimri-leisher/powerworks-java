@@ -12,7 +12,7 @@ public class Mouse extends ScreenObject {
 
     Texture texture = Image.CURSOR_DEFAULT;
     Item heldItem = null;
-    
+
     protected Mouse() {
 	super(InputManager.getMouseXPixel(), InputManager.getMouseYPixel());
     }
@@ -21,10 +21,22 @@ public class Mouse extends ScreenObject {
     public float getScale() {
 	return 0.5f;
     }
-    
+
     @Override
     public void render() {
+	if (heldItem != null) {
+	    Game.getRenderEngine().renderTexture(heldItem.getTexture(), xPixel - 9, yPixel);
+	    Game.getRenderEngine().renderText(heldItem.getQuantity(), xPixel - 8, yPixel + 4);
+	}
 	Game.getRenderEngine().renderScreenObject(this);
+    }
+
+    public Item getHeldItem() {
+	return heldItem;
+    }
+
+    public void setHeldItem(Item item) {
+	this.heldItem = item;
     }
 
     @Override
@@ -36,10 +48,10 @@ public class Mouse extends ScreenObject {
     public void update() {
 	xPixel = InputManager.getMouseXPixel();
 	yPixel = InputManager.getMouseYPixel();
-	if(InputManager.getMouseButton() == 3) {
+	if (InputManager.getMouseButton() == 3) {
 	    texture = SyncAnimation.CURSOR_RIGHT_CLICK;
 	    SyncAnimation.CURSOR_RIGHT_CLICK.play();
-	} else if(InputManager.getMouseButton() == 1) {
+	} else if (InputManager.getMouseButton() == 1) {
 	    texture = Image.CURSOR_LEFT_CLICK;
 	    SyncAnimation.CURSOR_RIGHT_CLICK.reset();
 	} else {
@@ -49,5 +61,6 @@ public class Mouse extends ScreenObject {
     }
 
     @Override
-    public void onScreenSizeChange() {}
+    public void onScreenSizeChange() {
+    }
 }

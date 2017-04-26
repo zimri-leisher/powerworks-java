@@ -5,6 +5,6 @@ public enum State {
     
     MAIN_MENU, INGAME;
     
-    public static State CURRENT_STATE = INGAME;
+    public static State CURRENT_STATE = MAIN_MENU;
     
 }

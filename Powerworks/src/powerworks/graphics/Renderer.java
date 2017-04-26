@@ -35,11 +35,13 @@ public class Renderer {
 	for (ScreenObject obj : objects) {
 	    if (obj instanceof ClickableScreenObject) {
 		ClickableScreenObject cObj = (ClickableScreenObject) obj;
-		if (GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), xPixel, yPixel, 0, 0)) {
-		    used = true;
-		    cObj.onClick(xPixel, yPixel);
-		} else
-		    cObj.onClickOff();
+		if (cObj.isOpen()) {
+		    if (GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), xPixel, yPixel, 0, 0)) {
+			used = true;
+			cObj.onClick(xPixel, yPixel);
+		    } else
+			cObj.onClickOff();
+		}
 	    }
 	}
 	return used;
@@ -49,7 +51,8 @@ public class Renderer {
 	for (ScreenObject obj : objects) {
 	    if (obj instanceof ClickableScreenObject) {
 		ClickableScreenObject cObj = (ClickableScreenObject) obj;
-		cObj.onRelease(xPixel, yPixel);
+		if (cObj.isOpen() && GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), xPixel, yPixel, 0, 0))
+		    cObj.onRelease(xPixel, yPixel);
 	    }
 	}
     }
@@ -60,9 +63,17 @@ public class Renderer {
 	objects.forEach((ScreenObject obj) -> {
 	    if (obj instanceof ClickableScreenObject) {
 		ClickableScreenObject cObj = (ClickableScreenObject) obj;
-		System.out.println(cObj.getXPixel() + ", " + cObj.getYPixel() + ", " + mXPixel + ", " + mYPixel);
-		if (GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), mXPixel, mYPixel, 0, 0))
-		    cObj.whileMouseOver();
+		if (cObj.isOpen()) {
+		    if (GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), mXPixel, mYPixel, 0, 0)) {
+			if (!cObj.mouseOn) {
+			    cObj.mouseOn = true;
+			    cObj.onMouseEnter();
+			}
+		    } else if (cObj.mouseOn) {
+			cObj.mouseOn = false;
+			cObj.onMouseLeave();
+		    }
+		}
 	    }
 	});
 	objects.forEach(ScreenObject::update);
@@ -185,11 +196,11 @@ public class Renderer {
      * @param texture
      *            the texture to render
      * @param xPixel
-     *            the x pixel to render at relative to screen if @param
-     *            screenObject is true. Otherwise it will be relative to level
+     *            the x pixel to render at relative to screen if screenObject is
+     *            true. Otherwise it will be relative to level
      * @param yPixel
-     *            the y pixel to render at relative to screen if @param
-     *            screenObject is true. Otherwise it will be relative to level
+     *            the y pixel to render at relative to screen if screenObject is
+     *            true. Otherwise it will be relative to level
      * @param screenObject
      *            whether to render relative to level (false) or relative to
      *            screen (true)
@@ -207,11 +218,11 @@ public class Renderer {
      * @param texture
      *            the texture to render
      * @param xPixel
-     *            the x pixel to render at relative to screen if @param
-     *            screenObject is true. Otherwise it will be relative to level
+     *            the x pixel to render at relative to screen if screenObject is
+     *            true. Otherwise it will be relative to level
      * @param yPixel
-     *            the y pixel to render at relative to screen if @param
-     *            screenObject is true. Otherwise it will be relative to level
+     *            the y pixel to render at relative to screen if screenObject is
+     *            true. Otherwise it will be relative to level
      * @param scale
      *            the scale of the texture
      * @param widthScale
@@ -221,6 +232,9 @@ public class Renderer {
      * @param rotation
      *            the rotation of the texture (0 = 0 degrees, 1 = 90 degrees,
      *            etc., 3 = 270 degrees)
+     * @param alpha
+     *            the alpha multiplier of the image (retains original alpha, 1 =
+     *            no modifier, 0 = invisible)
      * @param screenObject
      *            whether to render relative to level (false) or relative to
      *            screen (true)
@@ -252,6 +266,69 @@ public class Renderer {
 	    g2d.rotate(Math.toRadians(rotation * 90), absoluteXPixel + absoluteWidth / 2, absoluteYPixel + absoluteHeight / 2);
 	}
 	g2d.drawImage(image, absoluteXPixel, absoluteYPixel, absoluteWidth, absoluteHeight, null);
+	if (rotation != 0)
+	    g2d.setTransform(old);
+	if (alpha != 1)
+	    g2d.setComposite(oldC);
+    }
+
+    /**
+     * This method should be used for performance when you know the exact width
+     * and height pixels already
+     * 
+     * @param flag
+     *            does nothing, just differentiates between overloads
+     * @param texture
+     *            the texture to render
+     * @param xPixel
+     *            the x pixel to render at relative to screen if screenObject is
+     *            true. Otherwise it will be relative to level
+     * @param yPixel
+     *            the y pixel to render at relative to screen if screenObject is
+     *            true. Otherwise it will be relative to level
+     * @param widthPixels
+     *            the width pixels of the area to draw. Will automatically scale
+     *            the texture to fit this area
+     * @param heightPixels
+     *            the height pixels of the area to draw. Will automatically
+     *            scale the texture to fit this area
+     * @param rotation
+     *            the rotation of the texture (0 = 0 degrees, 1 = 90 degrees,
+     *            etc., 3 = 270 degrees)
+     * @param alpha
+     *            the alpha multiplier of the image (retains original alpha, 1 =
+     *            no modifier, 0 = invisible)
+     * @param screenObject
+     *            whether to render relative to level (false) or relative to
+     *            screen (true)
+     */
+    public void renderTexture(boolean flag, Texture texture, int xPixel, int yPixel, int widthPixels, int heightPixels, int rotation, float alpha, boolean screenObject) {
+	if (!screenObject) {
+	    xPixel -= xPixelOffset;
+	    yPixel -= yPixelOffset;
+	}
+	BufferedImage image = texture.getImage();
+	int mainScale = Game.getScreenScale();
+	int absoluteXPixel = xPixel * mainScale;
+	int absoluteYPixel = yPixel * mainScale;
+	int absoluteWidthPixels = widthPixels * mainScale;
+	int absoluteHeightPixels = heightPixels * mainScale;
+	if (!screenObject) {
+	    absoluteXPixel *= zoom;
+	    absoluteYPixel *= zoom;
+	    absoluteWidthPixels *= zoom;
+	    absoluteHeightPixels *= zoom;
+	}
+	AffineTransform old = null;
+	Composite oldC = g2d.getComposite();
+	if (alpha != 1) {
+	    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) alpha));
+	}
+	if (rotation != 0) {
+	    old = g2d.getTransform();
+	    g2d.rotate(Math.toRadians(rotation * 90), absoluteXPixel + absoluteWidthPixels / 2, absoluteYPixel + absoluteHeightPixels / 2);
+	}
+	g2d.drawImage(image, absoluteXPixel, absoluteYPixel, absoluteWidthPixels, absoluteHeightPixels, null);
 	if (rotation != 0)
 	    g2d.setTransform(old);
 	if (alpha != 1)

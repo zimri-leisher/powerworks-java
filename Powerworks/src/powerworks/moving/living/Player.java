@@ -1,6 +1,7 @@
 package powerworks.moving.living;
 
 import powerworks.block.Block;
+import powerworks.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
 import powerworks.data.Timer;
@@ -8,6 +9,7 @@ import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
 import powerworks.event.EventManager;
 import powerworks.event.PlaceBlockEvent;
+import powerworks.graphics.Image;
 import powerworks.graphics.ImageCollection;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
@@ -40,10 +42,11 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
     Timer removing = new Timer(96, 1), repeat = new Timer(40, 1);
 
     public Player(int xPixel, int yPixel, String name) {
-	super(xPixel, yPixel, Hitbox.PLAYER, new Inventory(8, 2));
+	super(xPixel, yPixel, Hitbox.PLAYER, new Inventory(8, 4), "Inventory", Image.PLAYER_INVENTORY, false);
 	this.name = name;
 	textures = ImageCollection.PLAYER;
 	removing.runTaskOnFinish(new Task() {
+
 	    @Override
 	    public void run() {
 		Block b = Game.getLevel().getBlockFromPixel(InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel());
@@ -62,12 +65,12 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	    }
 	});
 	EventManager.registerEventListener(this);
-	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
+	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
 		KeyControlOption.ROTATE_SELECTED_BLOCK,
 		KeyControlOption.SLOT_1, KeyControlOption.SLOT_2, KeyControlOption.SLOT_3, KeyControlOption.SLOT_4, KeyControlOption.SLOT_5, KeyControlOption.SLOT_6, KeyControlOption.SLOT_7,
 		KeyControlOption.SLOT_8,
 		KeyControlOption.GIVE_CONVEYOR_BELT, KeyControlOption.DROP_ITEM, KeyControlOption.TOGGLE_PLAYER_INVENTORY, KeyControlOption.GIVE_ORE_MINER);
-	InputManager.registerMouseControlHandler(this, ControlMap.DEFAULT, MouseControlOption.PLACE_BLOCK, MouseControlOption.REMOVE_BLOCK);
+	InputManager.registerMouseControlHandler(this, ControlMap.DEFAULT_INGAME, MouseControlOption.PLACE_BLOCK, MouseControlOption.REMOVE_BLOCK);
     }
 
     public Player(int x, int y) {
@@ -76,8 +79,15 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 
     @Override
     public void update() {
-	super.update();
 	long time = 0;
+	Block b = Game.getLevel().getBlockFromPixel(xPixel + hitbox.getXStart() + hitbox.getWidthPixels() / 2, yPixel + hitbox.getYStart() + hitbox.getHeightPixels());
+	if (b instanceof ConveyorBeltBlock) {
+	    int xVel = (b.getRotation() == 1) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 3) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
+	    int yVel = (b.getRotation() == 0) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 2) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
+	    addVel(xVel, yVel);
+	}
+	if (velX != 0 || velY != 0)
+	    move();
 	int mouseXPixel = InputManager.getMouseLevelXPixel();
 	int mouseYPixel = InputManager.getMouseLevelYPixel();
 	if (Game.showRenderTimes())

@@ -2,14 +2,14 @@ package powerworks.graphics.screen.gui;
 
 import powerworks.graphics.Image;
 import powerworks.graphics.Texture;
+import powerworks.graphics.screen.Mouse;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
 import powerworks.main.Game;
 
 public class GUIItemSlot extends GUIElement {
 
-    boolean highlighted = false;
-    boolean highlightOnMouseOver = true;
+    boolean display = false;
     int index;
     Inventory inv;
 
@@ -19,33 +19,60 @@ public class GUIItemSlot extends GUIElement {
 	this.inv = inv;
     }
 
-    GUIItemSlot(GUI parent, int xPixel, int yPixel, int layer, int index, Inventory inv, boolean highlightOnMouseOver) {
+    GUIItemSlot(GUI parent, int xPixel, int yPixel, int layer, int index, Inventory inv, boolean display) {
 	super(parent, xPixel, yPixel, 16, 16, layer);
-	this.highlightOnMouseOver = highlightOnMouseOver;
 	this.index = index;
+	this.display = display;
 	this.inv = inv;
     }
 
     @Override
     public void render() {
-	Item item = inv.getItem(index);
-	Game.getRenderEngine().renderTexture(Image.ERROR, xPixel + parent.xPixel, yPixel + parent.yPixel);
+	Item item = getItem();
 	if (item != null) {
-	    Game.getRenderEngine().renderTexture(item.getTexture(), xPixel + parent.xPixel, yPixel + parent.yPixel);
-	    Game.getRenderEngine().renderText(item.getQuantity(), xPixel + parent.xPixel + 1, yPixel + 4 + parent.yPixel);
+	    Game.getRenderEngine().renderTexture(item.getTexture(), xPixel, yPixel);
+	    Game.getRenderEngine().renderText(item.getQuantity(), xPixel + 1, yPixel + 4);
 	}
-	if (highlighted)
-	    Game.getRenderEngine().renderTexture(Image.ITEM_SLOT_HIGHLIGHT, xPixel + parent.xPixel, yPixel + parent.yPixel);
+	if (mouseOn && !display)
+	    Game.getRenderEngine().renderTexture(Image.ITEM_SLOT_HIGHLIGHT, xPixel, yPixel);
     }
 
     @Override
     public void onClick(int xPixel, int yPixel) {
+	if(display)
+	    return;
+	Mouse m = Game.getHUD().getMouse();
+	Item i = getItem();
+	Item mI = m.getHeldItem();
+	if (i != null) {
+	    if (mI == null) {
+		m.setHeldItem(new Item(i.getType(), i.getQuantity()));
+		inv.takeItem(i);
+	    } else if (m.getHeldItem().getType() == i.getType()) {
+		if (mI.getQuantity() + i.getQuantity() > i.getMaxStack()) {
+		    mI.setQuantity(mI.getQuantity() - (i.getMaxStack() - i.getQuantity()));
+		    i.setQuantity(i.getMaxStack());
+		} else {
+		    int quant = i.getQuantity();
+		    i.setQuantity(i.getQuantity() + mI.getQuantity());
+		    mI.setQuantity(mI.getQuantity() - quant);
+		}
+	    } else {
+		Item temp = mI;
+		m.setHeldItem(i);
+		inv.takeItem(i);
+		inv.giveItem(temp);
+	    }
+	} else {
+	    if (mI != null) {
+		inv.giveItem(mI);
+		m.setHeldItem(null);
+	    }
+	}
     }
 
-    @Override
-    public void whileMouseOver() {
-	if (highlightOnMouseOver)
-	    highlighted = true;
+    public Item getItem() {
+	return inv.getItem(index);
     }
 
     @Override
@@ -59,7 +86,6 @@ public class GUIItemSlot extends GUIElement {
 
     @Override
     public void update() {
-	highlighted = false;
     }
 
     @Override
@@ -68,6 +94,18 @@ public class GUIItemSlot extends GUIElement {
 
     @Override
     public void onRelease(int xPixel, int yPixel) {
-	
+    }
+
+    @Override
+    public String toString() {
+	return "GUI item slot at " + xPixel + ", " + yPixel + ", width: " + widthPixels + ", height: " + heightPixels + ", open: " + open + ", parent GUI: " + parent.toString();
+    }
+
+    @Override
+    public void onMouseEnter() {
+    }
+
+    @Override
+    public void onMouseLeave() {
     }
 }

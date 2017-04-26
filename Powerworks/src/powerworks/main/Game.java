@@ -37,6 +37,7 @@ import powerworks.graphics.Renderer;
 import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.screen.HUD;
 import powerworks.graphics.screen.gui.GUIManager;
+import powerworks.graphics.screen.gui.MainMenuGUI;
 import powerworks.io.ControlMap;
 import powerworks.io.ControlPressType;
 import powerworks.io.InputManager;
@@ -86,6 +87,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     private static List<Player> allPlayers;
     private static World world;
     private static GUIManager guiManager;
+    private static MainMenuGUI mainMenu;
     private static HUD hud;
     private static InputManager input;
     private static ChatCommandExecutor chatCmdExecutor;
@@ -112,6 +114,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	allPlayers.add(player);
 	guiManager = new GUIManager();
 	hud = new HUD();
+	mainMenu = new MainMenuGUI();
 	chatManager = new ChatManager();
 	addKeyListener(input);
 	addMouseWheelListener(input);
@@ -121,9 +124,9 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
 	EventManager.registerEventListener(this);
-	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES, KeyControlOption.RENDER_HITBOX,
+	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES, KeyControlOption.RENDER_HITBOX,
 		KeyControlOption.TOGGLE_FPS_MODE);
-	InputManager.registerMouseWheelControlHandler(this, ControlMap.DEFAULT, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
+	InputManager.registerMouseWheelControlHandler(this, ControlMap.DEFAULT_INGAME, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
     }
 
     private synchronized void start() {
@@ -152,6 +155,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	return chatManager;
     }
 
+    public static MainMenuGUI getMainMenuGUI() {
+	return mainMenu;
+    }
+
     public static HUD getHUD() {
 	return hud;
     }
@@ -164,10 +171,12 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	return allPlayerNames;
     }
 
+    /**
+     * Default font size is 28
+     */
     public static Font getFont(int size) {
 	if (fonts.containsKey(size))
 	    return fonts.get(size);
-	System.out.println("loaded " + size);
 	Font newFont = mainFont.deriveFont(Font.PLAIN, size);
 	fonts.put(size, newFont);
 	return newFont;
@@ -206,11 +215,11 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     public static int getScreenWidth() {
-	return width;
+	return render.getWidthPixels();
     }
 
     public static int getScreenHeight() {
-	return height;
+	return render.getHeightPixels();
     }
 
     public static int getScreenScale() {
@@ -295,6 +304,11 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    Timer.update();
 	    SyncAnimation.update();
 	} else if (State.CURRENT_STATE == State.MAIN_MENU) {
+	    InputManager.update();
+	    Task.update();
+	    render.update();
+	    Timer.update();
+	    SyncAnimation.update();
 	}
 	showUpdateTimes = false;
     }
@@ -307,15 +321,18 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	}
 	do {
 	    do {
+		Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
+		render.feed(g2d);
 		if (State.CURRENT_STATE == State.INGAME) {
-		    Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
-		    render.feed(g2d);
 		    world.render();
 		    guiManager.render();
 		    hud.render();
-		    g2d.dispose();
-		    bufferStrat.show();
+		} else if (State.CURRENT_STATE == State.MAIN_MENU) {
+		    guiManager.render();
+		    hud.getMouse().render();
 		}
+		g2d.dispose();
+		bufferStrat.show();
 	    } while (bufferStrat.contentsRestored());
 	    showRenderTimes = false;
 	} while (bufferStrat.contentsLost());
@@ -376,6 +393,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    game.requestFocusInWindow();
 	    frame.setVisible(true);
 	    System.out.println("Welcome back, " + player.getName());
+	    mainMenu.open();
 	    game.start();
 	    Scanner scanner = new Scanner(System.in);
 	    while (scanner.hasNext()) {
@@ -425,8 +443,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case RENDER_HITBOX:
 		switch (pressType) {
 		    case PRESSED:
-			//render.setZoom(render.getZoom() + 0.1);
-			//System.out.println(render.getCurrentViewArea());
+			// render.setZoom(render.getZoom() + 0.1);
+			// System.out.println(render.getCurrentViewArea());
 			chatManager.sendMessage("Hitbox rendering toggled to: " + !showHitboxes);
 			showHitboxes = !showHitboxes;
 			break;
@@ -435,7 +453,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		}
 		break;
 	    case TOGGLE_FPS_MODE:
-		switch(pressType) {
+		switch (pressType) {
 		    case PRESSED:
 			chatManager.sendMessage("Maximum FPS mode toggled to: " + !FPS_MODE);
 			FPS_MODE = !FPS_MODE;

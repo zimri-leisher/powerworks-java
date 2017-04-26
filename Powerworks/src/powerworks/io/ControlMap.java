@@ -10,7 +10,8 @@ import powerworks.graphics.ImageCollection;
 
 public class ControlMap {
 
-    public static final ControlMap DEFAULT = new ControlMap("/settings/binds_default.txt");
+    public static final ControlMap DEFAULT_INGAME = new ControlMap("/settings/binds_default.txt");
+    public static final ControlMap MAIN_MENU = new ControlMap("/settings/binds_main_menu.txt");
     HashMap<KeyMapping, KeyControlOption> keyBinds = new HashMap<KeyMapping, KeyControlOption>();
     HashMap<MouseMapping, MouseControlOption> mouseBinds = new HashMap<MouseMapping, MouseControlOption>();
     HashMap<MouseWheelMapping, MouseWheelControlOption> mouseWheelBinds = new HashMap<MouseWheelMapping, MouseWheelControlOption>();

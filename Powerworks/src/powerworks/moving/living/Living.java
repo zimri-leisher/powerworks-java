@@ -3,6 +3,7 @@ package powerworks.moving.living;
 import powerworks.ai.AI;
 import powerworks.collidable.Hitbox;
 import powerworks.graphics.Image;
+import powerworks.graphics.Texture;
 import powerworks.graphics.screen.gui.InventoryGUI;
 import powerworks.inventory.Inventory;
 import powerworks.main.Game;
@@ -16,10 +17,17 @@ public abstract class Living extends Moving {
     protected Equipment equips;
     protected double health, armor;
     
-    protected Living(int xPixel, int yPixel, Hitbox hitbox, Inventory inv) {
+    /**
+     * @param name the name of the inventory
+     * @param background the background of the inventory
+     * @param stretchToFit whether or not to stretch the background to fit the inventory width and height
+     */
+    protected Living(int xPixel, int yPixel, Hitbox hitbox, Inventory inv, String name, Texture background, boolean stretchToFit) {
 	this(xPixel, yPixel, hitbox, 20);
 	this.inv = inv;
-	invGUI = new InventoryGUI(10, 10, 180, 55, inv, Image.PLAYER_INVENTORY, "test");
+	int width = inv.getWidth() * 18 + 10;
+	int height = inv.getHeight() * 18 + 10;
+	invGUI = new InventoryGUI((Game.getScreenWidth() - width) / 2, 10, width, height, inv, background, name, true);
     }
     
     protected Living(int xPixel, int yPixel, Hitbox hitbox, int footstepDistance) {
