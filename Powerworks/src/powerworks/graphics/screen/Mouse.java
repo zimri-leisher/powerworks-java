@@ -13,7 +13,7 @@ public class Mouse extends ScreenObject {
     Texture texture = Image.CURSOR_DEFAULT;
     Item heldItem = null;
 
-    protected Mouse() {
+    public Mouse() {
 	super(InputManager.getMouseXPixel(), InputManager.getMouseYPixel());
     }
 

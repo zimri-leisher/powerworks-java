@@ -36,6 +36,7 @@ import powerworks.graphics.ImageCollection;
 import powerworks.graphics.Renderer;
 import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.screen.HUD;
+import powerworks.graphics.screen.Mouse;
 import powerworks.graphics.screen.gui.GUIManager;
 import powerworks.graphics.screen.gui.MainMenuGUI;
 import powerworks.io.ControlMap;
@@ -59,7 +60,7 @@ import powerworks.world.level.SimplexLevel;
 
 public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler, MouseWheelControlHandler {
 
-    public static Game game;
+    private static Game game;
     private static final long serialVersionUID = 1L;
     public static final float UPDATES_PER_SECOND = 60.0f;
     public static final float FRAMES_PER_SECOND = 1000000.0f;
@@ -69,32 +70,33 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static final float NS_PER_FRAME = 1000000000 / FRAMES_PER_SECOND;
     public static boolean FPS_MODE = false;
     public static final int MAX_UPDATES_BEFORE_RENDER = 5;
-    private static int width = 300, zoomedWidth = width;
-    private static int height = width / 16 * 9, zoomedHeight = height;
-    private static int scale = 4;
-    private int prevFrameWidth = 0;
-    private int prevFrameHeight = 0;
-    private static Player player;
-    private static boolean showHitboxes = false;
-    private static Thread gameThread;
-    private static JFrame frame;
-    private static Renderer render;
-    private static Font mainFont = null;
-    private static HashMap<Integer, Font> fonts = new HashMap<Integer, Font>();
-    private boolean running = false;
-    private static GraphicsConfiguration gConf = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
-    private static List<String> allPlayerNames;
-    private static List<Player> allPlayers;
-    private static World world;
-    private static GUIManager guiManager;
-    private static MainMenuGUI mainMenu;
-    private static HUD hud;
-    private static InputManager input;
-    private static ChatCommandExecutor chatCmdExecutor;
-    private static ChatManager chatManager;
-    private static Logger logger;
-    private static boolean showRenderTimes = false;
-    private static boolean showUpdateTimes = false;
+    static int width = 300, zoomedWidth = width;
+    static int height = width / 16 * 9, zoomedHeight = height;
+    static int scale = 4;
+    int prevFrameWidth = 0;
+    int prevFrameHeight = 0;
+    static Player player;
+    static boolean showHitboxes = false;
+    static Thread gameThread;
+    static JFrame frame;
+    static Renderer render;
+    static Font mainFont = null;
+    static HashMap<Integer, Font> fonts = new HashMap<Integer, Font>();
+    boolean running = false;
+    static GraphicsConfiguration gConf = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+    static List<String> allPlayerNames;
+    static List<Player> allPlayers;
+    static World world;
+    static GUIManager guiManager;
+    static MainMenuGUI mainMenu;
+    static HUD hud;
+    static Mouse mouse;
+    static InputManager input;
+    static ChatCommandExecutor chatCmdExecutor;
+    static ChatManager chatManager;
+    static Logger logger;
+    static boolean showRenderTimes = false;
+    static boolean showUpdateTimes = false;
 
     private Game() {
 	loadFont();
@@ -102,20 +104,11 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	frame = new JFrame();
 	logger = new Logger();
 	input = new InputManager();
-	long seed = (new Random()).nextInt(4096);
-	world = WorldManager.genWorld(256, 256, seed);
 	chatCmdExecutor = new ChatCommandExecutor();
 	render = new Renderer(width, height);
-	player = new Player(world.getWidthPixels() / 2, world.getHeightPixels() / 2);
-	render.setOffset(player.getXPixel() - width / 2, player.getYPixel() - height / 2);
-	allPlayerNames = new ArrayList<String>();
-	allPlayerNames.add(player.getName());
-	allPlayers = new ArrayList<Player>();
-	allPlayers.add(player);
 	guiManager = new GUIManager();
-	hud = new HUD();
 	mainMenu = new MainMenuGUI();
-	chatManager = new ChatManager();
+	mouse = new Mouse();
 	addKeyListener(input);
 	addMouseWheelListener(input);
 	addMouseListener(input);
@@ -124,7 +117,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
 	EventManager.registerEventListener(this);
-	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES, KeyControlOption.RENDER_HITBOX,
+	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES,
+		KeyControlOption.RENDER_HITBOX,
 		KeyControlOption.TOGGLE_FPS_MODE);
 	InputManager.registerMouseWheelControlHandler(this, ControlMap.DEFAULT_INGAME, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
     }
@@ -161,6 +155,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     public static HUD getHUD() {
 	return hud;
+    }
+
+    public static Mouse getMouse() {
+	return mouse;
     }
 
     public static Renderer getRenderEngine() {
@@ -279,7 +277,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		    render.setSize(newFrameWidth / scale, newFrameHeight / scale);
 		    prevFrameWidth = newFrameWidth;
 		    prevFrameHeight = newFrameHeight;
-		    render.setOffset(player.getXPixel() - Game.getRenderEngine().getWidthPixels() / 2, player.getYPixel() - Game.getRenderEngine().getHeightPixels() / 2);
+		    if (State.getState() == State.INGAME)
+			render.setOffset(player.getXPixel() - Game.getRenderEngine().getWidthPixels() / 2, player.getYPixel() - Game.getRenderEngine().getHeightPixels() / 2);
 		}
 	    }
 	    if (!FPS_MODE)
@@ -296,14 +295,15 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     public void update() {
-	if (State.CURRENT_STATE == State.INGAME) {
+	State s = State.getState();
+	if (s == State.INGAME) {
 	    InputManager.update();
 	    Task.update();
 	    render.update();
 	    world.update();
 	    Timer.update();
 	    SyncAnimation.update();
-	} else if (State.CURRENT_STATE == State.MAIN_MENU) {
+	} else if (s == State.MAIN_MENU) {
 	    InputManager.update();
 	    Task.update();
 	    render.update();
@@ -314,6 +314,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     public void render() {
+	State s = State.getState();
 	BufferStrategy bufferStrat = getBufferStrategy();
 	if (bufferStrat == null) {
 	    createBufferStrategy(3);
@@ -323,13 +324,14 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    do {
 		Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
 		render.feed(g2d);
-		if (State.CURRENT_STATE == State.INGAME) {
+		if (s == State.INGAME) {
 		    world.render();
 		    guiManager.render();
 		    hud.render();
-		} else if (State.CURRENT_STATE == State.MAIN_MENU) {
+		    mouse.render();
+		} else if (s == State.MAIN_MENU) {
 		    guiManager.render();
-		    hud.getMouse().render();
+		    mouse.render();
 		}
 		g2d.dispose();
 		bufferStrat.show();
@@ -392,7 +394,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    frame.setLocationRelativeTo(null);
 	    game.requestFocusInWindow();
 	    frame.setVisible(true);
-	    System.out.println("Welcome back, " + player.getName());
 	    mainMenu.open();
 	    game.start();
 	    Scanner scanner = new Scanner(System.in);

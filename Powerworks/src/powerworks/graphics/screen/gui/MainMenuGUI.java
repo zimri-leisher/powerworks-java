@@ -2,6 +2,7 @@ package powerworks.graphics.screen.gui;
 
 import powerworks.graphics.Image;
 import powerworks.main.Game;
+import powerworks.main.State;
 import powerworks.task.Task;
 
 public class MainMenuGUI extends GUI{
@@ -14,7 +15,8 @@ public class MainMenuGUI extends GUI{
 	play = new GUIButton(this, widthPixels / 2 - Image.GUI_BUTTON.getWidthPixels() / 2, heightPixels / 2 - Image.GUI_BUTTON.getHeightPixels() / 2, Image.GUI_BUTTON.getWidthPixels(), Image.GUI_BUTTON.getHeightPixels(), 1, Image.GUI_BUTTON, Image.GUI_BUTTON_HIGHLIGHT, Image.GUI_BUTTON_CLICK, null, "Play", true, true, new Task() {
 	    @Override
 	    public void run() {
-		System.out.println("test");
+		close();
+		State.setState(State.INGAME);
 	    }
 	}, new Task() {
 	    @Override

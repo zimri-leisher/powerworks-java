@@ -41,7 +41,7 @@ public class GUIItemSlot extends GUIElement {
     public void onClick(int xPixel, int yPixel) {
 	if(display)
 	    return;
-	Mouse m = Game.getHUD().getMouse();
+	Mouse m = Game.getMouse();
 	Item i = getItem();
 	Item mI = m.getHeldItem();
 	if (i != null) {

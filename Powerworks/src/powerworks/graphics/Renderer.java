@@ -9,6 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import powerworks.data.GeometryHelper;
 import powerworks.io.InputManager;
 import powerworks.main.Game;
@@ -16,7 +17,7 @@ import powerworks.world.level.LevelObject;
 
 public class Renderer {
 
-    List<ScreenObject> objects = new ArrayList<ScreenObject>();
+    List<ScreenObject> objects = new CopyOnWriteArrayList<ScreenObject>();
     private Graphics2D g2d = null;
     private int widthPixels, heightPixels;
     private int xPixelOffset, yPixelOffset;

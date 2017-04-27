@@ -24,6 +24,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static int modifier, mouseX, mouseY, mouseXPixel, mouseYPixel, mouseLevelYPixel, mouseLevelXPixel;
     static int mouseButton = -1;
     static boolean mouseMoved = false, mouseMovedRelativeToLevel = false;
+    static MouseEvent mouseClick, mouseRelease;
     static KeyControlOption keyBinding = null;
     static MouseControlOption mouseBinding = null;
     static LinkedList<ControlPress> queue = new LinkedList<ControlPress>();
@@ -159,6 +160,36 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 			queue.add(new KeyPress(ControlPressType.REPEAT, option));
 		}
 	}
+	if (mouseClick != null) {
+	    modifier = mouseClick.getModifiers();
+	    if (mouseBinding != null) {
+		map.setMouseBind(mouseClick.getButton(), modifier, mouseBinding);
+		Game.getLogger().log("Bound mouse button " + modifier + ":" + mouseClick.getButton() + " to " + mouseBinding);
+		Game.getChatManager().sendMessage("Bound mouse button " + modifier + ":" + mouseClick.getButton() + " to " + mouseBinding);
+		mouseBinding = null;
+	    } else if (mouseButton == -1) {
+		if (!Game.getRenderEngine().onClick(mouseXPixel - 3, mouseYPixel)) {
+		    MouseControlOption option = map.getMouseControl(mouseButton);
+		    MousePress press = new MousePress(ControlPressType.PRESSED, option);
+		    if (option != null && !queue.contains(press))
+			queue.add(press);
+		}
+		mouseButton = mouseClick.getButton();
+	    }
+	    mouseClick = null;
+	}
+	if (mouseRelease != null) {
+	    modifier = mouseRelease.getModifiers();
+	    if (mouseButton != -1) {
+		Game.getRenderEngine().onRelease(mouseXPixel - 3, mouseYPixel);
+		MouseControlOption option = map.getMouseControl(mouseButton);
+		mouseButton = -1;
+		MousePress press = new MousePress(ControlPressType.RELEASED, option);
+		if (option != null && !queue.contains(press))
+		    queue.add(press);
+	    }
+	    mouseRelease = null;
+	}
     }
 
     public static void screenMoved() {
@@ -252,34 +283,12 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 
     @Override
     public void mousePressed(MouseEvent e) {
-	modifier = e.getModifiers();
-	if (mouseBinding != null) {
-	    map.setMouseBind(e.getButton(), modifier, mouseBinding);
-	    Game.getLogger().log("Bound mouse button " + modifier + ":" + e.getButton() + " to " + mouseBinding);
-	    Game.getChatManager().sendMessage("Bound mouse button " + modifier + ":" + e.getButton() + " to " + mouseBinding);
-	    mouseBinding = null;
-	} else if (mouseButton == -1) {
-	    if (!Game.getRenderEngine().onClick(mouseXPixel - 3, mouseYPixel)) {
-		MouseControlOption option = map.getMouseControl(mouseButton);
-		MousePress press = new MousePress(ControlPressType.PRESSED, option);
-		if (option != null && !queue.contains(press))
-		    queue.add(press);
-	    }
-	    mouseButton = e.getButton();
-	}
+	mouseClick = e;
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-	modifier = e.getModifiers();
-	if (mouseButton != -1) {
-	    Game.getRenderEngine().onRelease(mouseXPixel - 3, mouseYPixel);
-	    MouseControlOption option = map.getMouseControl(mouseButton);
-	    mouseButton = -1;
-	    MousePress press = new MousePress(ControlPressType.RELEASED, option);
-	    if (option != null && !queue.contains(press))
-		queue.add(press);
-	}
+	mouseRelease = e;
     }
 
     @Override
