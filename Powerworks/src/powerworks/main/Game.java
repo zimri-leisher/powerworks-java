@@ -120,6 +120,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES,
 		KeyControlOption.RENDER_HITBOX,
 		KeyControlOption.TOGGLE_FPS_MODE);
+	InputManager.registerKeyControlHandler(this, ControlMap.MAIN_MENU, KeyControlOption.EXIT, KeyControlOption.TOGGLE_FPS_MODE);
 	InputManager.registerMouseWheelControlHandler(this, ControlMap.DEFAULT_INGAME, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
     }
 
@@ -131,7 +132,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     private synchronized void stop() {
 	logger.close();
-	world.getLevel().saveLevel();
 	TinySound.shutdown();
 	System.exit(0);
 	try {
@@ -456,7 +456,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case TOGGLE_FPS_MODE:
 		switch (pressType) {
 		    case PRESSED:
-			chatManager.sendMessage("Maximum FPS mode toggled to: " + !FPS_MODE);
 			FPS_MODE = !FPS_MODE;
 			break;
 		    default:

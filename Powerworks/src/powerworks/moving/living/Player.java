@@ -269,10 +269,6 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 		switch (p.getType()) {
 		    case PRESSED:
 			if (getHeldItem() != null) {
-			    // System.out.println(getHeldItem() + ", " +
-			    // getHeldItem().getType().getName() + ", " +
-			    // InputManager.getMouseLevelXPixel() + ", " +
-			    // InputManager.getMouseLevelYPixel());
 			    if (Game.getLevel().tryDropItem(getHeldItem().getType(), InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel()))
 				inv.takeItem(getHeldItem().getType(), 1);
 			}

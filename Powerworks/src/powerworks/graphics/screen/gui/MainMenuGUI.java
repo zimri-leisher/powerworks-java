@@ -21,7 +21,6 @@ public class MainMenuGUI extends GUI{
 	}, new Task() {
 	    @Override
 	    public void run() {
-		System.out.println("test2");
 	    }
 	});
 	background = new GUITexturePane(this, 0, 0, widthPixels, heightPixels, 0, Image.MAIN_MENU_BACKGROUND, true);
