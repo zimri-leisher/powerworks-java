@@ -1,7 +1,5 @@
 package powerworks.graphics;
 
-import java.util.ArrayList;
-import java.util.List;
 import powerworks.main.Game;
 
 public abstract class ScreenObject {
@@ -63,7 +61,7 @@ public abstract class ScreenObject {
     public abstract void update();
     
     /**
-     * Used for keeping things like the hotbar at the bottom of the screen if the size changes
+     * Used for keeping objects that should remain at a certain position relative to the screen where they should be
      */
     public abstract void onScreenSizeChange();
 }

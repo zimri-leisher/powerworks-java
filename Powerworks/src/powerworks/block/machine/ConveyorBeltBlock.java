@@ -27,7 +27,6 @@ public class ConveyorBeltBlock extends MachineBlock implements EventListener{
     }
     
     private void updateDirection() {
-	
     }
     
     @Override

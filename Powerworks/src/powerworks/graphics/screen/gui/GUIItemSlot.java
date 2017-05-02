@@ -108,4 +108,13 @@ public class GUIItemSlot extends GUIElement {
     @Override
     public void onMouseLeave() {
     }
+
+    @Override
+    public void onOpen() {
+    }
+
+    @Override
+    public void onClose() {
+	mouseOn = false;
+    }
 }

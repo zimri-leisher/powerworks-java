@@ -44,7 +44,6 @@ public class GUIText extends GUIElement {
 
     @Override
     public void onRelease(int xPixel, int yPixel) {
-	
     }
     
     @Override
@@ -55,11 +54,17 @@ public class GUIText extends GUIElement {
 
     @Override
     public void onMouseEnter() {
-	
     }
 
     @Override
     public void onMouseLeave() {
-	
+    }
+
+    @Override
+    public void onOpen() {
+    }
+
+    @Override
+    public void onClose() {
     }
 }

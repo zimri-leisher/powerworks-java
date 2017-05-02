@@ -31,9 +31,10 @@ public class EventManager {
 	    Method[] methods = listener.getClass().getMethods();
 	    for (Method m : methods) {
 		if (m.isAnnotationPresent(EventHandler.class) && containsClass(m.getParameterTypes(), e.getClass())) {
+		    String name = m.getName();
 		    if (m.getParameterCount() != 1)
 			throw new IllegalArgumentException("Method " + m.getName() + " in class " + m.getDeclaringClass() + " has more than 1 parameter");
-		    if (!m.getName().contains("handle"))
+		    if (!name.contains("handle") && !name.contains("on"))
 			System.err.println("EventHandler method " + m.getDeclaringClass() + "." + m.getName() + " does not follow standard naming convention");
 		    try {
 			m.invoke(listener, e);
@@ -47,9 +48,10 @@ public class EventManager {
 	    Method[] methods = listener.getClass().getMethods();
 	    for (Method m : methods) {
 		if (m.isAnnotationPresent(EventHandler.class)) {
+		    String name = m.getName();
 		    if (m.getParameterCount() != 1 || !containsClass(m.getParameterTypes(), e.getClass()))
 			throw new IllegalArgumentException("EventHandler methods cannot have more than 1 parameter and the parameter must be a child of Event");
-		    if (!m.getName().contains("handle"))
+		    if (!name.contains("handle") && !name.contains("on"))
 			System.err.println("EventHandler method " + m.getDeclaringClass() + "." + m.getName() + " does not follow standard naming convention");
 		    try {
 			m.invoke(listener, e);

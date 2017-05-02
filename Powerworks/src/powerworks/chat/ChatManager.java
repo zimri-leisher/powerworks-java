@@ -35,7 +35,7 @@ public class ChatManager implements KeyControlHandler, TextListener {
 	underscore.runTaskOnFinish(new Task() {
 	    @Override
 	    public void run() {
-		chatbar.showUnderscore(!Game.getHUD().getChatbar().showingUnderscore());
+		chatbar.showUnderscore(!chatbar.showingUnderscore());
 	    }
 	});
 	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.TOGGLE_CHAT);

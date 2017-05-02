@@ -17,8 +17,6 @@ public abstract class GUIElement extends ClickableScreenObject{
 	this.layer = layer;
     }
     
-    public abstract void render();
-    
     public void update() {}
     
 }

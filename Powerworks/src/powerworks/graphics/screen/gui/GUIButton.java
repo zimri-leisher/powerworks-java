@@ -56,21 +56,21 @@ public class GUIButton extends GUIElement {
 	    if (mouseOn) {
 		if (mouseDown) {
 		    Game.getRenderEngine().renderTexture(clicked, xPixel, yPixel);
-		    Game.getRenderEngine().renderText(text, (int) (xPixel - Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2 + widthPixels / 2),
+		    Game.getRenderEngine().renderText(text, (int) (xPixel - (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2) / Game.getScreenScale() + widthPixels / 2),
 			    yPixel + heightPixels / 2);
 		} else {
 		    Game.getRenderEngine().renderTexture(highlighted, xPixel, yPixel);
-		    Game.getRenderEngine().renderText(text, (int) (xPixel - Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2 + widthPixels / 2),
+		    Game.getRenderEngine().renderText(text, (int) (xPixel - (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2) / Game.getScreenScale() + widthPixels / 2),
 			    yPixel + heightPixels / 2);
 		}
 	    } else {
 		Game.getRenderEngine().renderTexture(unhighlighted, xPixel, yPixel);
-		Game.getRenderEngine().renderText(text, (int) (xPixel - Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2 + widthPixels / 2),
+		Game.getRenderEngine().renderText(text, (int) (xPixel - (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2) / Game.getScreenScale() + widthPixels / 2),
 			yPixel + heightPixels / 2);
 	    }
 	} else {
 	    Game.getRenderEngine().renderTexture(unavailable, xPixel, yPixel);
-	    Game.getRenderEngine().renderText(text, (int) (xPixel - Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2 + widthPixels / 2),
+	    Game.getRenderEngine().renderText(text, (int) (xPixel - (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2) / Game.getScreenScale() + widthPixels / 2),
 		    yPixel + heightPixels / 2);
 	}
     }
@@ -106,5 +106,14 @@ public class GUIButton extends GUIElement {
 
     @Override
     public void onScreenSizeChange() {
+    }
+
+    @Override
+    public void onOpen() {
+    }
+
+    @Override
+    public void onClose() {
+	mouseDown = false;
     }
 }
