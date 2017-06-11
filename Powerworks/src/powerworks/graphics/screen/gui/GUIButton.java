@@ -1,102 +1,65 @@
 package powerworks.graphics.screen.gui;
 
 import java.awt.font.FontRenderContext;
+import powerworks.graphics.Image;
 import powerworks.graphics.Texture;
+import powerworks.graphics.screen.ScreenObject;
+import powerworks.io.ControlPressType;
+import powerworks.io.MouseEvent;
 import powerworks.main.Game;
 import powerworks.task.Task;
 
 public class GUIButton extends GUIElement {
 
-    Texture unhighlighted, highlighted, clicked, unavailable;
+    protected Texture unhigh, high, clicked, unavail, current;
     boolean available;
-    boolean mouseDown;
-    String text;
-    Task onClick, onRelease;
-    boolean stretchToFit;
+    Task click, release;
+    GUIText text;
 
     /**
-     * @param unhighlighted
-     *            the texture to render when mouse is not on button
-     * @param highlighted
-     *            the texture to render when mouse is over but hasn't clicked
-     * @param clicked
-     *            the texture to render while mouse is down
-     * @param unavailable
-     *            the texture to render when unable to click
-     * @param text
-     *            the text of the button
-     * @param defaultAvailable
-     *            whether the button should be able to be clicked at
-     *            initialization or not
-     * @param stretchToFit
-     *            whether or not to stretch all the textures to fit the width
-     *            and height
-     * @param onClick
-     *            the task to run when clicked
-     * @param onRelease
-     *            the task to run when released
+     * @param unhigh
+     *            unhighlighted, for when mouse is off and is available
+     * @param high
+     *            highlighted, for when mouse is on and is available
+     * @param click
+     *            clicked, for when mouse is held down over button
+     * @param unavail
+     *            unavailable, for when button is unavailable
      */
-    GUIButton(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Texture unhighlighted, Texture highlighted, Texture clicked, Texture unavailable, String text,
-	    boolean defaultAvailable, boolean stretchToFit, Task onClick, Task onRelease) {
+    GUIButton(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text, Texture unhigh, Texture high, Texture clicked, Texture unavail,
+	    boolean defaultAvailable, Task click, Task release) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
-	this.unhighlighted = unhighlighted;
-	this.highlighted = highlighted;
+	this.unhigh = this.current = unhigh;
+	this.high = high;
 	this.clicked = clicked;
-	this.unavailable = unavailable;
-	this.text = text;
-	this.available = defaultAvailable;
-	this.stretchToFit = stretchToFit;
-	this.onClick = onClick;
-	this.onRelease = onRelease;
+	this.unavail = unavail;
+	this.click = click;
+	this.release = release;
+	int width = (int) (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / Game.getScreenScale());
+	this.text = new GUIText(this, (widthPixels - width) / 2, heightPixels / 2 + 1, layer + 1, text, 28);
+	setAvailable(defaultAvailable);
     }
 
-    @Override
-    public void render() {
-	if (available) {
-	    if (mouseOn) {
-		if (mouseDown) {
-		    Game.getRenderEngine().renderTexture(clicked, xPixel, yPixel);
-		    Game.getRenderEngine().renderText(text, (int) (xPixel - (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2) / Game.getScreenScale() + widthPixels / 2),
-			    yPixel + heightPixels / 2);
-		} else {
-		    Game.getRenderEngine().renderTexture(highlighted, xPixel, yPixel);
-		    Game.getRenderEngine().renderText(text, (int) (xPixel - (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2) / Game.getScreenScale() + widthPixels / 2),
-			    yPixel + heightPixels / 2);
-		}
-	    } else {
-		Game.getRenderEngine().renderTexture(unhighlighted, xPixel, yPixel);
-		Game.getRenderEngine().renderText(text, (int) (xPixel - (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2) / Game.getScreenScale() + widthPixels / 2),
-			yPixel + heightPixels / 2);
-	    }
-	} else {
-	    Game.getRenderEngine().renderTexture(unavailable, xPixel, yPixel);
-	    Game.getRenderEngine().renderText(text, (int) (xPixel - (Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / 2) / Game.getScreenScale() + widthPixels / 2),
-		    yPixel + heightPixels / 2);
-	}
+    GUIButton(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text, boolean defaultAvailable, Task click, Task release) {
+	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, text, Image.GUI_BUTTON, Image.GUI_BUTTON_HIGHLIGHT, Image.GUI_BUTTON_CLICK, Image.GUI_BUTTON, defaultAvailable, click, release);
     }
 
-    @Override
-    public void onClick(int xPixel, int yPixel) {
-	mouseDown = true;
-	onClick.run();
-    }
-
-    @Override
-    public void onClickOff() {
+    public void setAvailable(boolean available) {
+	this.available = available;
+	if (!available)
+	    current = unavail;
     }
 
     @Override
     public void onMouseEnter() {
+	if (available)
+	    current = high;
     }
 
     @Override
     public void onMouseLeave() {
-    }
-
-    @Override
-    public void onRelease(int xPixel, int yPixel) {
-	mouseDown = false;
-	onRelease.run();
+	if (available)
+	    current = unhigh;
     }
 
     @Override
@@ -105,15 +68,48 @@ public class GUIButton extends GUIElement {
     }
 
     @Override
-    public void onScreenSizeChange() {
+    public void render() {
+	Game.getRenderEngine().renderTexture(current, xPixel, yPixel);
+	super.render();
     }
 
     @Override
-    public void onOpen() {
+    public void update() {
     }
 
     @Override
-    public void onClose() {
-	mouseDown = false;
+    protected void onOpen() {
+    }
+
+    @Override
+    protected void onClose() {
+    }
+
+    @Override
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+    }
+
+    @Override
+    public void onMouseActionOn(MouseEvent mouse) {
+	ControlPressType type = mouse.getType();
+	switch (type) {
+	    case PRESSED:
+		if (available) {
+		    current = clicked;
+		    click.run();
+		}
+		break;
+	    case RELEASED:
+		if (available) {
+		    current = high;
+		    release.run();
+		}
+	    default:
+		break;
+	}
+    }
+
+    @Override
+    public void onMouseActionOff(MouseEvent mouse) {
     }
 }

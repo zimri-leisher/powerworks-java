@@ -1,32 +1,43 @@
 package powerworks.graphics.screen.gui;
 
-import java.awt.font.FontRenderContext;
 import powerworks.graphics.Texture;
+import powerworks.graphics.screen.ScreenObject;
 import powerworks.inventory.Inventory;
+import powerworks.inventory.item.Item;
 import powerworks.main.Game;
 
 public class InventoryGUI extends GUI {
 
     Inventory inv;
+    GUIItemSlot[] items;
     GUITexturePane background;
     GUIText name;
-    GUIItemSlot[] items;
-
-    public InventoryGUI(int xPixel, int yPixel, int widthPixels, int heightPixels, Inventory inv, Texture background, String name, boolean stretchToFit) {
-	super(xPixel, yPixel, widthPixels, heightPixels);
-	this.inv = inv;
-	this.background = new GUITexturePane(this, 0, 0, widthPixels, heightPixels, 0, background, stretchToFit);
-	this.name = new GUIText(this, 2, 5, (int) Game.getFont(28).getStringBounds(name, new FontRenderContext(null, false, false)).getWidth() / Game.getScreenScale(), 9, 3, name, 0xFFFFFF);
-	items = new GUIItemSlot[inv.getSize()];
-	for (int y = 0; y < inv.getHeight(); y++) {
-	    for (int x = 0; x < inv.getWidth(); x++) {
-		items[x + y * inv.getWidth()] = new GUIItemSlot(this, 6 + x * 18, 6 + y * 18, 1, x + y * inv.getWidth(), inv);
+    GUIDragGrip grip;
+    
+    public InventoryGUI(Inventory inv, Texture background, String name) {
+	super((Game.getScreenWidth() - background.getWidthPixels()) / 2, (Game.getScreenHeight() - background.getHeightPixels()) / 2, 1);
+	int width = inv.getWidth() * 18 + 20;
+	int height = inv.getHeight() * 18 + 20;
+	items = new GUIItemSlot[inv.getWidth() * inv.getHeight()];
+	for(int y = 0; y < inv.getHeight(); y++) {
+	    for(int x = 0; x < inv.getWidth(); x++) {
+		items[x + y * inv.getWidth()] = new GUIItemSlot(this, 10 + 18 * x, 10 + 18 * y, 16, 16, this.layer + 2, inv, x + y * inv.getWidth(), false);
 	    }
 	}
+	this.background = new GUITexturePane(this, 0, 0, width, height, this.layer + 1, background);
+	this.grip = new GUIDragGrip(this, width - 9, 1, this.layer + 2);
+	this.name = new GUIText(this, 2, 6, this.layer + 2, name);
     }
-
+    
     @Override
-    public String toString() {
-	return "Inventory GUI at " + xPixel + ", " + yPixel + ", width: " + widthPixels + ", height: " + heightPixels + ", inventory: " + inv.toString();
+    public void onClose() {
+	super.onClose();
+	if(!Game.getScreenManager().getScreenObjects().stream().filter(ScreenObject::isOpen).anyMatch(c -> c instanceof InventoryGUI)) {
+	    Item i = Game.getMouse().getHeldItem();
+	    if(i != null) {
+		Game.getMainPlayer().getInventory().giveItem(i);
+		Game.getMouse().setHeldItem(null);
+	    }
+	}
     }
 }

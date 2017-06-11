@@ -3,76 +3,35 @@ package powerworks.graphics.screen.gui;
 import powerworks.graphics.Image;
 import powerworks.graphics.Texture;
 import powerworks.graphics.screen.Mouse;
+import powerworks.graphics.screen.ScreenObject;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
+import powerworks.io.ControlPressType;
+import powerworks.io.MouseEvent;
 import powerworks.main.Game;
 
 public class GUIItemSlot extends GUIElement {
 
-    boolean display = false;
-    int index;
-    Inventory inv;
+    protected Inventory inv;
+    protected int index;
+    protected boolean isDisplay;
+    protected Texture unhigh, high, click, display, current;
 
-    GUIItemSlot(GUI parent, int xPixel, int yPixel, int layer, int index, Inventory inv) {
-	super(parent, xPixel, yPixel, 16, 16, layer);
-	this.index = index;
+    GUIItemSlot(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Inventory inv, int index, boolean isDisplay, Texture unhigh, Texture high,
+	    Texture click, Texture display) {
+	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.inv = inv;
-    }
-
-    GUIItemSlot(GUI parent, int xPixel, int yPixel, int layer, int index, Inventory inv, boolean display) {
-	super(parent, xPixel, yPixel, 16, 16, layer);
 	this.index = index;
+	this.isDisplay = isDisplay;
+	this.unhigh = unhigh;
+	this.high = high;
+	this.click = click;
 	this.display = display;
-	this.inv = inv;
+	current = unhigh;
     }
 
-    @Override
-    public void render() {
-	Item item = getItem();
-	if (item != null) {
-	    Game.getRenderEngine().renderTexture(item.getTexture(), xPixel, yPixel);
-	    Game.getRenderEngine().renderText(item.getQuantity(), xPixel + 1, yPixel + 4);
-	}
-	if (mouseOn && !display)
-	    Game.getRenderEngine().renderTexture(Image.ITEM_SLOT_HIGHLIGHT, xPixel, yPixel);
-    }
-
-    @Override
-    public void onClick(int xPixel, int yPixel) {
-	if(display)
-	    return;
-	Mouse m = Game.getMouse();
-	Item i = getItem();
-	Item mI = m.getHeldItem();
-	if (i != null) {
-	    if (mI == null) {
-		m.setHeldItem(new Item(i.getType(), i.getQuantity()));
-		inv.takeItem(i);
-	    } else if (m.getHeldItem().getType() == i.getType()) {
-		if (mI.getQuantity() + i.getQuantity() > i.getMaxStack()) {
-		    mI.setQuantity(mI.getQuantity() - (i.getMaxStack() - i.getQuantity()));
-		    i.setQuantity(i.getMaxStack());
-		} else {
-		    int quant = i.getQuantity();
-		    i.setQuantity(i.getQuantity() + mI.getQuantity());
-		    mI.setQuantity(mI.getQuantity() - quant);
-		}
-	    } else {
-		Item temp = mI;
-		m.setHeldItem(i);
-		inv.takeItem(i);
-		inv.giveItem(temp);
-	    }
-	} else {
-	    if (mI != null) {
-		inv.giveItem(mI);
-		m.setHeldItem(null);
-	    }
-	}
-    }
-
-    public Item getItem() {
-	return inv.getItem(index);
+    GUIItemSlot(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Inventory inv, int index, boolean isDisplay) {
+	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, inv, index, isDisplay, Image.ITEM_SLOT, Image.ITEM_SLOT_HIGHLIGHT, Image.ITEM_SLOT_CLICK, Image.ITEM_SLOT_DISPLAY);
     }
 
     @Override
@@ -81,7 +40,13 @@ public class GUIItemSlot extends GUIElement {
     }
 
     @Override
-    public void onScreenSizeChange() {
+    public void render() {
+	Game.getRenderEngine().renderTexture(current, xPixel, yPixel);
+	Item i = inv.getItem(index);
+	if (i != null) {
+	    Game.getRenderEngine().renderTexture(i.getTexture(), xPixel, yPixel);
+	    Game.getRenderEngine().renderText(i.getQuantity(), xPixel + 1, yPixel + 4);
+	}
     }
 
     @Override
@@ -89,32 +54,77 @@ public class GUIItemSlot extends GUIElement {
     }
 
     @Override
-    public void onClickOff() {
+    protected void onOpen() {
     }
 
     @Override
-    public void onRelease(int xPixel, int yPixel) {
+    protected void onClose() {
     }
 
     @Override
-    public String toString() {
-	return "GUI item slot at " + xPixel + ", " + yPixel + ", width: " + widthPixels + ", height: " + heightPixels + ", open: " + open + ", parent GUI: " + parent.toString();
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+    }
+
+    @Override
+    public void onMouseActionOn(MouseEvent mouse) {
+	if (isDisplay)
+	    return;
+	ControlPressType type = mouse.getType();
+	switch (type) {
+	    case PRESSED:
+		current = click;
+		Mouse m = Game.getMouse();
+		Item i = inv.getItem(index);
+		Item mI = m.getHeldItem();
+		if (mouse.getButton() == 1) {
+		    if (mI != null) {
+			if (i != null) {
+			    if (mI.getType() != i.getType()) {
+				m.setHeldItem(i);
+				inv.giveItem(mI);
+			    } else {
+				if (i.getQuantity() + mI.getQuantity() >= i.getMaxStack()) {
+				    int q = i.getQuantity();
+				    i.setQuantity(i.getMaxStack());
+				    mI.setQuantity(mI.getQuantity() - (i.getMaxStack() - q));
+				} else {
+				    i.setQuantity(i.getQuantity() + mI.getQuantity());
+				    m.setHeldItem(null);
+				}
+			    }
+			} else {
+			    inv.giveItem(mI);
+			    m.setHeldItem(null);
+			}
+		    } else {
+			if (i != null) {
+			    inv.setItem(null, index);
+			    m.setHeldItem(i);
+			}
+		    }
+		}
+		break;
+	    case RELEASED:
+		current = high;
+		break;
+	    default:
+		break;
+	}
+    }
+
+    @Override
+    public void onMouseActionOff(MouseEvent mouse) {
     }
 
     @Override
     public void onMouseEnter() {
+	if (!isDisplay)
+	    current = high;
     }
 
     @Override
     public void onMouseLeave() {
-    }
-
-    @Override
-    public void onOpen() {
-    }
-
-    @Override
-    public void onClose() {
-	mouseOn = false;
+	if (!isDisplay)
+	    current = unhigh;
     }
 }

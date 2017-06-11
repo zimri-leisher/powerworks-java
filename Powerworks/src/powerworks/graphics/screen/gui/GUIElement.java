@@ -1,22 +1,48 @@
 package powerworks.graphics.screen.gui;
 
-import powerworks.graphics.ClickableScreenObject;
+import powerworks.data.Timer;
+import powerworks.graphics.screen.ClickableScreenObject;
+import powerworks.graphics.screen.ScreenObject;
+import powerworks.task.Task;
 
-public abstract class GUIElement extends ClickableScreenObject{
-    
-    /**
-     * Higher layer number means on top
-     */
-    int layer;
-    GUI parent;
-    
-    GUIElement(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer) {
-	super(xPixel + parent.getXPixel(), yPixel + parent.getYPixel(), widthPixels, heightPixels);
-	parent.elements.add(this);
-	this.parent = parent;
-	this.layer = layer;
+public abstract class GUIElement extends ClickableScreenObject {
+
+    protected boolean showDesc, descShowing;
+    protected Timer descTimer;
+    protected GUIDescription desc;
+
+    protected GUIElement(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, boolean showDesc, String desc) {
+	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
+	this.showDesc = showDesc;
+	if (showDesc) {
+	    // this.desc = new GUIDescription();
+	    descTimer = new Timer(15, 1);
+	    descTimer.runTaskOnFinish(new Task() {
+
+		@Override
+		public void run() {
+		    descShowing = true;
+		}
+	    });
+	}
     }
-    
-    public void update() {}
-    
+
+    protected GUIElement(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer) {
+	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, false, null);
+    }
+
+    @Override
+    public void onMouseEnter() {
+	if (showDesc)
+	    descTimer.play();
+    }
+
+    @Override
+    public void onMouseLeave() {
+	if (showDesc) {
+	    descTimer.resetTimes();
+	    descTimer.stop();
+	    descShowing = false;
+	}
+    }
 }

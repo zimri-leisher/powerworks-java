@@ -1,12 +1,12 @@
 package powerworks.graphics.screen;
 
-import powerworks.graphics.ScreenObject;
 import powerworks.graphics.Texture;
 
-public class Healthbar extends ScreenObject{
+public class Healthbar extends ScreenObject {
 
     protected Healthbar(int xPixel, int yPixel) {
-	super(xPixel, yPixel);
+	super(xPixel, yPixel, 1);
+	open = true;
     }
 
     @Override
@@ -16,16 +16,22 @@ public class Healthbar extends ScreenObject{
 
     @Override
     public void render() {
-	
     }
 
     @Override
     public void update() {
-	
     }
 
     @Override
-    public void onScreenSizeChange() {
-	
+    public void onOpen() {
+    }
+
+    @Override
+    public void onClose() {
+    }
+
+    @Override
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+	// TODO Auto-generated method stub
     }
 }

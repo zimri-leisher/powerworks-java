@@ -11,7 +11,7 @@ public class Block extends Collidable {
 
     protected BlockType type;
     private boolean requiresUpdate = true;
-    private int rotation;
+    private int rotation = 0;
 
     public Block(BlockType type, int xTile, int yTile) {
 	super(xTile << 4, yTile << 4, type.getTextureXPixelOffset(), type.getTextureYPixelOffset(), type.hitbox);
@@ -86,7 +86,7 @@ public class Block extends Collidable {
 
     @Override
     public Texture getTexture() {
-	return type.texture;
+	return type.getTextures()[rotation];
     }
 
     @Override

@@ -17,15 +17,20 @@ public class MachineBlockType extends BlockType {
 	    Sound.GRASS_FOOTSTEP);
     Sound onSound;
 
-    protected MachineBlockType(Hitbox hitbox, Texture texture, int texXPixelOffset, int texYPixelOffset, String item, int widthTiles, int heightTiles, String name, int id, boolean placeable,
+    protected MachineBlockType(Hitbox hitbox, Texture[] textures, int texXPixelOffset, int texYPixelOffset, String item, int widthTiles, int heightTiles, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator, Sound footstep, Sound onSound) {
-	super(hitbox, texture, texXPixelOffset, texYPixelOffset, item, widthTiles, heightTiles, name, id, placeable, instantiator, footstep);
+	super(hitbox, textures, texXPixelOffset, texYPixelOffset, item, widthTiles, heightTiles, name, id, placeable, instantiator, footstep);
 	this.onSound = onSound;
     }
 
     protected MachineBlockType(Hitbox hitbox, Texture texture, String item, int widthTiles, int heightTiles, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator, Sound footstep, Sound onSound) {
-	this(hitbox, texture, 0, 0, item, widthTiles, heightTiles, name, id, placeable, instantiator, footstep, onSound);
+	this(hitbox, new Texture[] { texture, texture, texture, texture }, 0, 0, item, widthTiles, heightTiles, name, id, placeable, instantiator, footstep, onSound);
+    }
+    
+    protected MachineBlockType(Hitbox hitbox, Texture texture, int texXPixelOffset, int texYPixelOffset, String item, int widthTiles, int heightTiles, String name, int id, boolean placeable,
+	    Class<? extends Block> instantiator, Sound footstep, Sound onSound) {
+	this(hitbox, new Texture[] { texture, texture, texture, texture }, texXPixelOffset, texYPixelOffset, item, widthTiles, heightTiles, name, id, placeable, instantiator, footstep, onSound);
     }
 
     public static MachineBlockType getBlockType(String t) {

@@ -1,20 +1,21 @@
 package powerworks.graphics.screen;
 
 import powerworks.graphics.Image;
-import powerworks.graphics.ScreenObject;
 import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.Texture;
 import powerworks.inventory.item.Item;
+import powerworks.io.ControlMap;
 import powerworks.io.InputManager;
+import powerworks.io.KeyControlHandler;
 import powerworks.main.Game;
 
-public class Mouse extends ScreenObject {
+public class Mouse extends ScreenObject{
 
     Texture texture = Image.CURSOR_DEFAULT;
     Item heldItem = null;
 
     public Mouse() {
-	super(InputManager.getMouseXPixel(), InputManager.getMouseYPixel());
+	super(InputManager.getMouseXPixel(), InputManager.getMouseYPixel(), /* Always on top */ Integer.MAX_VALUE);
     }
 
     @Override
@@ -29,6 +30,10 @@ public class Mouse extends ScreenObject {
 	    Game.getRenderEngine().renderText(heldItem.getQuantity(), xPixel - 8, yPixel + 4);
 	}
 	Game.getRenderEngine().renderScreenObject(this);
+    }
+    
+    public void setTexture(Texture texture) {
+	this.texture = texture;
     }
 
     public Item getHeldItem() {
@@ -61,6 +66,14 @@ public class Mouse extends ScreenObject {
     }
 
     @Override
-    public void onScreenSizeChange() {
+    public void onOpen() {
+    }
+
+    @Override
+    public void onClose() {
+    }
+
+    @Override
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
 }

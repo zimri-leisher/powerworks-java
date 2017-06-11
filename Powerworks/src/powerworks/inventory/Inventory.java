@@ -79,7 +79,6 @@ public class Inventory {
 		    items[i].setQuantity(max);
 		    if (items[i + 1] != null && items[i + 1].getType() != type) {
 			if (shiftRight(i + 1)) {
-			    System.out.println("test");
 			    items[i] = new Item(type, left);
 			} else {
 			    return false;

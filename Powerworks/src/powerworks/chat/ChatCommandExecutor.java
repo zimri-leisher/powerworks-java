@@ -1,5 +1,6 @@
 package powerworks.chat;
 
+import powerworks.collidable.moving.living.Player;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
 import powerworks.io.InputManager;
@@ -9,7 +10,6 @@ import powerworks.io.MouseControlOption;
 import powerworks.io.Statistic;
 import powerworks.io.TextListener;
 import powerworks.main.Game;
-import powerworks.moving.living.Player;
 
 public class ChatCommandExecutor implements TextListener {
 
@@ -35,7 +35,7 @@ public class ChatCommandExecutor implements TextListener {
 	    if (command.equals("giveitem")) {
 		if (args[0] != null && Game.getAllPlayerNames().contains(args[0])) {
 		    if (ItemType.getItemType(args[1]) != null) {
-			Game.getPlayer(args[0]).getInv().giveItem(new Item(ItemType.getItemType(args[1]), (args.length >= 3) ? Integer.parseInt(args[2]) : 1));
+			Game.getPlayer(args[0]).getInventory().giveItem(new Item(ItemType.getItemType(args[1]), (args.length >= 3) ? Integer.parseInt(args[2]) : 1));
 		    }
 		}
 	    } else if (command.equals("bindkey")) {

@@ -1,5 +1,7 @@
 package powerworks.io;
 
+import java.awt.AWTException;
+import java.awt.Robot;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -14,8 +16,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
-import powerworks.graphics.screen.gui.GUI;
-import powerworks.graphics.screen.gui.GUIElement;
 import powerworks.main.Game;
 
 public class InputManager implements KeyListener, MouseWheelListener, MouseListener, MouseMotionListener {
@@ -25,6 +25,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static int mouseButton = -1;
     static boolean mouseMoved = false, mouseMovedRelativeToLevel = false;
     static MouseEvent mouseClick, mouseRelease;
+    private static Robot r;
     static KeyControlOption keyBinding = null;
     static MouseControlOption mouseBinding = null;
     static LinkedList<ControlPress> queue = new LinkedList<ControlPress>();
@@ -34,6 +35,13 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static List<MouseMovementDetector> mouseDetectors = new ArrayList<MouseMovementDetector>();
     static TextListener textListener = null;
     static ControlMap map = ControlMap.MAIN_MENU;
+    static {
+	try {
+	    r = new Robot();
+	} catch (AWTException e) {
+	    e.printStackTrace();
+	}
+    }
 
     public static void registerKeyControlHandler(KeyControlHandler h, ControlMap map, KeyControlOption... wantedControls) {
 	keyHandlers.get(map).put(h, wantedControls);
@@ -147,7 +155,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	    } catch (ConcurrentModificationException | NullPointerException e) {
 	    }
 	queue.clear();
-	if (mouseButton != -1) {
+	if (mouseButton != -1 && Game.getScreenManager().getClickableScreenObjectsAt(mouseXPixel, mouseYPixel).size() == 0) {
 	    MouseControlOption option = map.getMouseControl(mouseButton);
 	    if (option != null)
 		queue.add(new MousePress(ControlPressType.REPEAT, option));
@@ -168,7 +176,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		Game.getChatManager().sendMessage("Bound mouse button " + modifier + ":" + mouseClick.getButton() + " to " + mouseBinding);
 		mouseBinding = null;
 	    } else if (mouseButton == -1) {
-		if (!Game.getRenderEngine().onClick(mouseXPixel - 3, mouseYPixel)) {
+		if (!Game.getScreenManager().onMouseAction(new powerworks.io.MouseEvent(mouseXPixel - 3, mouseYPixel, 1, ControlPressType.PRESSED))) {
 		    MouseControlOption option = map.getMouseControl(mouseButton);
 		    MousePress press = new MousePress(ControlPressType.PRESSED, option);
 		    if (option != null && !queue.contains(press))
@@ -181,7 +189,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	if (mouseRelease != null) {
 	    modifier = mouseRelease.getModifiers();
 	    if (mouseButton != -1) {
-		Game.getRenderEngine().onRelease(mouseXPixel - 3, mouseYPixel);
+		Game.getScreenManager().onMouseAction(new powerworks.io.MouseEvent(mouseXPixel - 3, mouseYPixel, 1, ControlPressType.RELEASED));
 		MouseControlOption option = map.getMouseControl(mouseButton);
 		mouseButton = -1;
 		MousePress press = new MousePress(ControlPressType.RELEASED, option);
@@ -241,6 +249,13 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     public void mouseDragged(MouseEvent e) {
 	mouseY = e.getY();
 	mouseX = e.getX();
+	System.out.println(e.getX() + ", " + e.getY());
+	if (e.getX() < 0 || e.getY() < 0) {
+	    mouseX = Math.max(0, e.getX());
+	    mouseY = Math.max(0, e.getY());
+	    r.mouseMove(mouseX, mouseY);
+	    System.out.println("test");
+	}
 	mouseYPixel = mouseY / Game.getScreenScale();
 	mouseXPixel = mouseX / Game.getScreenScale();
 	mouseLevelXPixel = (int) ((mouseXPixel - 3) + Game.getRenderEngine().getXPixelOffset());

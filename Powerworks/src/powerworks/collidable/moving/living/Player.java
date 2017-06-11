@@ -1,9 +1,10 @@
-package powerworks.moving.living;
+package powerworks.collidable.moving.living;
 
 import powerworks.block.Block;
 import powerworks.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
+import powerworks.collidable.moving.droppeditem.DroppedItem;
 import powerworks.data.Timer;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
@@ -24,10 +25,8 @@ import powerworks.io.MouseControlOption;
 import powerworks.io.MouseMovementDetector;
 import powerworks.io.MousePress;
 import powerworks.main.Game;
-import powerworks.moving.droppeditem.DroppedItem;
 import powerworks.task.Task;
 import powerworks.world.level.GhostBlock;
-import powerworks.world.level.Level;
 
 public class Player extends Living implements KeyControlHandler, EventListener, MouseControlHandler {
 
@@ -49,9 +48,10 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 
 	    @Override
 	    public void run() {
+		System.out.println("test");
 		Block b = Game.getLevel().getBlockFromPixel(InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel());
 		if (b != null) {
-		    // TODO
+		    System.out.println(b);
 		    b.remove();
 		    removing.resetTimes();
 		    block.setPlaceable(true);
@@ -121,6 +121,47 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
     }
 
     @Override
+    protected void move() {
+	if (velX > 0 && dir != 1)
+	    dir = 1;
+	if (velX < 0 && dir != 3)
+	    dir = 3;
+	if (velY > 0 && dir != 2)
+	    dir = 2;
+	if (velY < 0 && dir != 0)
+	    dir = 0;
+	if (velX + xPixel + hitbox.getXStart() + hitbox.getWidthPixels() > Game.getLevel().getWidthPixels())
+	    xPixel = -hitbox.getXStart();
+	if (velY + yPixel + hitbox.getYStart() + hitbox.getHeightPixels() > Game.getLevel().getHeightPixels())
+	    yPixel = -hitbox.getYStart();
+	if (velX + xPixel + hitbox.getXStart() < 0)
+	    xPixel = Game.getLevel().getWidthPixels() - (hitbox.getXStart() + hitbox.getWidthPixels());
+	if (velY + yPixel + hitbox.getYStart() < 0)
+	    yPixel = Game.getLevel().getHeightPixels() - (hitbox.getYStart() + hitbox.getHeightPixels());
+	int pXPixel = xPixel, pYPixel = yPixel;
+	if (velX != 0 || velY != 0) {
+	    if (!getCollision(velX, velY)) {
+		xPixel += velX;
+		yPixel += velY;
+	    } else {
+		if (!getCollision(velX, 0)) {
+		    xPixel += velX;
+		}
+		if (!getCollision(0, velY)) {
+		    yPixel += velY;
+		}
+	    }
+	}
+	if (pXPixel != xPixel || pYPixel != yPixel) {
+	    Game.getRenderEngine().setOffset(xPixel - Game.getRenderEngine().getWidthPixels() / 2, yPixel - Game.getRenderEngine().getHeightPixels() / 2);
+	    hasMoved = true;
+	} else
+	    hasMoved = false;
+	velX /= AIR_DRAG;
+	velY /= AIR_DRAG;
+    }
+
+    @Override
     protected boolean getCollision(int moveX, int moveY) {
 	for (Collidable col : Game.getLevel().getCollidables().getIntersecting(xPixel + moveX + hitbox.getXStart(), yPixel + moveY + hitbox.getYStart(), hitbox.getWidthPixels(),
 		hitbox.getHeightPixels())) {
@@ -144,10 +185,6 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	Game.getRenderEngine().renderLevelObject(this, 16, 16);
 	if (Game.showHitboxes())
 	    renderHitbox();
-    }
-
-    public Inventory getInv() {
-	return inv;
     }
 
     public boolean isInvOpen() {
@@ -420,6 +457,9 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 
     @Override
     public void remove() {
+	Game.getLevel().getCollidables().remove(this);
+	Game.getLevel().getLivingEntities().remove(this);
+	Game.getLevel().getMovingEntities().remove(this);
 	name = null;
 	block = null;
 	removing = null;

@@ -2,10 +2,10 @@ package powerworks.world;
 
 import powerworks.block.Block;
 import powerworks.collidable.Collidable;
+import powerworks.collidable.moving.Moving;
+import powerworks.collidable.moving.droppeditem.DroppedItem;
+import powerworks.collidable.moving.living.Living;
 import powerworks.data.SpatialOrganizer;
-import powerworks.moving.Moving;
-import powerworks.moving.droppeditem.DroppedItem;
-import powerworks.moving.living.Living;
 import powerworks.world.level.Level;
 import powerworks.world.level.tile.Tile;
 

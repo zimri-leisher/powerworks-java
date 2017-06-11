@@ -22,7 +22,9 @@ public class Image implements Texture {
     public static final Image CONVEYOR_BELT_ITEM = new Image("/textures/item/conveyor_belt.png");
     public static final Image IRON_INGOT = new Image("/textures/item/iron_ingot.png");
     public static final Image ITEM_SLOT = new Image("/textures/gui/item_slot.png");
-    public static final Image ITEM_SLOT_HIGHLIGHT = new Image(ImageModifier.modify(new Image("/textures/gui/item_slot_highlight.png"), ImageModifier.SCALE, 16));
+    public static final Image ITEM_SLOT_HIGHLIGHT = new Image("/textures/gui/item_slot_highlight.png");
+    public static final Image ITEM_SLOT_DISPLAY = new Image("/textures/gui/item_slot_display.png");
+    public static final Image ITEM_SLOT_CLICK = new Image("/textures/gui/item_slot_click.png");
     public static final Image PLAYER_INVENTORY = new Image("/textures/gui/player_inventory.png");
     public static final Image CHAT_BAR = new Image(ImageModifier.modify(ImageModifier.modify(new Image("/textures/gui/chat_bar.png"), ImageModifier.SCALE_WIDTH, 180), ImageModifier.SCALE_HEIGHT, 10));
     public static final Image ARROW = new Image(ImageModifier.modify(new Image("/textures/misc/arrow.png"), ImageModifier.SET_ALPHA, 50));
@@ -31,7 +33,9 @@ public class Image implements Texture {
     public static final Image GUI_BUTTON = new Image("/textures/gui/button.png");
     public static final Image GUI_BUTTON_HIGHLIGHT = new Image("/textures/gui/button_highlight.png");
     public static final Image GUI_BUTTON_CLICK = new Image("/textures/gui/button_click.png");
+    public static final Image GUI_DRAG_GRIP = new Image("/textures/gui/drag_grip.png");
     public static final Image MAIN_MENU_BACKGROUND = new Image(new Color(0x666666));
+    public static final Image MAIN_MENU_BUTTON_BOX = new Image("/textures/gui/main_menu.png");
     
     private BufferedImage image;
 

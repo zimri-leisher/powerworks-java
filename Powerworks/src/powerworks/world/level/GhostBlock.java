@@ -65,7 +65,7 @@ public class GhostBlock extends LevelObject {
     @Override
     public void render() {
 	if (render) {
-	    Game.getRenderEngine().renderTexture(type.getTexture(), xPixel + type.getTextureXPixelOffset(), yPixel + type.getTextureYPixelOffset(), 1, 1, 1, rotation, 0.5f, false);
+	    Game.getRenderEngine().renderTexture(type.getTextures()[rotation], xPixel + type.getTextureXPixelOffset(), yPixel + type.getTextureYPixelOffset(), 1, 1, 1, rotation, 0.5f, false);
 	    Game.getRenderEngine().renderTexture(Image.ARROW, xPixel + type.getTextureXPixelOffset(), yPixel + type.getTextureYPixelOffset(), 1, 1, 1, rotation, 0.5f, false);
 	    if (placeable) {
 		float scaleWidth = (float) (type.getWidthTiles() << 4) / (float) Image.BLOCK_PLACEABLE.getWidthPixels();

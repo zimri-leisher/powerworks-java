@@ -47,7 +47,7 @@ public abstract class LevelObject {
 
     /**
      * Should be overriden if you want to modify
-     * @return the rotation of the texture
+     * @return the rotation of the texture in degrees
      */
     public int getRotation() {
 	return 0;

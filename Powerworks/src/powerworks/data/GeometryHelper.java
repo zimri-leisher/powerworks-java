@@ -13,4 +13,8 @@ public class GeometryHelper {
 	    return true;
 	return false;
     }
+    
+    public static int addDegrees(int deg1, int deg2) {
+	return (deg1 + deg2) % 360;
+    }
 }

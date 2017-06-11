@@ -2,7 +2,10 @@ package powerworks.graphics.screen.gui;
 
 import powerworks.data.Timer;
 import powerworks.graphics.Texture;
+import powerworks.graphics.screen.ScreenObject;
+import powerworks.io.ControlPressType;
 import powerworks.io.InputManager;
+import powerworks.io.MouseEvent;
 import powerworks.io.TextListener;
 import powerworks.main.Game;
 import powerworks.task.Task;
@@ -18,11 +21,15 @@ public class GUITextField extends GUIElement implements TextListener {
     boolean showUnderscore = true;
 
     /**
-     * @param backgroundText the text to be displayed when not selected and empty (will be slightly gray)
-     * @param size the size of the text
-     * @param onEnter the task to run when the enter key is pressed
+     * @param backgroundText
+     *            the text to be displayed when not selected and empty (will be
+     *            slightly gray)
+     * @param size
+     *            the size of the text
+     * @param onEnter
+     *            the task to run when the enter key is pressed
      */
-    GUITextField(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText, int size, Task onEnter) {
+    GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText, int size, Task onEnter) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.backgroundText = backgroundText;
 	this.size = size;
@@ -37,16 +44,16 @@ public class GUITextField extends GUIElement implements TextListener {
 	    }
 	});
     }
-    
-    GUITextField(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText, Task onEnter) {
+
+    GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText, Task onEnter) {
 	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, backgroundText, 28, onEnter);
     }
 
-    GUITextField(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText) {
+    GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText) {
 	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, backgroundText, 28, null);
     }
 
-    GUITextField(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer) {
+    GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer) {
 	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, "", 28, null);
     }
 
@@ -54,25 +61,29 @@ public class GUITextField extends GUIElement implements TextListener {
     public void render() {
 	if (active || !text.equals(""))
 	    Game.getRenderEngine().renderText(text + ((showUnderscore) ? "_" : ""), xPixel + 1, yPixel + 4, size);
-	else if(!backgroundText.equals(""))
+	else if (!backgroundText.equals(""))
 	    Game.getRenderEngine().renderText(backgroundText, xPixel + 1, yPixel + 4, size, 0x999999);
     }
 
     @Override
-    public void onClick(int xPixel, int yPixel) {
-	InputManager.funnelKeys(this);
-	active = true;
-	underscore.play();
-	showUnderscore = true;
+    public void onMouseActionOn(MouseEvent e) {
+	if (e.getType() == ControlPressType.PRESSED) {
+	    InputManager.funnelKeys(this);
+	    active = true;
+	    underscore.play();
+	    showUnderscore = true;
+	}
     }
 
     @Override
-    public void onClickOff() {
-	InputManager.stopFunneling();
-	active = false;
-	underscore.resetTimes();
-	underscore.stop();
-	showUnderscore = false;
+    public void onMouseActionOff(MouseEvent e) {
+	if (e.getType() == ControlPressType.PRESSED) {
+	    InputManager.stopFunneling();
+	    active = false;
+	    underscore.resetTimes();
+	    underscore.stop();
+	    showUnderscore = false;
+	}
     }
 
     @Override
@@ -84,16 +95,8 @@ public class GUITextField extends GUIElement implements TextListener {
     }
 
     @Override
-    public void onRelease(int xPixel, int yPixel) {
-    }
-
-    @Override
     public Texture getTexture() {
 	return null;
-    }
-
-    @Override
-    public void onScreenSizeChange() {
     }
 
     @Override
@@ -116,7 +119,6 @@ public class GUITextField extends GUIElement implements TextListener {
 
     @Override
     public void onOpen() {
-	
     }
 
     @Override
@@ -125,5 +127,13 @@ public class GUITextField extends GUIElement implements TextListener {
 	active = false;
 	text = "";
 	showUnderscore = true;
+    }
+
+    @Override
+    public void update() {
+    }
+
+    @Override
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
 }

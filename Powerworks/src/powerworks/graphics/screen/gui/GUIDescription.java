@@ -2,11 +2,22 @@ package powerworks.graphics.screen.gui;
 
 import powerworks.graphics.Texture;
 import powerworks.graphics.screen.ScreenObject;
+import powerworks.io.MouseEvent;
 
-public abstract class GUI extends ScreenObject{
+public class GUIDescription extends GUIElement {
 
-    protected GUI(int xPixel, int yPixel, int layer) {
-	super(xPixel, yPixel, layer);
+    private String text;
+    
+    protected GUIDescription(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text) {
+	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
+    }
+
+    @Override
+    public void onMouseActionOn(MouseEvent mouse) {
+    }
+
+    @Override
+    public void onMouseActionOff(MouseEvent mouse) {
     }
 
     @Override
@@ -16,22 +27,17 @@ public abstract class GUI extends ScreenObject{
 
     @Override
     public void update() {
-	
     }
 
     @Override
     protected void onOpen() {
-	
     }
 
     @Override
     protected void onClose() {
-	
     }
 
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
-	
     }
-    
 }

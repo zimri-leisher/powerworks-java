@@ -1,7 +1,6 @@
 package powerworks.graphics.screen;
 
 import powerworks.graphics.Image;
-import powerworks.graphics.ScreenObject;
 import powerworks.graphics.Texture;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
@@ -10,12 +9,13 @@ import powerworks.main.Game;
 public class Hotbar extends ScreenObject {
 
     int numSlots, currentSlot = 0;
-    Inventory parent;
+    Inventory inv;
 
-    protected Hotbar(int xPixel, int yPixel, int numSlots, Inventory parent) {
-	super(xPixel, yPixel);
+    protected Hotbar(int xPixel, int yPixel, int numSlots) {
+	super(xPixel, yPixel, 1);
 	this.numSlots = numSlots;
-	this.parent = parent;
+	this.inv = Game.getMainPlayer().getInventory();
+	open = true;
     }
 
     public int getNumberOfItems() {
@@ -27,15 +27,15 @@ public class Hotbar extends ScreenObject {
     }
 
     public Item getSelectedItem() {
-	return parent.getItem(currentSlot);
+	return inv.getItem(currentSlot);
     }
-    
+
     public void setSelectedSlot(int index) {
 	this.currentSlot = index;
     }
 
-    public Inventory getParentInventory() {
-	return parent;
+    public Inventory getInv() {
+	return inv;
     }
 
     @Override
@@ -51,8 +51,8 @@ public class Hotbar extends ScreenObject {
 		Game.getRenderEngine().renderTexture(Image.HOTBAR_SLOT, xPixelT, yPixel);
 	    else
 		Game.getRenderEngine().renderTexture(Image.HOTBAR_SLOT_SELECTED, xPixelT, yPixel);
-	    Item item = parent.getItem(i);
-	    if(item != null) {
+	    Item item = inv.getItem(i);
+	    if (item != null) {
 		Game.getRenderEngine().renderTexture(item.getTexture(), xPixelT, yPixel);
 		Game.getRenderEngine().renderText(item.getQuantity(), xPixelT + 1, yPixel + 4);
 	    }
@@ -64,7 +64,15 @@ public class Hotbar extends ScreenObject {
     }
 
     @Override
-    public void onScreenSizeChange() {
+    public void onOpen() {
+    }
+
+    @Override
+    public void onClose() {
+    }
+
+    @Override
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
 	xPixel = Game.getRenderEngine().getWidthPixels() / 2 - 8 * (Image.HOTBAR_SLOT.getWidthPixels() / 2);
 	yPixel = Game.getRenderEngine().getHeightPixels() - Image.HOTBAR_SLOT.getHeightPixels();
     }

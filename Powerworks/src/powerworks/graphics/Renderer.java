@@ -7,81 +7,23 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import powerworks.data.GeometryHelper;
+import powerworks.graphics.screen.ScreenObject;
 import powerworks.io.InputManager;
 import powerworks.main.Game;
 import powerworks.world.level.LevelObject;
 
 public class Renderer {
 
-    List<ScreenObject> objects = new CopyOnWriteArrayList<ScreenObject>();
     private Graphics2D g2d = null;
     private int widthPixels, heightPixels;
     private int xPixelOffset, yPixelOffset;
     private double zoom = 1.0, scaleWidth = 1.0, scaleHeight = 1.0;
+    private Rectangle clip, defClip;
 
     public Renderer(int widthPixels, int heightPixels) {
 	this.widthPixels = widthPixels;
 	this.heightPixels = heightPixels;
-    }
-
-    /**
-     * @return true if a clickable screen object was clicked on
-     */
-    public boolean onClick(int xPixel, int yPixel) {
-	boolean used = false;
-	for (ScreenObject obj : objects) {
-	    if (obj instanceof ClickableScreenObject) {
-		ClickableScreenObject cObj = (ClickableScreenObject) obj;
-		if (cObj.isOpen()) {
-		    if (GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), xPixel, yPixel, 0, 0)) {
-			used = true;
-			cObj.onClick(xPixel, yPixel);
-		    } else
-			cObj.onClickOff();
-		}
-	    }
-	}
-	return used;
-    }
-
-    public void onRelease(int xPixel, int yPixel) {
-	for (ScreenObject obj : objects) {
-	    if (obj instanceof ClickableScreenObject) {
-		ClickableScreenObject cObj = (ClickableScreenObject) obj;
-		if (cObj.isOpen() && GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), xPixel, yPixel, 0, 0))
-		    cObj.onRelease(xPixel, yPixel);
-	    }
-	}
-    }
-
-    public void update() {
-	int mXPixel = InputManager.getMouseXPixel();
-	int mYPixel = InputManager.getMouseYPixel();
-	objects.forEach((ScreenObject obj) -> {
-	    if (obj instanceof ClickableScreenObject) {
-		ClickableScreenObject cObj = (ClickableScreenObject) obj;
-		if (cObj.isOpen()) {
-		    if (GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), mXPixel, mYPixel, 0, 0)) {
-			if (!cObj.mouseOn) {
-			    cObj.mouseOn = true;
-			    cObj.onMouseEnter();
-			}
-		    } else if (cObj.mouseOn) {
-			cObj.mouseOn = false;
-			cObj.onMouseLeave();
-		    }
-		}
-	    }
-	});
-	objects.forEach(ScreenObject::update);
-    }
-
-    public List<ScreenObject> getScreenObjects() {
-	return objects;
+	defClip = new Rectangle(0, 0, widthPixels, heightPixels);
     }
 
     public int getWidthPixels() {
@@ -103,7 +45,23 @@ public class Renderer {
     public double getZoom() {
 	return zoom;
     }
-
+    
+    public Rectangle getClip() {
+	return clip;
+    }
+    
+    /**
+     * All drawing operations will not do anything outside this rectangle on the screen. It can be reset by Renderer.resetClip()
+     */
+    public void setClip(Rectangle clip) {
+	this.clip = clip;
+	g2d.setClip(clip);
+    }
+    
+    public void resetClip() {
+	setClip(defClip);
+    }
+    
     public void setOffset(int xPixel, int yPixel) {
 	boolean used = false;
 	if (xPixel - widthPixels / 2 >= 0 && xPixel + widthPixels < Game.getLevel().getWidthPixels()) {
@@ -121,9 +79,12 @@ public class Renderer {
     }
 
     public void setSize(int widthPixels, int heightPixels) {
+	int w = this.widthPixels;
+	int h = this.heightPixels;
 	this.widthPixels = widthPixels;
 	this.heightPixels = heightPixels;
-	objects.forEach(ScreenObject::onScreenSizeChange);
+	defClip = new Rectangle(0, 0, widthPixels, heightPixels);
+	Game.getScreenManager().getScreenObjects().forEach((ScreenObject obj) -> obj.onScreenSizeChange(w, h));
     }
 
     public void setZoom(double zoom) {
@@ -271,6 +232,66 @@ public class Renderer {
 	    g2d.setTransform(old);
 	if (alpha != 1)
 	    g2d.setComposite(oldC);
+    }
+
+    /**
+     * Renders a texture
+     * 
+     * @param texture
+     *            the texture to render
+     * @param xPixel
+     *            the x pixel to render at relative to screen if screenObject is
+     *            true. Otherwise it will be relative to level
+     * @param yPixel
+     *            the y pixel to render at relative to screen if screenObject is
+     *            true. Otherwise it will be relative to level
+     * @param rotation
+     *            the rotation of the texture (0 = 0 degrees, 1 = 90 degrees,
+     *            etc., 3 = 270 degrees)
+     * @param alpha
+     *            the alpha multiplier of the image (retains original alpha, 1 =
+     *            no modifier, 0 = invisible)
+     * @param screenObject
+     *            whether to render relative to level (false) or relative to
+     *            screen (true)
+     * @param clip
+     *            the clipping rectangle, relative to the screen
+     * 
+     */
+    public void renderTexture(Texture texture, int xPixel, int yPixel, int rotation, float alpha, boolean screenObject, Rectangle clip) {
+	if (!screenObject) {
+	    xPixel -= xPixelOffset;
+	    yPixel -= yPixelOffset;
+	}
+	int mainScale = Game.getScreenScale();
+	BufferedImage image = texture.getImage();
+	int absoluteXPixel = xPixel * mainScale;
+	int absoluteYPixel = yPixel * mainScale;
+	int absoluteWidth = (int) (image.getWidth() * scaleWidth * mainScale);
+	int absoluteHeight = (int) (image.getHeight() * scaleHeight * mainScale);
+	if (!screenObject) {
+	    absoluteWidth *= zoom;
+	    absoluteHeight *= zoom;
+	    absoluteXPixel *= zoom;
+	    absoluteYPixel *= zoom;
+	}
+	AffineTransform old = null;
+	Composite oldC = g2d.getComposite();
+	Rectangle oldClip = g2d.getClipBounds();
+	g2d.setClip((int) clip.getX() * mainScale, (int) clip.getY() * mainScale, (int) clip.getWidth() * mainScale, (int) clip.getHeight() * mainScale);
+	if (alpha != 1) {
+	    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) alpha));
+	}
+	if (rotation != 0) {
+	    old = g2d.getTransform();
+	    g2d.rotate(Math.toRadians(rotation * 90), absoluteXPixel + absoluteWidth / 2, absoluteYPixel + absoluteHeight / 2);
+	}
+	g2d.drawImage(image, absoluteXPixel, absoluteYPixel, absoluteWidth, absoluteHeight, null);
+	if (rotation != 0)
+	    g2d.setTransform(old);
+	if (alpha != 1)
+	    g2d.setComposite(oldC);
+	g2d.setClip(oldClip);
     }
 
     /**

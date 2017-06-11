@@ -1,11 +1,11 @@
-package powerworks.moving.droppeditem;
+package powerworks.collidable.moving.droppeditem;
 
 import powerworks.collidable.Collidable;
+import powerworks.collidable.moving.Moving;
+import powerworks.collidable.moving.living.Player;
 import powerworks.graphics.Texture;
 import powerworks.inventory.item.ItemType;
 import powerworks.main.Game;
-import powerworks.moving.Moving;
-import powerworks.moving.living.Player;
 
 public class DroppedItem extends Moving {
 

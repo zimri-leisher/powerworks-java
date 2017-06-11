@@ -87,7 +87,7 @@ public class ChatManager implements KeyControlHandler, TextListener {
 	    case TOGGLE_CHAT:
 		switch (press) {
 		    case PRESSED:
-			chatbar.setOpen(true);
+			chatbar.setActive(true);
 			InputManager.funnelKeys(this);
 			underscore.play();
 			break;
@@ -113,7 +113,7 @@ public class ChatManager implements KeyControlHandler, TextListener {
 	    underscore.resetTimes();
 	    underscore.stop();
 	    Game.getHUD().getChatbar().showUnderscore(true);
-	    Game.getHUD().getChatbar().setOpen(false);
+	    Game.getHUD().getChatbar().setActive(false);
 	    if (text.startsWith("/")) {
 		Game.getCommandExecutor().executeCommand(text.substring(1), Game.getMainPlayer());
 	    }
@@ -141,7 +141,7 @@ public class ChatManager implements KeyControlHandler, TextListener {
 	    // Backspace
 	} else if (c == '') {
 	    InputManager.stopFunneling();
-	    chatbar.setOpen(false);
+	    chatbar.setActive(false);
 	    text = "";
 	    chatbar.setChatbarSize(Image.CHAT_BAR.getWidthPixels());
 	} else if (c == '' && text.length() != 0) {

@@ -11,6 +11,10 @@ import java.util.Random;
 import powerworks.block.Block;
 import powerworks.block.BlockType;
 import powerworks.collidable.Collidable;
+import powerworks.collidable.moving.Moving;
+import powerworks.collidable.moving.droppeditem.DroppedItem;
+import powerworks.collidable.moving.living.Living;
+import powerworks.collidable.moving.living.Player;
 import powerworks.data.SpatialOrganizer;
 import powerworks.event.EventManager;
 import powerworks.event.PlaceBlockEvent;
@@ -19,10 +23,6 @@ import powerworks.inventory.item.ItemType;
 import powerworks.io.InputManager;
 import powerworks.io.Statistic;
 import powerworks.main.Game;
-import powerworks.moving.Moving;
-import powerworks.moving.droppeditem.DroppedItem;
-import powerworks.moving.living.Living;
-import powerworks.moving.living.Player;
 import powerworks.world.level.tile.Tile;
 import powerworks.world.level.tile.TileType;
 
@@ -180,8 +180,8 @@ public abstract class Level {
 	}
 	for (DroppedItem item : droppedItems.getIntersecting(xPixel0, yPixel0, xPixel1 - xPixel0, yPixel1 - yPixel0))
 	    item.render();
-	p.render();
 	p.block.render();
+	p.render();
     }
 
     /**
@@ -347,8 +347,7 @@ public abstract class Level {
      *            the x tile to look at
      * @param yTile
      *            the y tile to look at
-     * @return the Tile object, Tile.voidTile if there is not one at the
-     *         location
+     * @return the Tile object
      */
     public Tile getTileFromTile(int xTile, int yTile) {
 	if (!(xTile < 0 || yTile < 0 || xTile >= width || yTile >= height))

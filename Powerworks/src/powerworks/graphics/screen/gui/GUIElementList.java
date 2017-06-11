@@ -1,39 +1,25 @@
 package powerworks.graphics.screen.gui;
 
+import powerworks.data.GeometryHelper;
 import powerworks.graphics.Texture;
+import powerworks.graphics.screen.ClickableScreenObject;
+import powerworks.graphics.screen.ScreenObject;
+import powerworks.io.MouseEvent;
 
 public class GUIElementList extends GUIElement {
 
-    GUIElementList(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer) {
+    private int scrollPos;
+
+    protected GUIElementList(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
     }
 
     @Override
-    public void onClick(int xPixel, int yPixel) {
+    public void onMouseActionOn(MouseEvent mouse) {
     }
 
     @Override
-    public void onClickOff() {
-    }
-
-    @Override
-    public void onMouseEnter() {
-    }
-
-    @Override
-    public void onMouseLeave() {
-    }
-
-    @Override
-    public void onOpen() {
-    }
-
-    @Override
-    public void onClose() {
-    }
-
-    @Override
-    public void onRelease(int xPixel, int yPixel) {
+    public void onMouseActionOff(MouseEvent mouse) {
     }
 
     @Override
@@ -43,9 +29,29 @@ public class GUIElementList extends GUIElement {
 
     @Override
     public void render() {
+	for (ScreenObject c : children) {
+	    if (c instanceof ClickableScreenObject) {
+		ClickableScreenObject cObj = (ClickableScreenObject) c;
+		if (GeometryHelper.intersects(xPixel, yPixel, widthPixels, heightPixels, cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels())) {
+		    cObj.render();
+		}
+	    }
+	}
     }
 
     @Override
-    public void onScreenSizeChange() {
+    public void update() {
+    }
+
+    @Override
+    protected void onOpen() {
+    }
+
+    @Override
+    protected void onClose() {
+    }
+
+    @Override
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
 }

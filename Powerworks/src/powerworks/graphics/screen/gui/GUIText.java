@@ -1,32 +1,24 @@
 package powerworks.graphics.screen.gui;
 
+import java.awt.font.FontRenderContext;
 import powerworks.graphics.Texture;
+import powerworks.graphics.screen.ScreenObject;
+import powerworks.io.MouseEvent;
 import powerworks.main.Game;
 
-public class GUIText extends GUIElement {
+public class GUIText extends GUIElement{
 
-    String text;
-    int color;
-    int size;
-
-    GUIText(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text, int color) {
-	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, text, color, 28);
-    }
+    protected String text;
+    protected int size;
     
-    GUIText(GUI parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text, int color, int size) {
-	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
+    protected GUIText(ScreenObject parent, int xPixel, int yPixel, int layer, String text, int size) {
+	super(parent, xPixel, yPixel, (int) Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / Game.getScreenScale(), (int) Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getHeight() / Game.getScreenScale(), layer);
 	this.text = text;
-	this.color = color;
 	this.size = size;
     }
-
-    @Override
-    public void render() {
-	Game.getRenderEngine().renderText(text, xPixel, yPixel, size, color);
-    }
-
-    @Override
-    public void onClick(int xPixel, int yPixel) {
+    
+    protected GUIText(ScreenObject parent, int xPixel, int yPixel, int layer, String text) {
+	this(parent, xPixel, yPixel, layer, text, 28);
     }
 
     @Override
@@ -35,36 +27,47 @@ public class GUIText extends GUIElement {
     }
 
     @Override
-    public void onScreenSizeChange() {
+    public void render() {
+	Game.getRenderEngine().renderText(text, xPixel, yPixel, size);
     }
 
     @Override
-    public void onClickOff() {
+    public void update() {
+	
     }
 
     @Override
-    public void onRelease(int xPixel, int yPixel) {
+    protected void onOpen() {
+	
     }
-    
+
     @Override
-    public String toString() {
-	return "GUI text at " + xPixel + ", " + yPixel + ", width: " + widthPixels + ", height: " + heightPixels + ", open: " + open + " text: " + text + ", color: " + Integer.toHexString(color) + ", size: " + size;
-    
+    protected void onClose() {
+	
+    }
+
+    @Override
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+	
+    }
+
+    @Override
+    public void onMouseActionOn(MouseEvent mouse) {
+	
+    }
+
+    @Override
+    public void onMouseActionOff(MouseEvent mouse) {
+	
     }
 
     @Override
     public void onMouseEnter() {
+	
     }
 
     @Override
     public void onMouseLeave() {
-    }
-
-    @Override
-    public void onOpen() {
-    }
-
-    @Override
-    public void onClose() {
+	
     }
 }

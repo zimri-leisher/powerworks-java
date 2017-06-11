@@ -6,26 +6,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import powerworks.data.Timer;
 import powerworks.graphics.Image;
-import powerworks.graphics.ScreenObject;
 import powerworks.graphics.Texture;
 import powerworks.main.Game;
 
 public class Chatbar extends ScreenObject {
-
-    boolean open = false;
-    boolean underscoreShown = true;
-    float chatbarWidthScale = 1.0f;
+    
+    private boolean active = false;
+    private boolean underscoreShown = true;
+    private float chatbarWidthScale = 1.0f;
 
     protected Chatbar(int xPixel, int yPixel) {
-	super(xPixel, yPixel);
-    }
-
-    public void setOpen(boolean open) {
-	this.open = open;
-    }
-
-    public boolean isOpen() {
-	return open;
+	super(xPixel, yPixel, 1);
+	open = true;
     }
 
     public void showUnderscore(boolean show) {
@@ -34,6 +26,17 @@ public class Chatbar extends ScreenObject {
 
     public boolean showingUnderscore() {
 	return underscoreShown;
+    }
+    
+    /**
+     * True if text is being listened for
+     */
+    public boolean isActive() {
+	return active;
+    }
+    
+    public void setActive(boolean active) {
+	this.active = active;
     }
 
     public void setChatbarSize(int pixels) {
@@ -53,7 +56,7 @@ public class Chatbar extends ScreenObject {
     public void render() {
 	Map<Timer, String> messages = Game.getChatManager().getMessagesWithTimers();
 	String text = Game.getChatManager().getCurrentText();
-	if (open) {
+	if (active) {
 	    Game.getRenderEngine().renderTexture(Image.CHAT_BAR, xPixel, yPixel, 1.0f, chatbarWidthScale, 1.0f, 0, 1.0f, true);
 	    String newText = text;
 	    if (underscoreShown)
@@ -80,6 +83,16 @@ public class Chatbar extends ScreenObject {
     }
 
     @Override
-    public void onScreenSizeChange() {
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+    }
+
+    @Override
+    public void onOpen() {
+	
+    }
+
+    @Override
+    public void onClose() {
+	
     }
 }

@@ -1,4 +1,4 @@
-package powerworks.moving.living;
+package powerworks.collidable.moving.living;
 
 import powerworks.inventory.item.ArmorItem;
 

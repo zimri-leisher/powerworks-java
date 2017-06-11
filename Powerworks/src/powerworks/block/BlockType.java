@@ -5,6 +5,7 @@ import java.util.HashMap;
 import powerworks.audio.Sound;
 import powerworks.collidable.Hitbox;
 import powerworks.graphics.Image;
+import powerworks.graphics.ImageCollection;
 import powerworks.graphics.Texture;
 
 public class BlockType {
@@ -14,7 +15,7 @@ public class BlockType {
     public static final BlockType ERROR = new BlockType(Hitbox.TILE, Image.ERROR, "Error", 1, 1, "Error", 0, false, ErrorBlock.class);
     
     Hitbox hitbox;
-    Texture texture;
+    Texture[] textures;
     int widthTiles, heightTiles;
     String item;
     String name;
@@ -25,10 +26,12 @@ public class BlockType {
     int texXPixelOffset, texYPixelOffset;
     Class<? extends Block> instantiator;
 
-    protected BlockType(Hitbox hitbox, Texture texture, int texXPixelOffset, int texYPixelOffset, String item, int widthTiles, int heightTiles, String name, int id, boolean placeable,
+    protected BlockType(Hitbox hitbox, Texture[] textures, int texXPixelOffset, int texYPixelOffset, String item, int widthTiles, int heightTiles, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator, Sound footstep) {
 	this.hitbox = hitbox;
-	this.texture = texture;
+	if(textures.length != 4)
+	    System.err.println("Block does not have adequate textures");
+	this.textures = textures;
 	this.widthTiles = widthTiles;
 	this.heightTiles = heightTiles;
 	this.name = name;
@@ -44,12 +47,12 @@ public class BlockType {
     
     protected BlockType(Hitbox hitbox, Texture texture, String item, int width, int height, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator) {
-	this(hitbox, texture, 0, 0, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
+	this(hitbox, new Texture[] { texture, texture, texture, texture }, 0, 0, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
     }
     
     protected BlockType(Hitbox hitbox, Texture texture, int texXPixelOffset, int texYPixelOffset, String item, int width, int height, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator) {
-	this(hitbox, texture, texXPixelOffset, texYPixelOffset, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
+	this(hitbox, new Texture[] { texture , texture, texture, texture}, texXPixelOffset, texYPixelOffset, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
     }
 
     public boolean defaultRequiresUpdate() {
@@ -60,8 +63,8 @@ public class BlockType {
 	return footstep;
     }
 
-    public Texture getTexture() {
-	return texture;
+    public Texture[] getTextures() {
+	return textures;
     }
     
     public int getTextureXPixelOffset() {

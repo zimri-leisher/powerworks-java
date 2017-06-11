@@ -1,16 +1,16 @@
-package powerworks.moving;
+package powerworks.collidable.moving;
 
 import powerworks.block.Block;
 import powerworks.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
+import powerworks.collidable.moving.living.Player;
 import powerworks.data.SpatialOrganizer;
 import powerworks.event.EventManager;
 import powerworks.event.ViewMoveEvent;
 import powerworks.graphics.ImageCollection;
 import powerworks.graphics.Texture;
 import powerworks.main.Game;
-import powerworks.moving.living.Player;
 
 public abstract class Moving extends Collidable {
 
@@ -28,7 +28,8 @@ public abstract class Moving extends Collidable {
     }
 
     protected boolean getCollision(int moveX, int moveY) {
-	for (Collidable col : Game.getLevel().getCollidables().getIntersecting(xPixel + moveX + hitbox.getXStart(), yPixel + moveY + hitbox.getYStart(), hitbox.getWidthPixels(), hitbox.getHeightPixels())) {
+	for (Collidable col : Game.getLevel().getCollidables().getIntersecting(xPixel + moveX + hitbox.getXStart(), yPixel + moveY + hitbox.getYStart(), hitbox.getWidthPixels(),
+		hitbox.getHeightPixels())) {
 	    if (col != this)
 		return true;
 	}
@@ -38,7 +39,7 @@ public abstract class Moving extends Collidable {
     @Override
     public void update() {
 	Block b = Game.getLevel().getBlockFromPixel(xPixel + hitbox.getXStart() + hitbox.getWidthPixels() / 2, yPixel + hitbox.getYStart() + hitbox.getHeightPixels() / 2);
-	if(b instanceof ConveyorBeltBlock) {
+	if (b instanceof ConveyorBeltBlock) {
 	    int xVel = (b.getRotation() == 1) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 3) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
 	    int yVel = (b.getRotation() == 0) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 2) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
 	    addVel(xVel, yVel);
@@ -78,11 +79,9 @@ public abstract class Moving extends Collidable {
 		}
 	    }
 	}
-	if (pXPixel != xPixel || pYPixel != yPixel) {
-	    if (this == Game.getMainPlayer())
-		Game.getRenderEngine().setOffset(xPixel - Game.getRenderEngine().getWidthPixels() / 2, yPixel - Game.getRenderEngine().getHeightPixels() / 2);
+	if (pXPixel != xPixel || pYPixel != yPixel)
 	    hasMoved = true;
-	} else
+	else
 	    hasMoved = false;
 	velX /= AIR_DRAG;
 	velY /= AIR_DRAG;

@@ -1,13 +1,13 @@
-package powerworks.moving.living;
+package powerworks.collidable.moving.living;
 
 import powerworks.ai.AI;
 import powerworks.collidable.Hitbox;
+import powerworks.collidable.moving.Moving;
 import powerworks.graphics.Image;
 import powerworks.graphics.Texture;
 import powerworks.graphics.screen.gui.InventoryGUI;
 import powerworks.inventory.Inventory;
 import powerworks.main.Game;
-import powerworks.moving.Moving;
 
 public abstract class Living extends Moving {
 
@@ -25,13 +25,35 @@ public abstract class Living extends Moving {
     protected Living(int xPixel, int yPixel, Hitbox hitbox, Inventory inv, String name, Texture background, boolean stretchToFit) {
 	this(xPixel, yPixel, hitbox, 20);
 	this.inv = inv;
-	int width = inv.getWidth() * 18 + 10;
-	int height = inv.getHeight() * 18 + 10;
-	invGUI = new InventoryGUI((Game.getScreenWidth() - width) / 2, 10, width, height, inv, background, name, true);
+	invGUI = new InventoryGUI(inv, Image.PLAYER_INVENTORY, "Inventory");
     }
     
     protected Living(int xPixel, int yPixel, Hitbox hitbox, int footstepDistance) {
 	super(xPixel, yPixel, hitbox);
 	Game.getLevel().getLivingEntities().add(this);
+    }
+    
+    public Inventory getInventory() {
+	return inv;
+    }
+    
+    public AI getAI() {
+	return ai;
+    }
+    
+    public InventoryGUI getInvGUI() {
+	return invGUI;
+    }
+    
+    public Equipment getEquipment() {
+	return equips;
+    }
+    
+    public double getHealth() {
+	return health;
+    }
+    
+    public double getArmor() {
+	return armor;
     }
 }

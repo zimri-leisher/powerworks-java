@@ -26,6 +26,8 @@ import kuusisto.tinysound.TinySound;
 import powerworks.chat.ChatCommandExecutor;
 import powerworks.chat.ChatManager;
 import powerworks.collidable.Collidable;
+import powerworks.collidable.moving.droppeditem.DroppedItem;
+import powerworks.collidable.moving.living.Player;
 import powerworks.data.Timer;
 import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
@@ -37,7 +39,8 @@ import powerworks.graphics.Renderer;
 import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.screen.HUD;
 import powerworks.graphics.screen.Mouse;
-import powerworks.graphics.screen.gui.GUIManager;
+import powerworks.graphics.screen.ScreenManager;
+import powerworks.graphics.screen.ScreenObject;
 import powerworks.graphics.screen.gui.MainMenuGUI;
 import powerworks.io.ControlMap;
 import powerworks.io.ControlPressType;
@@ -50,8 +53,6 @@ import powerworks.io.MouseWheelControlHandler;
 import powerworks.io.MouseWheelControlOption;
 import powerworks.io.MouseWheelPress;
 import powerworks.io.Statistic;
-import powerworks.moving.droppeditem.DroppedItem;
-import powerworks.moving.living.Player;
 import powerworks.task.Task;
 import powerworks.world.World;
 import powerworks.world.WorldManager;
@@ -73,6 +74,9 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     static int width = 300, zoomedWidth = width;
     static int height = width / 16 * 9, zoomedHeight = height;
     static int scale = 4;
+    static int secondCount = 0;
+    static long updateCount = 0;
+    static long frameCount = 0;
     int prevFrameWidth = 0;
     int prevFrameHeight = 0;
     static Player player;
@@ -87,9 +91,9 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     static List<String> allPlayerNames;
     static List<Player> allPlayers;
     static World world;
-    static GUIManager guiManager;
-    static MainMenuGUI mainMenu;
+    static ScreenManager screen;
     static HUD hud;
+    static MainMenuGUI mainMenu;
     static Mouse mouse;
     static InputManager input;
     static ChatCommandExecutor chatCmdExecutor;
@@ -106,9 +110,9 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	input = new InputManager();
 	chatCmdExecutor = new ChatCommandExecutor();
 	render = new Renderer(width, height);
-	guiManager = new GUIManager();
-	mainMenu = new MainMenuGUI();
+	screen = new ScreenManager();
 	mouse = new Mouse();
+	mainMenu = new MainMenuGUI();
 	addKeyListener(input);
 	addMouseWheelListener(input);
 	addMouseListener(input);
@@ -141,16 +145,24 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	}
     }
 
-    public static GUIManager getGUIManager() {
-	return guiManager;
+    public static int getSecondsSinceStart() {
+	return secondCount;
+    }
+
+    public static long getUpdatesSinceStart() {
+	return updateCount;
+    }
+
+    public static long getFramesSinceStart() {
+	return frameCount;
+    }
+
+    public static ScreenManager getScreenManager() {
+	return screen;
     }
 
     public static ChatManager getChatManager() {
 	return chatManager;
-    }
-
-    public static MainMenuGUI getMainMenuGUI() {
-	return mainMenu;
     }
 
     public static HUD getHUD() {
@@ -255,17 +267,20 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		lastUpdateTime += NS_PER_UPDATE;
 		updates++;
 		updateCount++;
+		Game.updateCount++;
 	    }
 	    if (now - lastUpdateTime > NS_PER_UPDATE) {
 		lastUpdateTime = now - NS_PER_UPDATE;
 	    }
 	    render();
+	    Game.frameCount++;
 	    frameCount++;
 	    lastRenderTime = now;
 	    int thisSecond = (int) (lastUpdateTime / 1000000000);
 	    if (thisSecond > lastSecondTime) {
 		frame.setTitle("Powerworks Industries - " + frameCount + " fps, " + updateCount + " ups");
 		lastSecondTime = thisSecond;
+		secondCount++;
 		logger.addData(Statistic.FPS, frameCount);
 		logger.addData(Statistic.UPS, updateCount);
 		frameCount = 0;
@@ -278,7 +293,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		    prevFrameWidth = newFrameWidth;
 		    prevFrameHeight = newFrameHeight;
 		    if (State.getState() == State.INGAME)
-			render.setOffset(player.getXPixel() - Game.getRenderEngine().getWidthPixels() / 2, player.getYPixel() - Game.getRenderEngine().getHeightPixels() / 2);
+			render.setOffset(player.getXPixel() - getRenderEngine().getWidthPixels() / 2, player.getYPixel() - getRenderEngine().getHeightPixels() / 2);
 		}
 	    }
 	    if (!FPS_MODE)
@@ -299,14 +314,14 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	if (s == State.INGAME) {
 	    InputManager.update();
 	    Task.update();
-	    render.update();
+	    screen.update();
 	    world.update();
 	    Timer.update();
 	    SyncAnimation.update();
 	} else if (s == State.MAIN_MENU) {
 	    InputManager.update();
 	    Task.update();
-	    render.update();
+	    screen.update();
 	    Timer.update();
 	    SyncAnimation.update();
 	}
@@ -326,11 +341,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		render.feed(g2d);
 		if (s == State.INGAME) {
 		    world.render();
-		    guiManager.render();
-		    hud.render();
+		    screen.render();
 		    mouse.render();
 		} else if (s == State.MAIN_MENU) {
-		    guiManager.render();
+		    screen.render();
 		    mouse.render();
 		}
 		g2d.dispose();
@@ -377,6 +391,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     public static void main(String[] args) {
+	System.setProperty("sun.java2d.translaccel", "true");
+	System.setProperty("sun.java2d.ddforcevram", "true");
 	System.out.println("Starting game...");
 	// TinySound.init();
 	game = new Game();
@@ -436,7 +452,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case SHOW_RENDER_TIMES:
 		switch (pressType) {
 		    case PRESSED:
-			showRenderTimes = true;
+			// showRenderTimes = true;
 		    default:
 			break;
 		}
@@ -456,7 +472,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case TOGGLE_FPS_MODE:
 		switch (pressType) {
 		    case PRESSED:
-			FPS_MODE = !FPS_MODE;
+			ScreenObject.test();
+			// FPS_MODE = !FPS_MODE;
 			break;
 		    default:
 			break;
