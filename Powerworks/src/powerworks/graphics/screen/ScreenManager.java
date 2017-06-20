@@ -2,6 +2,7 @@ package powerworks.graphics.screen;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import powerworks.data.GeometryHelper;
 import powerworks.io.InputManager;
@@ -31,6 +32,10 @@ public class ScreenManager {
 	}
 	return used;
     }
+    
+    //public boolean onMouseScroll(ScrollEvent scroll) {
+//	
+ //   }
 
     public void update() {
 	int mXPixel = InputManager.getMouseXPixel();

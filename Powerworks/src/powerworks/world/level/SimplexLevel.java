@@ -11,7 +11,7 @@ public class SimplexLevel extends Level {
     static final double IRON_ORE_MAX_THRESHOLD = 2.0;
     static final int IRON_ORE_SCATTER = 5;
     private SimplexNoise singleOre;
-    
+
     public SimplexLevel(int width, int height, long seed) {
 	super(width, height, seed);
     }

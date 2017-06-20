@@ -66,17 +66,15 @@ public abstract class Moving extends Collidable {
 	if (velY + yPixel + hitbox.getYStart() < 0)
 	    yPixel = Game.getLevel().getHeightPixels() - (hitbox.getYStart() + hitbox.getHeightPixels());
 	int pXPixel = xPixel, pYPixel = yPixel;
-	if (velX != 0 || velY != 0) {
-	    if (!getCollision(velX, velY)) {
+	if (!getCollision(velX, velY)) {
+	    xPixel += velX;
+	    yPixel += velY;
+	} else {
+	    if (!getCollision(velX, 0)) {
 		xPixel += velX;
+	    }
+	    if (!getCollision(0, velY)) {
 		yPixel += velY;
-	    } else {
-		if (!getCollision(velX, 0)) {
-		    xPixel += velX;
-		}
-		if (!getCollision(0, velY)) {
-		    yPixel += velY;
-		}
 	    }
 	}
 	if (pXPixel != xPixel || pYPixel != yPixel)
@@ -137,5 +135,17 @@ public abstract class Moving extends Collidable {
 		    this.velY = newVelY;
 	    }
 	}
+    }
+
+    @Override
+    public void remove() {
+	super.remove();
+	textures = null;
+	Game.getLevel().getMovingEntities().remove(this);
+    }
+    
+    @Override
+    public String toString() {
+	return "Moving object at " + xPixel + ", " + yPixel + ", with x velocity " + velX + " and y velocity " + velY + ", direction of " + dir;
     }
 }

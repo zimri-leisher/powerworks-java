@@ -127,4 +127,16 @@ public class GUIItemSlot extends GUIElement {
 	if (!isDisplay)
 	    current = unhigh;
     }
+    
+    @Override
+    public String toString() {
+	return "GUI item slot at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", item: " + inv.getItem(index).toString() + ", is display: " + isDisplay;
+    }
+    
+    @Override
+    public void remove() {
+	super.remove();
+	inv = null;
+	unhigh = high = click = display = current = null;
+    }
 }

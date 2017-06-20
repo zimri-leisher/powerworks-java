@@ -91,7 +91,7 @@ public class Block extends Collidable {
 
     @Override
     public String toString() {
-	return type.name;
+	return type.name + " block at x tile " + (xPixel >> 4) + ", y tile " + (yPixel >> 4) + ", with rotation " + rotation;
     }
 
     @Override

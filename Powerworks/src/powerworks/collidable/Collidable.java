@@ -31,4 +31,16 @@ public abstract class Collidable extends LevelObject {
     public void renderHitbox() {
 	Game.getRenderEngine().renderSquare(0xFF0C00, xPixel + hitbox.getXStart(), yPixel + hitbox.getYStart(), hitbox.getWidthPixels(), hitbox.getHeightPixels());
     }
+    
+    @Override
+    public void remove() {
+	if(hitbox.isSolid())
+	    Game.getLevel().getCollidables().remove(this);
+	hitbox = null;
+    }
+    
+    @Override
+    public String toString() {
+	return "Collidable at " + xPixel + ", " + yPixel;
+    }
 }

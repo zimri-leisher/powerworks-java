@@ -38,7 +38,6 @@ public enum Sound {
 	    int frameSize = format.getFrameSize();
 	    float frameRate = format.getFrameRate();
 	    float durationInSeconds = (audioFileLength / (frameSize * frameRate));
-	    System.out.println(durationInSeconds);
 	} catch (UnsupportedAudioFileException | IOException e) {
 	    e.printStackTrace();
 	}

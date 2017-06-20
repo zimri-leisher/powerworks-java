@@ -1,5 +1,6 @@
 package powerworks.graphics.screen.gui;
 
+import java.awt.Rectangle;
 import powerworks.data.Timer;
 import powerworks.graphics.Texture;
 import powerworks.graphics.screen.ScreenObject;
@@ -12,13 +13,13 @@ import powerworks.task.Task;
 
 public class GUITextField extends GUIElement implements TextListener {
 
-    String text = "";
-    int size;
-    String backgroundText;
-    boolean active;
-    Timer underscore;
-    Task onEnter;
-    boolean showUnderscore = true;
+    private String text = "";
+    private int size;
+    private String backgroundText;
+    private boolean active;
+    private Timer underscore;
+    private Task onEnter;
+    private boolean showUnderscore = true;
 
     /**
      * @param backgroundText
@@ -59,10 +60,12 @@ public class GUITextField extends GUIElement implements TextListener {
 
     @Override
     public void render() {
+	Game.getRenderEngine().setClip(xPixel, yPixel, widthPixels, heightPixels);
 	if (active || !text.equals(""))
 	    Game.getRenderEngine().renderText(text + ((showUnderscore) ? "_" : ""), xPixel + 1, yPixel + 4, size);
 	else if (!backgroundText.equals(""))
 	    Game.getRenderEngine().renderText(backgroundText, xPixel + 1, yPixel + 4, size, 0x999999);
+	Game.getRenderEngine().resetClip();
     }
 
     @Override
@@ -135,5 +138,19 @@ public class GUITextField extends GUIElement implements TextListener {
 
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+    }
+
+    @Override
+    public String toString() {
+	return "GUI text field at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", current text of " + text
+		+ ", background text of " + backgroundText + ", is active: " + active;
+    }
+
+    @Override
+    public void remove() {
+	super.remove();
+	backgroundText = text = null;
+	underscore = null;
+	onEnter = null;
     }
 }

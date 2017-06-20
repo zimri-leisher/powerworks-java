@@ -1,6 +1,5 @@
 package powerworks.inventory;
 
-import java.util.Iterator;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
 
@@ -101,7 +100,7 @@ public class Inventory {
      * 
      * @return false if unable to do this
      */
-    public boolean shiftRight(int index) {
+    private boolean shiftRight(int index) {
 	if (items[items.length - 1] != null)
 	    return false;
 	Item[] temp = items.clone();
@@ -113,7 +112,13 @@ public class Inventory {
 	return true;
     }
     
-    
+    private boolean shiftLeft(int index) {
+	if(items[index - 1] != null)
+	    return false;
+	Item[] temp = items.clone();
+	//TODO
+	return true;
+    }
 
     /**
      * Takes an item from the inventory

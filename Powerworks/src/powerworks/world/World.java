@@ -12,6 +12,7 @@ import powerworks.world.level.tile.Tile;
 public class World {
     long seed;
     Level level;
+    
     /**
      * Allowing others to locate this world
      */
@@ -83,6 +84,7 @@ public class World {
     }
     
     public void unload() {
+	level.unload();
 	level = null;
     }
 }

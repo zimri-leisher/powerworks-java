@@ -40,4 +40,14 @@ public class InventoryGUI extends GUI {
 	    }
 	}
     }
+    
+    @Override
+    public void remove() {
+	super.remove();
+	inv = null;
+	items = null;
+	background = null;
+	name = null;
+	grip = null;
+    }
 }

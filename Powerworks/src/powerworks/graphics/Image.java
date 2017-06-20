@@ -34,8 +34,15 @@ public class Image implements Texture {
     public static final Image GUI_BUTTON_HIGHLIGHT = new Image("/textures/gui/button_highlight.png");
     public static final Image GUI_BUTTON_CLICK = new Image("/textures/gui/button_click.png");
     public static final Image GUI_DRAG_GRIP = new Image("/textures/gui/drag_grip.png");
+    public static final Image GUI_SCROLL_BAR_TOP = new Image("/textures/gui/scroll_bar_top.png");
+    public static final Image GUI_SCROLL_BAR_MIDDLE = new Image("/textures/gui/scroll_bar_middle.png");
+    public static final Image GUI_SCROLL_BAR_BOTTOM = new Image("/textures/gui/scroll_bar_bottom.png");
+    public static final Image GUI_SCROLL_BAR = new Image("/textures/gui/scroll_bar.png");
+    public static final Image GUI_SCROLL_BAR_HIGHLIGHT = new Image("/textures/gui/scroll_bar_highlight.png");
+    public static final Image GUI_SCROLL_BAR_CLICK = new Image("/textures/gui/scroll_bar_click.png");
     public static final Image MAIN_MENU_BACKGROUND = new Image(new Color(0x666666));
     public static final Image MAIN_MENU_BUTTON_BOX = new Image("/textures/gui/main_menu.png");
+    public static final Image OPTIONS_MENU_BACKGROUND = new Image(new Color(0x999999));
     
     private BufferedImage image;
 
@@ -52,11 +59,11 @@ public class Image implements Texture {
 	    e.printStackTrace();
 	}
     }
-    
+
     private Image(BufferedImage image) {
 	this.image = image;
     }
-    
+
     /**
      * 1x1 pixel of the color
      */

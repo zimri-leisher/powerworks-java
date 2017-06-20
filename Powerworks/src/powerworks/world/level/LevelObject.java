@@ -17,7 +17,6 @@ public abstract class LevelObject {
 	this.texXPixelOffset = texXPixelOffset;
 	this.texYPixelOffset = texYPixelOffset;
     }
-
     
     protected LevelObject(int xPixel, int yPixel) {
 	this(xPixel, yPixel, 0, 0);
@@ -83,7 +82,7 @@ public abstract class LevelObject {
     public abstract Texture getTexture();
 
     /**
-     * Should immediately render, using the Renderer's methods (from <tt>Game.getRenderEngine.renderLevelObject</tt>). Also, should take into account texture offsets
+     * Should immediately render, taking into account texture offsets
      */
     public abstract void render();
 

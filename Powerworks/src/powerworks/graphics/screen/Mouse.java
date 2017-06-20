@@ -76,4 +76,11 @@ public class Mouse extends ScreenObject{
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
+    
+    @Override
+    public void remove() {
+	super.remove();
+	texture = null;
+	heldItem = null;
+    }
 }

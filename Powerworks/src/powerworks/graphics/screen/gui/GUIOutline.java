@@ -1,15 +1,18 @@
 package powerworks.graphics.screen.gui;
 
 import powerworks.graphics.Texture;
+import powerworks.graphics.screen.ClickableScreenObject;
 import powerworks.graphics.screen.ScreenObject;
 import powerworks.io.MouseEvent;
 
-public class GUIDescription extends GUIElement {
+public class GUIOutline extends GUIElement {
 
-    private String text;
+    protected GUIOutline(ScreenObject parent, int widthPixels, int heightPixels, int color) {
+	super(parent, 0, 0, widthPixels, heightPixels, parent.getLayer() + 1);
+    }
     
-    protected GUIDescription(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text) {
-	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
+    protected GUIOutline(ClickableScreenObject parent, int color) {
+	super(parent, 0, 0, parent.getWidthPixels(), parent.getHeightPixels(), parent.getLayer() + 1);
     }
 
     @Override
@@ -18,6 +21,11 @@ public class GUIDescription extends GUIElement {
 
     @Override
     public void onMouseActionOff(MouseEvent mouse) {
+    }
+    
+    @Override
+    public void render() {
+	super.render();
     }
 
     @Override
@@ -39,15 +47,5 @@ public class GUIDescription extends GUIElement {
 
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
-    }
-    
-    @Override
-    public String toString() {
-	return "GUI description at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + " with text " + text + ", layer: " + layer + ", # of children: " + children.size();
-    }
-    
-    @Override
-    public void remove() {
-	text = null;
     }
 }

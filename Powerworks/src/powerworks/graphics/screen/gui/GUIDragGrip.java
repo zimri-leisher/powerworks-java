@@ -88,4 +88,15 @@ public class GUIDragGrip extends GUIElement {
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
+    
+    @Override
+    public String toString() {
+	return "GUI drag grip at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
+    }
+    
+    @Override
+    public void remove() {
+	super.remove();
+	texture = null;
+    }
 }

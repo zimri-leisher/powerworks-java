@@ -22,7 +22,6 @@ import powerworks.io.KeyControlOption;
 import powerworks.io.KeyPress;
 import powerworks.io.MouseControlHandler;
 import powerworks.io.MouseControlOption;
-import powerworks.io.MouseMovementDetector;
 import powerworks.io.MousePress;
 import powerworks.main.Game;
 import powerworks.task.Task;
@@ -33,25 +32,22 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
     public static int MOVE_SPEED = 1;
     public static int SPRINT_SPEED = 2;
     boolean invOpen = false;
-    String name;
+    private String name;
     public GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
-    int lastMouseXPixel = 0, lastMouseYPixel = 0;
-    MouseMovementDetector mouseMovementDetector = InputManager.newDetector();
-    boolean moving, sprinting;
-    Timer removing = new Timer(96, 1), repeat = new Timer(40, 1);
+    private int lastMouseXPixel = 0, lastMouseYPixel = 0;
+    private boolean moving, sprinting;
+    private Timer removing = new Timer(96, 1), repeat = new Timer(40, 1);
 
     public Player(int xPixel, int yPixel, String name) {
-	super(xPixel, yPixel, Hitbox.PLAYER, new Inventory(8, 4), "Inventory", Image.PLAYER_INVENTORY, false);
+	super(xPixel, yPixel, Hitbox.PLAYER, new Inventory(8, 4), "Inventory", Image.PLAYER_INVENTORY);
 	this.name = name;
 	textures = ImageCollection.PLAYER;
 	removing.runTaskOnFinish(new Task() {
 
 	    @Override
 	    public void run() {
-		System.out.println("test");
 		Block b = Game.getLevel().getBlockFromPixel(InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel());
 		if (b != null) {
-		    System.out.println(b);
 		    b.remove();
 		    removing.resetTimes();
 		    block.setPlaceable(true);
@@ -94,7 +90,7 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	    time = System.nanoTime();
 	Item item = getHeldItem();
 	if (item != null && getHeldItem().isPlaceable()) {
-	    if (mouseMovementDetector.hasMovedRelativeToLevel()) {
+	    if (true) {
 		int xTile = mouseXPixel >> 4;
 		int yTile = mouseYPixel >> 4;
 		if (Game.getLevel().getBlockFromTile(xTile, yTile) == null) {
@@ -197,7 +193,7 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 
     @Override
     public String toString() {
-	return name;
+	return "Player named " + name + " at " + xPixel + ", "  + yPixel + ", sprinting: " + sprinting + ", inventory open: " + invOpen;
     }
 
     @EventHandler
@@ -464,6 +460,5 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	block = null;
 	removing = null;
 	repeat = null;
-	mouseMovementDetector = null;
     }
 }

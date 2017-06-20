@@ -32,6 +32,9 @@ public class Healthbar extends ScreenObject {
 
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
-	// TODO Auto-generated method stub
+    }
+    
+    @Override
+    public void remove() {
     }
 }

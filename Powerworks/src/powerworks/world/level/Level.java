@@ -393,4 +393,16 @@ public abstract class Level {
 	id = Integer.parseInt(split[2].substring(1));
 	tiles[x + y * width] = new Tile(TileType.getTileType(id), y, x);
     }
+    
+    public void unload() {
+	rand = null;
+	chunks = null;
+	tiles = null;
+	blocks = null;
+	collidables = null;
+	droppedItems = null;
+	livingEntities = null;
+	movingEntities = null;
+	path = null;
+    }
 }

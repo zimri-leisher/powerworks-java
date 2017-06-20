@@ -45,4 +45,11 @@ public abstract class GUIElement extends ClickableScreenObject {
 	    descShowing = false;
 	}
     }
+
+    @Override
+    public void remove() {
+	descTimer = null;
+	desc = null;
+	super.remove();
+    }
 }

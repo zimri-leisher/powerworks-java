@@ -53,13 +53,15 @@ public class Renderer {
     /**
      * All drawing operations will not do anything outside this rectangle on the screen. It can be reset by Renderer.resetClip()
      */
-    public void setClip(Rectangle clip) {
-	this.clip = clip;
+    public void setClip(int xPixel, int yPixel, int widthPixels, int heightPixels) {
+	int s = Game.getScreenScale();
+	this.clip = new Rectangle(xPixel * s, yPixel * s, widthPixels * s, heightPixels * s);
 	g2d.setClip(clip);
     }
     
     public void resetClip() {
-	setClip(defClip);
+	clip = defClip;
+	g2d.setClip(clip);
     }
     
     public void setOffset(int xPixel, int yPixel) {
@@ -83,7 +85,7 @@ public class Renderer {
 	int h = this.heightPixels;
 	this.widthPixels = widthPixels;
 	this.heightPixels = heightPixels;
-	defClip = new Rectangle(0, 0, widthPixels, heightPixels);
+	defClip = new Rectangle(0, 0, widthPixels * Game.getScreenScale(), heightPixels * Game.getScreenScale());
 	Game.getScreenManager().getScreenObjects().forEach((ScreenObject obj) -> obj.onScreenSizeChange(w, h));
     }
 

@@ -63,4 +63,15 @@ public class GUITexturePane extends GUIElement {
     @Override
     public void onMouseLeave() {
     }
+    
+    @Override
+    public String toString() {
+	return "GUI texture pane at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size() + ", texture of " + texture.toString();
+    }
+    
+    @Override
+    public void remove() {
+	super.remove();
+	texture = null;
+    }    
 }

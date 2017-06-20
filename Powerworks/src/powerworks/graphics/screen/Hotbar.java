@@ -76,4 +76,10 @@ public class Hotbar extends ScreenObject {
 	xPixel = Game.getRenderEngine().getWidthPixels() / 2 - 8 * (Image.HOTBAR_SLOT.getWidthPixels() / 2);
 	yPixel = Game.getRenderEngine().getHeightPixels() - Image.HOTBAR_SLOT.getHeightPixels();
     }
+    
+    @Override
+    public void remove() {
+	super.remove();
+	inv = null;
+    }
 }

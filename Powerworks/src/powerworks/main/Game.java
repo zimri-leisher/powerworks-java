@@ -1,6 +1,7 @@
 package powerworks.main;
 
 import java.awt.Canvas;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontFormatException;
@@ -9,39 +10,30 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.Transparency;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.VolatileImage;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import kuusisto.tinysound.TinySound;
 import powerworks.chat.ChatCommandExecutor;
 import powerworks.chat.ChatManager;
-import powerworks.collidable.Collidable;
-import powerworks.collidable.moving.droppeditem.DroppedItem;
 import powerworks.collidable.moving.living.Player;
 import powerworks.data.Timer;
-import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
 import powerworks.event.EventManager;
-import powerworks.event.ViewMoveEvent;
-import powerworks.event.ZoomEvent;
-import powerworks.graphics.ImageCollection;
 import powerworks.graphics.Renderer;
 import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.screen.HUD;
 import powerworks.graphics.screen.Mouse;
 import powerworks.graphics.screen.ScreenManager;
 import powerworks.graphics.screen.ScreenObject;
+import powerworks.graphics.screen.gui.GUI;
 import powerworks.graphics.screen.gui.MainMenuGUI;
+import powerworks.graphics.screen.gui.OptionsMenuGUI;
 import powerworks.io.ControlMap;
 import powerworks.io.ControlPressType;
 import powerworks.io.InputManager;
@@ -55,9 +47,7 @@ import powerworks.io.MouseWheelPress;
 import powerworks.io.Statistic;
 import powerworks.task.Task;
 import powerworks.world.World;
-import powerworks.world.WorldManager;
 import powerworks.world.level.Level;
-import powerworks.world.level.SimplexLevel;
 
 public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler, MouseWheelControlHandler {
 
@@ -94,6 +84,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     static ScreenManager screen;
     static HUD hud;
     static MainMenuGUI mainMenu;
+    static OptionsMenuGUI optionsMenu;
     static Mouse mouse;
     static InputManager input;
     static ChatCommandExecutor chatCmdExecutor;
@@ -101,6 +92,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     static Logger logger;
     static boolean showRenderTimes = false;
     static boolean showUpdateTimes = false;
+    static Cursor defCursor;
 
     private Game() {
 	loadFont();
@@ -113,10 +105,12 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	screen = new ScreenManager();
 	mouse = new Mouse();
 	mainMenu = new MainMenuGUI();
+	optionsMenu = new OptionsMenuGUI();
 	addKeyListener(input);
 	addMouseWheelListener(input);
 	addMouseListener(input);
 	addMouseMotionListener(input);
+	defCursor = Cursor.getDefaultCursor();
 	setCursor(Toolkit.getDefaultToolkit().createCustomCursor(
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
@@ -143,6 +137,39 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	} catch (InterruptedException e) {
 	    e.printStackTrace();
 	}
+    }
+
+    /**
+     * Should not normally be used, only necessary for things that have to do
+     * with the Component part of the game (i.e. mouse icons, frame size, etc.)
+     */
+    public static Game getInstance() {
+	return game;
+    }
+
+    /**
+     * Sets the cursor to the default windows cursor
+     */
+    public void resetMouseIcon() {
+	setCursor(defCursor);
+    }
+
+    public void clearMouseIcon() {
+	setCursor(Toolkit.getDefaultToolkit().createCustomCursor(
+		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
+		new Point(0, 0), "null"));
+    }
+
+    public static MainMenuGUI getMainMenuGUI() {
+	return mainMenu;
+    }
+
+    public static OptionsMenuGUI getOptionsMenuGUI() {
+	return optionsMenu;
+    }
+
+    public static void exit() {
+	game.running = false;
     }
 
     public static int getSecondsSinceStart() {
@@ -391,34 +418,31 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     public static void main(String[] args) {
-	System.setProperty("sun.java2d.translaccel", "true");
-	System.setProperty("sun.java2d.ddforcevram", "true");
-	System.out.println("Starting game...");
-	// TinySound.init();
-	game = new Game();
 	try {
-	    frame.setIconImage(ImageIO.read(Game.class.getResource("/textures/misc/logo.png")));
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-	try {
-	    frame.setResizable(true);
-	    frame.setTitle("Powerworks - Loading");
-	    frame.add(game);
-	    frame.pack();
-	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    frame.setLocationRelativeTo(null);
-	    game.requestFocusInWindow();
-	    frame.setVisible(true);
-	    mainMenu.open();
-	    game.start();
-	    Scanner scanner = new Scanner(System.in);
-	    while (scanner.hasNext()) {
-		chatCmdExecutor.executeCommand(scanner.nextLine(), player);
-	    }
-	    scanner.close();
+	    System.setProperty("sun.java2d.translaccel", "true");
+	    System.setProperty("sun.java2d.ddforcevram", "true");
+	    System.out.println("Starting game...");
+	    // TinySound.init();
+	    game = new Game();
+		frame.setIconImage(ImageIO.read(Game.class.getResource("/textures/misc/logo.png")));
+		frame.setResizable(true);
+		frame.setTitle("Powerworks - Loading");
+		frame.add(game);
+		frame.pack();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLocationRelativeTo(null);
+		game.requestFocusInWindow();
+		frame.setVisible(true);
+		mainMenu.open();
+		game.start();
+		Scanner scanner = new Scanner(System.in);
+		while (scanner.hasNext()) {
+		    chatCmdExecutor.executeCommand(scanner.nextLine(), player);
+		}
+		scanner.close();
 	} catch (Exception e) {
 	    e.printStackTrace();
+	} finally {
 	    logger.close();
 	}
     }
@@ -472,7 +496,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case TOGGLE_FPS_MODE:
 		switch (pressType) {
 		    case PRESSED:
-			ScreenObject.test();
+			logger.log("test");
 			// FPS_MODE = !FPS_MODE;
 			break;
 		    default:

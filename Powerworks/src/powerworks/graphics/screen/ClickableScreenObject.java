@@ -81,4 +81,10 @@ public abstract class ClickableScreenObject extends ScreenObject {
     public abstract void onMouseEnter();
 
     public abstract void onMouseLeave();
+    
+    @Override
+    public void remove() {
+	super.remove();
+	Game.getScreenManager().getClickableScreenObjects().remove(this);
+    }
 }

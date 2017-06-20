@@ -10,6 +10,7 @@ public abstract class ScreenObject {
     static class NoParent extends ScreenObject {
 
 	protected NoParent() {
+	    children = new ArrayList<ScreenObject>();
 	    this.parent = null;
 	    this.layer = 0;
 	    this.xPixel = 0;
@@ -23,33 +24,33 @@ public abstract class ScreenObject {
 	    this.xPixel = xPixel;
 	    children.forEach(ScreenObject::onParentMove);
 	}
-	
+
 	@Override
 	public void setRelYPixel(int yPixel) {
 	    this.yPixel = yPixel;
 	    children.forEach(ScreenObject::onParentMove);
 	}
-	
+
 	@Override
 	public float getScale() {
 	    return 1;
 	}
-	
+
 	@Override
 	public float getWidthScale() {
 	    return 1;
 	}
-	
+
 	@Override
 	public float getHeightScale() {
 	    return 1;
 	}
-	
+
 	@Override
 	public int getRotation() {
 	    return 0;
 	}
-	
+
 	@Override
 	public Texture getTexture() {
 	    return null;
@@ -77,11 +78,6 @@ public abstract class ScreenObject {
     static NoParent getNoParentObject() {
 	return (NoParent) noParent;
     }
-    
-    public static void test() {
-	System.out.println("test");
-	noParent.setXPixel(noParent.getXPixel() + 2);
-    }
 
     /**
      * Relative to screen, however, constructor values are relative to parent
@@ -93,7 +89,7 @@ public abstract class ScreenObject {
     protected int relXPixel, relYPixel;
     protected int layer;
     protected ScreenObject parent;
-    protected List<ScreenObject> children = new ArrayList<ScreenObject>();
+    protected List<ScreenObject> children;
     protected boolean open = false;
 
     /**
@@ -110,14 +106,15 @@ public abstract class ScreenObject {
      *            stores relative to screen)
      */
     protected ScreenObject(ScreenObject parent, int xPixel, int yPixel, int layer) {
+	children = new ArrayList<ScreenObject>();
 	this.parent = (parent == null) ? noParent : parent;
-	this.parent.children.add(this);
 	this.relXPixel = xPixel;
 	this.relYPixel = yPixel;
 	this.xPixel = xPixel + this.parent.xPixel;
 	this.yPixel = yPixel + this.parent.yPixel;
 	this.layer = layer;
 	Game.getScreenManager().getScreenObjects().add(this);
+	this.parent.children.add(this);
     }
 
     /**
@@ -134,6 +131,13 @@ public abstract class ScreenObject {
     }
 
     private ScreenObject() {
+    }
+
+    public void setParent(ScreenObject parent) {
+	this.parent.children.remove(this);
+	this.parent = parent;
+	parent.children.add(this);
+	onParentMove();
     }
 
     public ScreenObject getParent() {
@@ -283,7 +287,8 @@ public abstract class ScreenObject {
      * this object in order of their layers
      */
     public void render() {
-	children.stream().filter(ScreenObject::isOpen).sorted((ScreenObject obj, ScreenObject obj2) -> obj.getLayer() > obj2.getLayer() ? 1 : obj.getLayer() == obj2.getLayer() ? 0 : -1).forEach(ScreenObject::render);
+	children.stream().filter(ScreenObject::isOpen).sorted((ScreenObject obj, ScreenObject obj2) -> obj.getLayer() > obj2.getLayer() ? 1 : obj.getLayer() == obj2.getLayer() ? 0 : -1)
+		.forEach(ScreenObject::render);
     }
 
     /**
@@ -302,8 +307,19 @@ public abstract class ScreenObject {
     }
 
     /**
+     * Closes and frees up memory of this and all children
+     */
+    public void remove() {
+	close();
+	Game.getScreenManager().getScreenObjects().remove(this);
+	children = null;
+	parent = null;
+	children.forEach(ScreenObject::remove);
+    }
+    
+    /**
      * Used for keeping objects that should remain at a certain position
-     * relative to the screen where they should be
+     * relative to the screen where they should be, i.e. the hotbar
      */
     public abstract void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels);
 }

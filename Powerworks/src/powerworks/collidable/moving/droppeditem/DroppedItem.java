@@ -40,14 +40,14 @@ public class DroppedItem extends Moving {
 
     @Override
     public void remove() {
+	super.remove();
 	type = null;
 	Game.getLevel().getDroppedItems().remove(this);
-	Game.getLevel().getMovingEntities().remove(this);
-	Game.getLevel().getCollidables().remove(this);
     }
     
     @Override
     public String toString() {
-	return type.toString();
+	return type.toString() + " dropped item at " + xPixel + ", " + yPixel;
     }
+    
 }

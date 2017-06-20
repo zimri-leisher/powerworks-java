@@ -5,7 +5,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.IntSummaryStatistics;
@@ -19,17 +24,19 @@ public class Logger {
     HashMap<Statistic, Integer> toAdd = new HashMap<Statistic, Integer>();
     ArrayList<Statistic> toLog = new ArrayList<Statistic>();
     File f;
-    boolean used, closed;
+    boolean used = false, closed;
 
     public Logger() {
 	try {
-	    f = new File("data/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-1.txt");
+	    String s = "/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-1.txt";
+	    f = new File(s);
 	    int count = 2;
 	    while (f.exists()) {
-		f = new File("data/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-" + count + ".txt");
+		s = "/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-" + count + ".txt";
+		f = new File(s);
 		count++;
 	    }
-	    writer = new BufferedWriter(new FileWriter(f.getCanonicalPath()));
+	    writer = new BufferedWriter(new FileWriter(s));
 	} catch (FileNotFoundException e) {
 	    e.printStackTrace();
 	} catch (IOException e) {
@@ -88,7 +95,7 @@ public class Logger {
 
     public void log(String message) {
 	cal = Calendar.getInstance();
-	message = "[LOG] : " + cal.get(Calendar.DAY_OF_MONTH) + "/" + cal.get(Calendar.MONTH) + "/" + cal.get(Calendar.YEAR) + " " + cal.get(Calendar.HOUR_OF_DAY) + ":"
+	message = "[LOG] : " + cal.get(Calendar.DAY_OF_MONTH) + "/" + cal.get(Calendar.MONTH) + "/" + (cal.get(Calendar.YEAR) % 100) + " " + cal.get(Calendar.HOUR_OF_DAY) + ":"
 		+ cal.get(Calendar.MINUTE) + ":" + cal.get(Calendar.MILLISECOND) + " - " + message;
 	System.out.println(message);
 	try {
@@ -101,7 +108,7 @@ public class Logger {
 
     public void error(String message) {
 	cal = Calendar.getInstance();
-	message = "[ERROR] : " + cal.get(Calendar.DAY_OF_MONTH) + "/" + cal.get(Calendar.MONTH) + "/" + cal.get(Calendar.YEAR) + " " + cal.get(Calendar.HOUR_OF_DAY) + ":"
+	message = "[ERROR] : " + cal.get(Calendar.DAY_OF_MONTH) + "/" + cal.get(Calendar.MONTH) + "/" + (cal.get(Calendar.YEAR) % 100) + " " + cal.get(Calendar.HOUR_OF_DAY) + ":"
 		+ cal.get(Calendar.MINUTE) + ":" + cal.get(Calendar.MILLISECOND) + " - " + message;
 	System.out.println(message);
 	try {
@@ -114,7 +121,7 @@ public class Logger {
 
     public void warning(String message) {
 	cal = Calendar.getInstance();
-	message = "[WARNING] : " + cal.get(Calendar.DAY_OF_MONTH) + "/" + cal.get(Calendar.MONTH) + "/" + cal.get(Calendar.YEAR) + " " + cal.get(Calendar.HOUR_OF_DAY) + ":"
+	message = "[WARNING] : " + cal.get(Calendar.DAY_OF_MONTH) + "/" + cal.get(Calendar.MONTH) + "/" + (cal.get(Calendar.YEAR) % 100) + " " + cal.get(Calendar.HOUR_OF_DAY) + ":"
 		+ cal.get(Calendar.MINUTE) + ":" + cal.get(Calendar.MILLISECOND) + " - " + message;
 	System.out.println(message);
 	try {
@@ -126,7 +133,7 @@ public class Logger {
     }
 
     public void p(Object message) {
-	System.out.println(message);
+	System.out.println(message + " log");
     }
 
     public void close() {

@@ -6,8 +6,8 @@ import powerworks.graphics.Texture;
 import powerworks.main.Game;
 import powerworks.world.level.LevelObject;
 
-public class Tile extends LevelObject{
-    
+public class Tile extends LevelObject {
+
     private Texture texture;
     private TileType type;
     private int rotation;
@@ -30,11 +30,11 @@ public class Tile extends LevelObject{
 	    rotation = 0;
 	}
     }
-    
+
     public TileType getType() {
 	return type;
     }
-    
+
     public Sound getFootstepSound() {
 	return type.getFootstepSound();
     }
@@ -54,7 +54,7 @@ public class Tile extends LevelObject{
 	}
 	texture = type.getTexture();
     }
-    
+
     @Override
     public int getRotation() {
 	return rotation;
@@ -67,7 +67,6 @@ public class Tile extends LevelObject{
 
     @Override
     public void update() {
-	
     }
 
     @Override
@@ -80,5 +79,4 @@ public class Tile extends LevelObject{
     public Texture getTexture() {
 	return texture;
     }
-    
 }

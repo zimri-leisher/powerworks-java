@@ -83,6 +83,7 @@ public class GUIButton extends GUIElement {
 
     @Override
     protected void onClose() {
+	current = (available) ? unhigh : unavail;
     }
 
     @Override
@@ -111,5 +112,10 @@ public class GUIButton extends GUIElement {
 
     @Override
     public void onMouseActionOff(MouseEvent mouse) {
+    }
+    
+    @Override
+    public String toString() {
+	return "GUI button at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + " with text " + text + ", layer: " + layer + ", # of children: " + children.size();
     }
 }

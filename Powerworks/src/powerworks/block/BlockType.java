@@ -11,9 +11,7 @@ import powerworks.graphics.Texture;
 public class BlockType {
 
     private static HashMap<String, BlockType> types = new HashMap<String, BlockType>();
-    
     public static final BlockType ERROR = new BlockType(Hitbox.TILE, Image.ERROR, "Error", 1, 1, "Error", 0, false, ErrorBlock.class);
-    
     Hitbox hitbox;
     Texture[] textures;
     int widthTiles, heightTiles;
@@ -29,7 +27,7 @@ public class BlockType {
     protected BlockType(Hitbox hitbox, Texture[] textures, int texXPixelOffset, int texYPixelOffset, String item, int widthTiles, int heightTiles, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator, Sound footstep) {
 	this.hitbox = hitbox;
-	if(textures.length != 4)
+	if (textures.length != 4)
 	    System.err.println("Block does not have adequate textures");
 	this.textures = textures;
 	this.widthTiles = widthTiles;
@@ -44,21 +42,21 @@ public class BlockType {
 	this.texYPixelOffset = texYPixelOffset;
 	types.put(name, this);
     }
-    
+
     protected BlockType(Hitbox hitbox, Texture texture, String item, int width, int height, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator) {
 	this(hitbox, new Texture[] { texture, texture, texture, texture }, 0, 0, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
     }
-    
+
     protected BlockType(Hitbox hitbox, Texture texture, int texXPixelOffset, int texYPixelOffset, String item, int width, int height, String name, int id, boolean placeable,
 	    Class<? extends Block> instantiator) {
-	this(hitbox, new Texture[] { texture , texture, texture, texture}, texXPixelOffset, texYPixelOffset, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
+	this(hitbox, new Texture[] { texture, texture, texture, texture }, texXPixelOffset, texYPixelOffset, item, width, height, name, id, placeable, instantiator, Sound.GRASS_FOOTSTEP);
     }
 
     public boolean defaultRequiresUpdate() {
 	return defaultRequiresUpdate;
     }
-    
+
     public Sound getFootstepSound() {
 	return footstep;
     }
@@ -66,11 +64,11 @@ public class BlockType {
     public Texture[] getTextures() {
 	return textures;
     }
-    
+
     public int getTextureXPixelOffset() {
 	return texXPixelOffset;
     }
-    
+
     public int getTextureYPixelOffset() {
 	return texYPixelOffset;
     }
@@ -102,7 +100,7 @@ public class BlockType {
     public boolean isSolid() {
 	return hitbox.isSolid();
     }
-    
+
     public static BlockType getBlockType(String t) {
 	return types.get(t);
     }
@@ -110,7 +108,13 @@ public class BlockType {
     public static HashMap<String, BlockType> getBlockTypes() {
 	return types;
     }
-    
+
+    @Override
+    public String toString() {
+	return name + " block type with id " + id + ", width tiles " + widthTiles + ", height tiles " + heightTiles + ", texture x pixel offset " + texXPixelOffset + " and y pixel offset"
+		+ texYPixelOffset + " and footstep sound " + footstep.toString();
+    }
+
     /**
      * Creates an instance of a Block based on the BlockType using the correct
      * class - note: this does not add it to the level

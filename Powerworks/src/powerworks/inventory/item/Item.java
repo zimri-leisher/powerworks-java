@@ -65,6 +65,6 @@ public class Item {
 
     @Override
     public String toString() {
-	return type.toString() + " with quantity " + quantity;
+	return type.toString() + " item with quantity " + quantity;
     }
 }
