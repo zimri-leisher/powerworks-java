@@ -2,9 +2,7 @@ package powerworks.audio;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sound.sampled.AudioFormat;
@@ -12,9 +10,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
-import javax.sound.sampled.Line;
 import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import powerworks.main.Game;
@@ -69,7 +65,6 @@ public class AudioManager {
     }
 
     public static Clip getClip(AudioInputStream input) {
-	AudioFormat format = input.getFormat();
 	DataLine.Info newInfo = new DataLine.Info(Clip.class, FORMAT);
 	Clip outMem = null;
 	try {
@@ -84,6 +79,7 @@ public class AudioManager {
 	return outMem;
     }
 
+    @SuppressWarnings("resource")
     public static AudioInputStream getAudioInputStream(URL url) {
 	AudioInputStream input = null;
 	try {

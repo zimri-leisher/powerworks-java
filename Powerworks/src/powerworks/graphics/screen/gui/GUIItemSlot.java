@@ -17,7 +17,7 @@ public class GUIItemSlot extends GUIElement {
     protected boolean isDisplay;
     protected Texture unhigh, high, click, display, current;
 
-    GUIItemSlot(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Inventory inv, int index, boolean isDisplay, Texture unhigh, Texture high,
+    public GUIItemSlot(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Inventory inv, int index, boolean isDisplay, Texture unhigh, Texture high,
 	    Texture click, Texture display) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.inv = inv;
@@ -30,7 +30,7 @@ public class GUIItemSlot extends GUIElement {
 	current = unhigh;
     }
 
-    GUIItemSlot(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Inventory inv, int index, boolean isDisplay) {
+    public GUIItemSlot(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Inventory inv, int index, boolean isDisplay) {
 	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, inv, index, isDisplay, Image.ITEM_SLOT, Image.ITEM_SLOT_HIGHLIGHT, Image.ITEM_SLOT_CLICK, Image.ITEM_SLOT_DISPLAY);
     }
 
@@ -127,12 +127,13 @@ public class GUIItemSlot extends GUIElement {
 	if (!isDisplay)
 	    current = unhigh;
     }
-    
+
     @Override
     public String toString() {
-	return "GUI item slot at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", item: " + inv.getItem(index).toString() + ", is display: " + isDisplay;
+	return "GUI item slot at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", item: " + inv.getItem(index).toString()
+		+ ", is display: " + isDisplay;
     }
-    
+
     @Override
     public void remove() {
 	super.remove();

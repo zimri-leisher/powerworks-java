@@ -10,6 +10,7 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.font.FontRenderContext;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -30,8 +31,7 @@ import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.screen.HUD;
 import powerworks.graphics.screen.Mouse;
 import powerworks.graphics.screen.ScreenManager;
-import powerworks.graphics.screen.ScreenObject;
-import powerworks.graphics.screen.gui.GUI;
+import powerworks.graphics.screen.gui.EscapeMenuGUI;
 import powerworks.graphics.screen.gui.MainMenuGUI;
 import powerworks.graphics.screen.gui.OptionsMenuGUI;
 import powerworks.io.ControlMap;
@@ -59,7 +59,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static final float MS_PER_FRAME = 1000 / FRAMES_PER_SECOND;
     public static final float NS_PER_UPDATE = 1000000000 / UPDATES_PER_SECOND;
     public static final float NS_PER_FRAME = 1000000000 / FRAMES_PER_SECOND;
-    public static boolean FPS_MODE = false;
+    private static boolean FPS_MODE = false;
+    private static boolean PAUSE_IN_ESCAPE_MENU = true;
     public static final int MAX_UPDATES_BEFORE_RENDER = 5;
     static int width = 300, zoomedWidth = width;
     static int height = width / 16 * 9, zoomedHeight = height;
@@ -85,6 +86,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     static HUD hud;
     static MainMenuGUI mainMenu;
     static OptionsMenuGUI optionsMenu;
+    static EscapeMenuGUI escapeMenu;
     static Mouse mouse;
     static InputManager input;
     static ChatCommandExecutor chatCmdExecutor;
@@ -106,6 +108,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	mouse = new Mouse();
 	mainMenu = new MainMenuGUI();
 	optionsMenu = new OptionsMenuGUI();
+	escapeMenu = new EscapeMenuGUI();
 	addKeyListener(input);
 	addMouseWheelListener(input);
 	addMouseListener(input);
@@ -160,6 +163,14 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		new Point(0, 0), "null"));
     }
 
+    static void setFPSMode(boolean mode) {
+	FPS_MODE = mode;
+    }
+
+    static void setPauseInEscapeMenu(boolean val) {
+	PAUSE_IN_ESCAPE_MENU = val;
+    }
+
     public static MainMenuGUI getMainMenuGUI() {
 	return mainMenu;
     }
@@ -168,8 +179,16 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	return optionsMenu;
     }
 
+    public static EscapeMenuGUI getEscapeMenuGUI() {
+	return escapeMenu;
+    }
+
     public static void exit() {
 	game.running = false;
+    }
+
+    static void setShowHitboxes(boolean show) {
+	showHitboxes = show;
     }
 
     public static int getSecondsSinceStart() {
@@ -424,22 +443,22 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    System.out.println("Starting game...");
 	    // TinySound.init();
 	    game = new Game();
-		frame.setIconImage(ImageIO.read(Game.class.getResource("/textures/misc/logo.png")));
-		frame.setResizable(true);
-		frame.setTitle("Powerworks - Loading");
-		frame.add(game);
-		frame.pack();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLocationRelativeTo(null);
-		game.requestFocusInWindow();
-		frame.setVisible(true);
-		mainMenu.open();
-		game.start();
-		Scanner scanner = new Scanner(System.in);
-		while (scanner.hasNext()) {
-		    chatCmdExecutor.executeCommand(scanner.nextLine(), player);
-		}
-		scanner.close();
+	    frame.setIconImage(ImageIO.read(Game.class.getResource("/textures/misc/logo.png")));
+	    frame.setResizable(true);
+	    frame.setTitle("Powerworks - Loading");
+	    frame.add(game);
+	    frame.pack();
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    frame.setLocationRelativeTo(null);
+	    game.requestFocusInWindow();
+	    frame.setVisible(true);
+	    mainMenu.open();
+	    game.start();
+	    Scanner scanner = new Scanner(System.in);
+	    while (scanner.hasNext()) {
+		chatCmdExecutor.executeCommand(scanner.nextLine(), player);
+	    }
+	    scanner.close();
 	} catch (Exception e) {
 	    e.printStackTrace();
 	} finally {
@@ -459,7 +478,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case EXIT:
 		switch (pressType) {
 		    case PRESSED:
-			running = false;
+			if (State.getState() == State.INGAME)
+			    escapeMenu.open();
+			else
+			    exit();
 			break;
 		    default:
 			break;
@@ -496,8 +518,9 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case TOGGLE_FPS_MODE:
 		switch (pressType) {
 		    case PRESSED:
-			logger.log("test");
-			// FPS_MODE = !FPS_MODE;
+			Setting.THREAD_WAITING.setValue(!Setting.THREAD_WAITING.getValue());
+			if (State.getState() == State.INGAME)
+			    chatManager.sendMessage("FPS mode toggled to: " + Setting.THREAD_WAITING.getValue());
 			break;
 		    default:
 			break;

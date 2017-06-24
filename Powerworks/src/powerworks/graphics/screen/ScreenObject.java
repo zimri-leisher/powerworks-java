@@ -176,6 +176,17 @@ public abstract class ScreenObject {
     }
 
     /**
+     * Sets the layer for this.
+     * If doChildren is true it will change the layer for children relative to this layer change
+     **/
+    public void setLayer(int layer, boolean doChildren) {
+	int diff = layer - this.layer;
+	this.layer = layer;
+	if (doChildren)
+	    children.forEach(obj -> setLayer(obj.layer + diff, true));
+    }
+
+    /**
      * @param xPixel
      *            relative to parent
      */
@@ -316,7 +327,7 @@ public abstract class ScreenObject {
 	parent = null;
 	children.forEach(ScreenObject::remove);
     }
-    
+
     /**
      * Used for keeping objects that should remain at a certain position
      * relative to the screen where they should be, i.e. the hotbar

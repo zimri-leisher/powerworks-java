@@ -36,7 +36,7 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
     public GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
     private int lastMouseXPixel = 0, lastMouseYPixel = 0;
     private boolean moving, sprinting;
-    private Timer removing = new Timer(96, 1), repeat = new Timer(40, 1);
+    private Timer removing = new Timer(96, 1, true);
 
     public Player(int xPixel, int yPixel, String name) {
 	super(xPixel, yPixel, Hitbox.PLAYER, new Inventory(8, 4), "Inventory", Image.PLAYER_INVENTORY);
@@ -52,12 +52,6 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 		    removing.resetTimes();
 		    block.setPlaceable(true);
 		}
-	    }
-	});
-	repeat.runTaskOnFinish(new Task() {
-
-	    @Override
-	    public void run() {
 	    }
 	});
 	EventManager.registerEventListener(this);
@@ -459,6 +453,5 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	name = null;
 	block = null;
 	removing = null;
-	repeat = null;
     }
 }

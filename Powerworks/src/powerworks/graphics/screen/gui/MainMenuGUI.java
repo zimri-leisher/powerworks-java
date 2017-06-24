@@ -23,8 +23,7 @@ public final class MainMenuGUI extends GUI {
 	background = new GUITexturePane(this, 0, 0, width, height, 0, Image.MAIN_MENU_BACKGROUND);
 	box = new GUITexturePane(this, (width - Image.MAIN_MENU_BUTTON_BOX.getWidthPixels()) / 2, (height - Image.MAIN_MENU_BUTTON_BOX.getHeightPixels()) / 2, 1, Image.MAIN_MENU_BUTTON_BOX);
 	play = new GUIButton(box, (Image.MAIN_MENU_BUTTON_BOX.getWidthPixels() - Image.GUI_BUTTON.getWidthPixels()) / 2,
-		Image.MAIN_MENU_BUTTON_BOX.getHeightPixels() / 2 - Image.GUI_BUTTON.getHeightPixels() * 2 + 6,
-		Image.GUI_BUTTON.getWidthPixels(), Image.GUI_BUTTON.getHeightPixels(), 2, "Play", true, new Task() {
+		Image.MAIN_MENU_BUTTON_BOX.getHeightPixels() / 2 - Image.GUI_BUTTON.getHeightPixels() * 2 + 6, 2, "Play", true, new Task() {
 
 		    @Override
 		    public void run() {
@@ -38,8 +37,7 @@ public final class MainMenuGUI extends GUI {
 		    }
 		});
 	options = new GUIButton(box, (Image.MAIN_MENU_BUTTON_BOX.getWidthPixels() - Image.GUI_BUTTON.getWidthPixels()) / 2,
-		Image.MAIN_MENU_BUTTON_BOX.getHeightPixels() / 2 - Image.GUI_BUTTON.getHeightPixels() + 6,
-		Image.GUI_BUTTON.getWidthPixels(), Image.GUI_BUTTON.getHeightPixels(), 2, "Options", true, new Task() {
+		Image.MAIN_MENU_BUTTON_BOX.getHeightPixels() / 2 - Image.GUI_BUTTON.getHeightPixels() + 6, 2, "Options", true, new Task() {
 
 		    @Override
 		    public void run() {
@@ -53,7 +51,7 @@ public final class MainMenuGUI extends GUI {
 		    }
 		});
 	exit = new GUIButton(box, (Image.MAIN_MENU_BUTTON_BOX.getWidthPixels() - Image.GUI_BUTTON.getWidthPixels()) / 2,
-		Image.MAIN_MENU_BUTTON_BOX.getHeightPixels() / 2 + 6, Image.GUI_BUTTON.getWidthPixels(), Image.GUI_BUTTON.getHeightPixels(), 2, "Exit", true,
+		Image.MAIN_MENU_BUTTON_BOX.getHeightPixels() / 2 + 6, 2, "Exit", true,
 		new Task() {
 
 		    @Override
@@ -88,6 +86,5 @@ public final class MainMenuGUI extends GUI {
 
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
-	
     }
 }

@@ -8,26 +8,26 @@ public class GUIProgressBar extends GUIElement {
 
     private int max, current;
     private boolean showPercent;
-    
-    protected GUIProgressBar(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, int start, int max, boolean showPercent) {
+
+    public GUIProgressBar(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, int start, int max, boolean showPercent) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.max = max;
 	this.current = start;
 	this.showPercent = showPercent;
     }
-    
+
     public void setProgress(int p) {
 	current = p;
     }
-    
+
     public int getProgress() {
 	return current;
     }
-    
+
     public int getMax() {
 	return max;
     }
-    
+
     public void setMax(int max) {
 	this.max = max;
     }

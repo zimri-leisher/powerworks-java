@@ -578,6 +578,7 @@ public class TinySound {
 	 * @return the specified stream as an AudioInputStream stream, null if
 	 * failure
 	 */
+	@SuppressWarnings("resource")
 	private static AudioInputStream getValidAudioStream(URL url) {
 		AudioInputStream audioStream = null;
 		try {

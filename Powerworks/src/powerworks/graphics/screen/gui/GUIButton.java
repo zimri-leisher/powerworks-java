@@ -26,7 +26,7 @@ public class GUIButton extends GUIElement {
      * @param unavail
      *            unavailable, for when button is unavailable
      */
-    GUIButton(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text, Texture unhigh, Texture high, Texture clicked, Texture unavail,
+    public GUIButton(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text, Texture unhigh, Texture high, Texture clicked, Texture unavail,
 	    boolean defaultAvailable, Task click, Task release) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.unhigh = this.current = unhigh;
@@ -40,8 +40,8 @@ public class GUIButton extends GUIElement {
 	setAvailable(defaultAvailable);
     }
 
-    GUIButton(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String text, boolean defaultAvailable, Task click, Task release) {
-	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, text, Image.GUI_BUTTON, Image.GUI_BUTTON_HIGHLIGHT, Image.GUI_BUTTON_CLICK, Image.GUI_BUTTON, defaultAvailable, click, release);
+    public GUIButton(ScreenObject parent, int xPixel, int yPixel, int layer, String text, boolean defaultAvailable, Task click, Task release) {
+	this(parent, xPixel, yPixel, Image.GUI_BUTTON.getWidthPixels(), Image.GUI_BUTTON.getHeightPixels(), layer, text, Image.GUI_BUTTON, Image.GUI_BUTTON_HIGHLIGHT, Image.GUI_BUTTON_CLICK, Image.GUI_BUTTON, defaultAvailable, click, release);
     }
 
     public void setAvailable(boolean available) {
@@ -84,6 +84,10 @@ public class GUIButton extends GUIElement {
     @Override
     protected void onClose() {
 	current = (available) ? unhigh : unavail;
+    }
+    
+    public GUIText getText() {
+	return text;
     }
 
     @Override

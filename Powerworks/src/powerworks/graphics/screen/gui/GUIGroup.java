@@ -5,6 +5,7 @@ import java.util.List;
 import powerworks.graphics.Texture;
 import powerworks.graphics.screen.ScreenObject;
 import powerworks.io.MouseEvent;
+import powerworks.main.Game;
 
 public class GUIGroup extends GUIElement {
 
@@ -15,7 +16,7 @@ public class GUIGroup extends GUIElement {
      * @param elements
      *            adds these to children automatically
      */
-    protected GUIGroup(ScreenObject parent, int xPixel, int yPixel, int layer, List<GUIElement> elements) {
+    public GUIGroup(ScreenObject parent, int xPixel, int yPixel, int layer, List<GUIElement> elements) {
 	super(parent, xPixel, yPixel, getWidthPixels(elements), getHeightPixels(elements), layer);
 	children.addAll(elements);
     }
@@ -23,16 +24,21 @@ public class GUIGroup extends GUIElement {
     /**
      * For adding elements later
      */
-    protected GUIGroup(ScreenObject parent, int xPixel, int yPixel, int layer) {
+    public GUIGroup(ScreenObject parent, int xPixel, int yPixel, int layer) {
 	super(parent, xPixel, yPixel, 0, 0, layer);
     }
 
-    public void addChild(ScreenObject el) {
+    public void addChild(GUIElement el) {
 	el.setParent(this);
 	updateDimensions();
     }
+    
+    @Override
+    public void render() {
+	children.forEach(ScreenObject::render);
+    }
 
-    private void updateDimensions() {
+    protected void updateDimensions() {
 	Rectangle r = new Rectangle();
 	for (ScreenObject s : children) {
 	    if (s instanceof GUIElement) {
@@ -44,7 +50,7 @@ public class GUIGroup extends GUIElement {
 	heightPixels = (int) r.getHeight();
     }
 
-    private static int getWidthPixels(List<GUIElement> elements) {
+    protected static int getWidthPixels(List<GUIElement> elements) {
 	Rectangle r = new Rectangle();
 	for (GUIElement el : elements) {
 	    r.add(new Rectangle(el.getRelXPixel(), el.getRelYPixel(), el.getWidthPixels(), el.getHeightPixels()));
@@ -52,14 +58,14 @@ public class GUIGroup extends GUIElement {
 	return (int) r.getWidth();
     }
 
-    private static int getHeightPixels(List<GUIElement> elements) {
+    protected static int getHeightPixels(List<GUIElement> elements) {
 	Rectangle r = new Rectangle();
 	for (GUIElement el : elements) {
 	    r.add(new Rectangle(el.getRelXPixel(), el.getRelYPixel(), el.getWidthPixels(), el.getHeightPixels()));
 	}
 	return (int) r.getHeight();
     }
-
+    
     @Override
     public void onMouseActionOn(MouseEvent mouse) {
     }
@@ -80,7 +86,7 @@ public class GUIGroup extends GUIElement {
     @Override
     protected void onOpen() {
     }
-
+    
     @Override
     protected void onClose() {
     }

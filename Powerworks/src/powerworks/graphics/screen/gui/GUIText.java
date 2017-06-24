@@ -8,23 +8,33 @@ import powerworks.main.Game;
 
 public class GUIText extends GUIElement {
 
-    protected String text;
+    protected Object text;
     protected int size;
 
-    protected GUIText(ScreenObject parent, int xPixel, int yPixel, int layer, String text, int size) {
-	super(parent, xPixel, yPixel, (int) Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getWidth() / Game.getScreenScale(),
-		(int) Game.getFont(28).getStringBounds(text, new FontRenderContext(null, false, false)).getHeight() / Game.getScreenScale(), layer);
+    public GUIText(ScreenObject parent, int xPixel, int yPixel, int layer, Object text, int size) {
+	super(parent, xPixel, yPixel, (int) Game.getFont(28).getStringBounds(text.toString(), new FontRenderContext(null, false, false)).getWidth() / Game.getScreenScale(),
+		(int) Game.getFont(28).getStringBounds(text.toString(), new FontRenderContext(null, false, false)).getHeight() / Game.getScreenScale(), layer);
 	this.text = text;
 	this.size = size;
     }
 
-    protected GUIText(ScreenObject parent, int xPixel, int yPixel, int layer, String text) {
+    public GUIText(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Object text, int size) {
+	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
+	this.text = text;
+	this.size = size;
+    }
+
+    public GUIText(ScreenObject parent, int xPixel, int yPixel, int layer, String text) {
 	this(parent, xPixel, yPixel, layer, text, 28);
     }
 
     @Override
     public Texture getTexture() {
 	return null;
+    }
+    
+    public void setText(String text) {
+	this.text = text;
     }
 
     @Override
@@ -68,7 +78,7 @@ public class GUIText extends GUIElement {
     public String toString() {
 	return "GUI text at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", text: " + text;
     }
-    
+
     @Override
     public void remove() {
 	super.remove();

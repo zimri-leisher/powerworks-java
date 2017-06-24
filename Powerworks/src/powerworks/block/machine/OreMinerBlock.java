@@ -17,7 +17,7 @@ public class OreMinerBlock extends Block {
     
     public OreMinerBlock(MachineBlockType type, int xTile, int yTile) {
 	super(type, xTile, yTile);
-	t = new Timer(TICKS_PER_MINE, 1);
+	t = new Timer(TICKS_PER_MINE, 1, true);
 	t.setLoop(true);
 	t.runTaskOnFinish(new Task() {
 	    @Override

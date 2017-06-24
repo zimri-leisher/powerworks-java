@@ -30,12 +30,12 @@ public class GUITextField extends GUIElement implements TextListener {
      * @param onEnter
      *            the task to run when the enter key is pressed
      */
-    GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText, int size, Task onEnter) {
+    public GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText, int size, Task onEnter) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.backgroundText = backgroundText;
 	this.size = size;
 	this.onEnter = onEnter;
-	underscore = new Timer(30, 1);
+	underscore = new Timer(30, 1, false);
 	underscore.setLoop(true);
 	underscore.runTaskOnFinish(new Task() {
 
@@ -46,15 +46,15 @@ public class GUITextField extends GUIElement implements TextListener {
 	});
     }
 
-    GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText, Task onEnter) {
+    public GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText, Task onEnter) {
 	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, backgroundText, 28, onEnter);
     }
 
-    GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText) {
+    public GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, String backgroundText) {
 	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, backgroundText, 28, null);
     }
 
-    GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer) {
+    public GUITextField(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer) {
 	this(parent, xPixel, yPixel, widthPixels, heightPixels, layer, "", 28, null);
     }
 

@@ -18,7 +18,7 @@ public class GUIScrollBar extends GUIElement {
     /**
      * Width pixels is always 6, height defaults to 12 if lower than 12
      */
-    protected GUIScrollBar(Scrollable parent, int xPixel, int yPixel, int heightPixels, int layer) {
+    public GUIScrollBar(Scrollable parent, int xPixel, int yPixel, int heightPixels, int layer) {
 	super((ScreenObject) parent, xPixel, yPixel, 6, Math.max(12, heightPixels), layer);
 	highlight = Image.GUI_SCROLL_BAR_HIGHLIGHT;
 	unhighlight = current = Image.GUI_SCROLL_BAR;
@@ -46,7 +46,7 @@ public class GUIScrollBar extends GUIElement {
 		break;
 	}
     }
-    
+
     public int getCurrentPos() {
 	return currentPos;
     }
@@ -78,7 +78,7 @@ public class GUIScrollBar extends GUIElement {
     @Override
     public void onMouseLeave() {
 	super.onMouseLeave();
-	if(!dragging)
+	if (!dragging)
 	    current = unhighlight;
     }
 
@@ -87,7 +87,7 @@ public class GUIScrollBar extends GUIElement {
 	int mYPixel = InputManager.getMouseYPixel();
 	int mXPixel = InputManager.getMouseXPixel();
 	if (mouseOn && !dragging) {
-	    if(GeometryHelper.intersects(mXPixel, mYPixel, 1, 1, xPixel + 1, currentPos + yPixel + 1, 4, 8))
+	    if (GeometryHelper.intersects(mXPixel, mYPixel, 1, 1, xPixel + 1, currentPos + yPixel + 1, 4, 8))
 		current = highlight;
 	    else
 		current = unhighlight;
@@ -100,9 +100,9 @@ public class GUIScrollBar extends GUIElement {
 	    }
 	}
     }
-    
+
     public int getMaxPos() {
-	return heightPixels - 9;
+	return heightPixels - 10;
     }
 
     @Override
@@ -116,16 +116,15 @@ public class GUIScrollBar extends GUIElement {
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
-    
+
     @Override
     public String toString() {
 	return "GUI scroll bar at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", current position: " + currentPos;
     }
-    
+
     @Override
     public void remove() {
 	super.remove();
 	current = highlight = unhighlight = top = mid = bottom = click = null;
     }
-
 }

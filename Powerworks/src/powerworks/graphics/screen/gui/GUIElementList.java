@@ -14,15 +14,24 @@ public class GUIElementList extends GUIElement implements Scrollable {
      * Adding children to this will <i> not </i> put them in the list, so to add
      * them to it, use the add() method to put them in the list
      */
-    protected GUIElementList(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, GUIGroup elements) {
+    public GUIElementList(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, GUIGroup elements) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.elements = elements;
 	scroll = new GUIScrollBar(this, widthPixels - 6, 0, heightPixels, layer + 1);
+	elements.setParent(this);
     }
 
+    /**
+     * Automatically adds this to the list and puts it in the correct position
+     * or not depending on the type of GUIGroup inputted
+     */
     public void add(GUIElement el) {
 	elements.addChild(el);
 	onScroll();
+    }
+    
+    public GUIGroup getElements() {
+	return elements;
     }
 
     @Override
@@ -65,14 +74,14 @@ public class GUIElementList extends GUIElement implements Scrollable {
 
     @Override
     public void onScroll() {
-	elements.setRelYPixel((int) (-scroll.getCurrentPos() * ((double) elements.getHeightPixels() / (double) heightPixels)));
+	elements.setRelYPixel((int) ((heightPixels - elements.getHeightPixels()) * (scroll.getCurrentPos() / (double) scroll.getMaxPos())));
     }
 
     @Override
     public String toString() {
 	return "GUI element list at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
     }
-    
+
     @Override
     public void remove() {
 	super.remove();

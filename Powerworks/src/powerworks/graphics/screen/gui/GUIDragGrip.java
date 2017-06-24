@@ -14,12 +14,12 @@ public class GUIDragGrip extends GUIElement {
     private boolean dragging;
     private int mXPixel, mYPixel;
 
-    GUIDragGrip(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Texture texture) {
+    public GUIDragGrip(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Texture texture) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.texture = texture;
     }
 
-    GUIDragGrip(ScreenObject parent, int xPixel, int yPixel, int layer) {
+    public GUIDragGrip(ScreenObject parent, int xPixel, int yPixel, int layer) {
 	this(parent, xPixel, yPixel, 8, 8, layer, Image.GUI_DRAG_GRIP);
     }
 

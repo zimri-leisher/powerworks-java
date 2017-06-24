@@ -12,12 +12,12 @@ public class GUITexturePane extends GUIElement {
     /**
      * Width and height pixels are for stretching the texture to fit
      */
-    GUITexturePane(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Texture texture) {
+    public GUITexturePane(ScreenObject parent, int xPixel, int yPixel, int widthPixels, int heightPixels, int layer, Texture texture) {
 	super(parent, xPixel, yPixel, widthPixels, heightPixels, layer);
 	this.texture = texture;
     }
 
-    GUITexturePane(ScreenObject parent, int xPixel, int yPixel, int layer, Texture texture) {
+    public GUITexturePane(ScreenObject parent, int xPixel, int yPixel, int layer, Texture texture) {
 	this(parent, xPixel, yPixel, texture.getWidthPixels(), texture.getHeightPixels(), layer, texture);
     }
 
@@ -63,15 +63,16 @@ public class GUITexturePane extends GUIElement {
     @Override
     public void onMouseLeave() {
     }
-    
+
     @Override
     public String toString() {
-	return "GUI texture pane at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size() + ", texture of " + texture.toString();
+	return "GUI texture pane at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size()
+		+ ", texture of " + texture.toString();
     }
-    
+
     @Override
     public void remove() {
 	super.remove();
 	texture = null;
-    }    
+    }
 }

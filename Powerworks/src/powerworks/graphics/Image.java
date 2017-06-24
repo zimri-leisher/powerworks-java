@@ -43,6 +43,7 @@ public class Image implements Texture {
     public static final Image MAIN_MENU_BACKGROUND = new Image(new Color(0x666666));
     public static final Image MAIN_MENU_BUTTON_BOX = new Image("/textures/gui/main_menu.png");
     public static final Image OPTIONS_MENU_BACKGROUND = new Image(new Color(0x999999));
+    public static final Image ESCAPE_MENU_BACKGROUND = new Image("/textures/gui/escape_menu_background.png");
     
     private BufferedImage image;
 

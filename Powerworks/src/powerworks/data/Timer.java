@@ -2,6 +2,8 @@ package powerworks.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import powerworks.main.Game;
+import powerworks.main.Setting;
 import powerworks.task.Task;
 
 public class Timer {
@@ -10,26 +12,27 @@ public class Timer {
     int upt, maxTicks, updateCount = 0, currentTick = 0;
     Task perNTicks, onFinish, perNUpdates;
     int nUpdates, nTicks;
-    boolean loop = false, playing = false;
+    boolean loop = false, playing = false, world = false;
 
-    public Timer(int updatesPerTick, int maxTicks) {
+    public Timer(int updatesPerTick, int maxTicks, boolean world) {
 	upt = updatesPerTick;
 	this.maxTicks = maxTicks;
+	this.world = world;
 	timers.add(this);
     }
-    
+
     public int getCurrentUpdate() {
 	return updateCount;
     }
-    
+
     public void play() {
 	playing = true;
     }
-    
+
     public void stop() {
 	playing = false;
     }
-    
+
     public void resetTimes() {
 	currentTick = 0;
 	updateCount = 0;
@@ -38,11 +41,11 @@ public class Timer {
     public void setLoop(boolean loop) {
 	this.loop = loop;
     }
-    
+
     public int getCurrentTick() {
 	return currentTick;
     }
-    
+
     public void runTaskEveryNUpdates(int updates, Task t) {
 	perNUpdates = t;
 	nUpdates = updates;
@@ -58,19 +61,21 @@ public class Timer {
     }
 
     private void nextUpdate() {
-	updateCount++;
-	if(nUpdates > 0 && updateCount % nUpdates == 0)
-	    perNUpdates.run();
-	if (updateCount % upt == 0) {
-	    currentTick++;
-	    if (currentTick % maxTicks == 0) {
-		if (onFinish != null)
-		    onFinish.run();
-		if (!loop)
-		    playing = false;
-	    } else {
-		if(nTicks > 0 && currentTick % nTicks == 0) {
-		    perNTicks.run();
+	if (!world || !(Setting.PAUSE_IN_ESCAPE_MENU.getValue() && Game.getEscapeMenuGUI().isOpen())) {
+	    updateCount++;
+	    if (nUpdates > 0 && updateCount % nUpdates == 0)
+		perNUpdates.run();
+	    if (updateCount % upt == 0) {
+		currentTick++;
+		if (currentTick % maxTicks == 0) {
+		    if (onFinish != null)
+			onFinish.run();
+		    if (!loop)
+			playing = false;
+		} else {
+		    if (nTicks > 0 && currentTick % nTicks == 0) {
+			perNTicks.run();
+		    }
 		}
 	    }
 	}

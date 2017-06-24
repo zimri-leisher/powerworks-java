@@ -7,11 +7,11 @@ import powerworks.io.MouseEvent;
 
 public class GUIOutline extends GUIElement {
 
-    protected GUIOutline(ScreenObject parent, int widthPixels, int heightPixels, int color) {
+    public GUIOutline(ScreenObject parent, int widthPixels, int heightPixels, int color) {
 	super(parent, 0, 0, widthPixels, heightPixels, parent.getLayer() + 1);
     }
-    
-    protected GUIOutline(ClickableScreenObject parent, int color) {
+
+    public GUIOutline(ClickableScreenObject parent, int color) {
 	super(parent, 0, 0, parent.getWidthPixels(), parent.getHeightPixels(), parent.getLayer() + 1);
     }
 
@@ -22,7 +22,7 @@ public class GUIOutline extends GUIElement {
     @Override
     public void onMouseActionOff(MouseEvent mouse) {
     }
-    
+
     @Override
     public void render() {
 	super.render();

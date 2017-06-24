@@ -29,7 +29,7 @@ public class ChatManager implements KeyControlHandler, TextListener {
     Chatbar chatbar;
 
     public ChatManager() {
-	underscore = new Timer(30, 1);
+	underscore = new Timer(30, 1, true);
 	chatbar = Game.getHUD().getChatbar();
 	underscore.setLoop(true);
 	underscore.runTaskOnFinish(new Task() {
@@ -58,7 +58,7 @@ public class ChatManager implements KeyControlHandler, TextListener {
     }
     
     public void sendMessage(Object message, int ticksToRemove) {
-	Timer t = new Timer(ticksToRemove, 1);
+	Timer t = new Timer(ticksToRemove, 1, true);
 	    t.runTaskOnFinish(new Task() {
 		@Override
 		public void run() {
@@ -117,7 +117,7 @@ public class ChatManager implements KeyControlHandler, TextListener {
 	    if (text.startsWith("/")) {
 		Game.getCommandExecutor().executeCommand(text.substring(1), Game.getMainPlayer());
 	    }
-	    Timer t = new Timer(700, 1);
+	    Timer t = new Timer(700, 1, true);
 	    t.runTaskOnFinish(new Task() {
 
 		@Override
