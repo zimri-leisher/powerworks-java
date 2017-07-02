@@ -28,12 +28,12 @@ public class Logger {
 
     public Logger() {
 	try {
-	    String s = "/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-1.txt";
-	    f = new File(s);
+	    String s = "data/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-1.txt";
+	    f = Paths.get(s).toFile();
 	    int count = 2;
 	    while (f.exists()) {
-		s = "/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-" + count + ".txt";
-		f = new File(s);
+		s = "data/logs/log " + cal.get(Calendar.DAY_OF_MONTH) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.YEAR) + "-" + count + ".txt";
+		f = Paths.get(s).toFile();
 		count++;
 	    }
 	    writer = new BufferedWriter(new FileWriter(s));

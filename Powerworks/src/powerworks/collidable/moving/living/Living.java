@@ -11,13 +11,12 @@ import powerworks.main.Game;
 
 public abstract class Living extends Moving {
 
-    protected AI ai;
     protected Inventory inv;
     protected InventoryGUI invGUI;
     protected Equipment equips;
-    protected double health, maxHealth, armor;
-    protected String name;
-    
+    protected LivingType type;
+    protected double health, armor;
+
     /**
      * @param name
      *            the name of the inventory
@@ -27,15 +26,13 @@ public abstract class Living extends Moving {
      *            whether or not to stretch the background to fit the inventory
      *            width and height
      */
-    protected Living(int xPixel, int yPixel, Hitbox hitbox, Inventory inv, String name, Texture background) {
-	this(xPixel, yPixel, hitbox, 20);
-	this.inv = inv;
-	this.name = name;
-	invGUI = new InventoryGUI(inv, Image.PLAYER_INVENTORY, "Inventory");
-    }
-
-    protected Living(int xPixel, int yPixel, Hitbox hitbox, int footstepDistance) {
-	super(xPixel, yPixel, hitbox);
+    protected Living(LivingType type, int xPixel, int yPixel) {
+	super(xPixel, yPixel, type.getHitbox(), type.getTextures());
+	this.type = type;
+	inv = new Inventory(type.getInvWidth(), type.getInvHeight());
+	if (type.shouldCreateInvGUI()) {
+	    invGUI = new InventoryGUI(inv, Image.Utils.getImage(Image.Utils.genRectangle(type.getInvWidth() * 18 + 10, type.getInvHeight() * 18 + 10)), type.getName());
+	}
 	Game.getLevel().getLivingEntities().add(this);
     }
 
@@ -44,11 +41,11 @@ public abstract class Living extends Moving {
     }
 
     public AI getAI() {
-	return ai;
+	return type.ai;
     }
 
     public InventoryGUI getInvGUI() {
-	return invGUI;
+	return (invGUI == null) ? invGUI = new InventoryGUI(inv, Image.Utils.getImage(Image.Utils.genRectangle(type.invWidth * 18 + 20, type.invHeight * 18 + 20)), type.name) : invGUI;
     }
 
     public Equipment getEquipment() {
@@ -62,20 +59,22 @@ public abstract class Living extends Moving {
     public double getArmor() {
 	return armor;
     }
-    
+
     @Override
     public void remove() {
 	super.remove();
-	ai = null;
+	inv.unload();
 	inv = null;
+	invGUI.remove();
 	invGUI = null;
-	invGUI.close();
+	equips.unload();
 	equips = null;
+	type = null;
     }
 
     @Override
     public String toString() {
-	return "Living object at " + xPixel + ", " + yPixel + ", with a health value of " + health + "/" + maxHealth + ", armor value of " + armor + ", with equipment "
-		+ equips.toString() + " and AI " + ai.toString();
+	return "Living object at " + xPixel + ", " + yPixel + ", with a health value of " + health + "/" + type.health + ", with equipment "
+		+ equips.toString() + " and AI " + type.ai.toString();
     }
 }

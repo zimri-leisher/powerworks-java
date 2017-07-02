@@ -1,12 +1,12 @@
 package powerworks.graphics.screen.gui;
 
-import powerworks.graphics.Texture;
 import powerworks.graphics.screen.ClickableScreenObject;
 import powerworks.graphics.screen.ScreenObject;
 import powerworks.io.MouseEvent;
 
 public class GUIOutline extends GUIElement {
 
+    //TODO
     public GUIOutline(ScreenObject parent, int widthPixels, int heightPixels, int color) {
 	super(parent, 0, 0, widthPixels, heightPixels, parent.getLayer() + 1);
     }
@@ -29,11 +29,6 @@ public class GUIOutline extends GUIElement {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void update() {
     }
 
@@ -48,4 +43,5 @@ public class GUIOutline extends GUIElement {
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
+
 }

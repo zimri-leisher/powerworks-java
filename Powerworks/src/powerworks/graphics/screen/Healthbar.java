@@ -6,12 +6,6 @@ public class Healthbar extends ScreenObject {
 
     protected Healthbar(int xPixel, int yPixel) {
 	super(xPixel, yPixel, 1);
-	open = true;
-    }
-
-    @Override
-    public Texture getTexture() {
-	return null;
     }
 
     @Override
@@ -37,4 +31,5 @@ public class Healthbar extends ScreenObject {
     @Override
     public void remove() {
     }
+
 }

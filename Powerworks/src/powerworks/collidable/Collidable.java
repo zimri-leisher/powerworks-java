@@ -1,5 +1,6 @@
 package powerworks.collidable;
 
+import powerworks.io.MouseEvent;
 import powerworks.main.Game;
 import powerworks.world.level.LevelObject;
 
@@ -23,6 +24,22 @@ public abstract class Collidable extends LevelObject {
      */
     public Hitbox getHitbox() {
 	return hitbox;
+    }
+    
+    public void onMouseEnter() {
+	
+    }
+    
+    public void onMouseLeave() {
+	
+    }
+    
+    public void onMouseActionOn(MouseEvent e) {
+	
+    }
+    
+    public void onScrollOn(int scroll) {
+	
     }
 
     /**

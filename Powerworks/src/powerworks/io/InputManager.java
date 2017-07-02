@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 import powerworks.main.Game;
+import powerworks.main.State;
 
 public class InputManager implements KeyListener, MouseWheelListener, MouseListener, MouseMotionListener {
 
@@ -22,6 +23,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     static int mouseButton = -1;
     static boolean mouseMoved = false, mouseMovedRelativeToLevel = false;
     static MouseEvent mouseClick, mouseRelease;
+    static MouseWheelEvent mouseWheel;
     static KeyControlOption keyBinding = null;
     static MouseControlOption mouseBinding = null;
     static LinkedList<ControlPress> queue = new LinkedList<ControlPress>();
@@ -106,6 +108,14 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	InputManager.map = map;
     }
 
+    /*
+     * What's happening: Mouse release: mouseRelease gets set to MouseEvent sent
+     * thru function to switch threads over then, in update, if mouseRelease is
+     * not null, it updates the current modifiers it then checks to make sure
+     * that the mouse was being held down so as to prevent multiple releases
+     * from going off without multiple clicks
+     * 
+     */
     public static void update() {
 	if (queue.size() != 0)
 	    try {
@@ -158,20 +168,23 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		Game.getChatManager().sendMessage("Bound mouse button " + modifier + ":" + mouseClick.getButton() + " to " + mouseBinding);
 		mouseBinding = null;
 	    } else if (mouseButton == -1) {
-		if (!Game.getScreenManager().onMouseAction(new powerworks.io.MouseEvent(mouseXPixel, mouseYPixel, 1, ControlPressType.PRESSED))) {
+		mouseButton = mouseClick.getButton();
+		if (!Game.getScreenManager().onMouseAction(new powerworks.io.MouseEvent(mouseXPixel, mouseYPixel, mouseButton, ControlPressType.PRESSED))
+			&& (State.getState() == State.INGAME && !Game.getLevelManager().onMouseAction(new powerworks.io.MouseEvent(mouseXPixel, mouseYPixel, mouseButton, ControlPressType.PRESSED)))) {
 		    MouseControlOption option = map.getMouseControl(mouseButton);
 		    MousePress press = new MousePress(ControlPressType.PRESSED, option);
 		    if (option != null && !queue.contains(press))
 			queue.add(press);
 		}
-		mouseButton = mouseClick.getButton();
 	    }
 	    mouseClick = null;
 	}
 	if (mouseRelease != null) {
 	    modifier = mouseRelease.getModifiers();
 	    if (mouseButton != -1) {
-		Game.getScreenManager().onMouseAction(new powerworks.io.MouseEvent(mouseXPixel, mouseYPixel, 1, ControlPressType.RELEASED));
+		Game.getScreenManager().onMouseAction(new powerworks.io.MouseEvent(mouseXPixel, mouseYPixel, mouseButton, ControlPressType.RELEASED));
+		if (State.getState() == State.INGAME)
+		    Game.getLevelManager().onMouseAction(new powerworks.io.MouseEvent(mouseXPixel, mouseYPixel, mouseButton, ControlPressType.RELEASED));
 		MouseControlOption option = map.getMouseControl(mouseButton);
 		mouseButton = -1;
 		MousePress press = new MousePress(ControlPressType.RELEASED, option);
@@ -179,6 +192,19 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		    queue.add(press);
 	    }
 	    mouseRelease = null;
+	}
+	if (mouseWheel != null) {
+	    modifier = mouseWheel.getModifiers();
+	    int rotation = mouseWheel.getWheelRotation();
+	    if (rotation == 1 || rotation == -1) {
+		if (!Game.getScreenManager().onMouseScroll(rotation * 5)) {
+		    MouseWheelControlOption option = map.getMouseWheelControl(rotation);
+		    MouseWheelPress press = new MouseWheelPress(ControlPressType.PRESSED, option);
+		    if (option != null && !queue.contains(press))
+			queue.add(press);
+		}
+	    }
+	    mouseWheel = null;
 	}
     }
 
@@ -283,14 +309,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-	modifier = e.getModifiers();
-	int rotation = e.getWheelRotation();
-	if (rotation == 1 || rotation == -1) {
-	    MouseWheelControlOption option = map.getMouseWheelControl(rotation);
-	    MouseWheelPress press = new MouseWheelPress(ControlPressType.PRESSED, option);
-	    if (option != null && !queue.contains(press))
-		queue.add(press);
-	}
+	mouseWheel = e;
     }
 
     @Override

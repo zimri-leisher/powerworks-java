@@ -49,11 +49,6 @@ public class GUIProgressBar extends GUIElement {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void update() {
     }
 
@@ -68,4 +63,5 @@ public class GUIProgressBar extends GUIElement {
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
+
 }

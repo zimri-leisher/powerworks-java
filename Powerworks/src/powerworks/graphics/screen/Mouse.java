@@ -1,21 +1,25 @@
 package powerworks.graphics.screen;
 
 import powerworks.graphics.Image;
-import powerworks.graphics.SyncAnimation;
+import powerworks.graphics.RenderParams;
+import powerworks.graphics.Renderer;
 import powerworks.graphics.Texture;
 import powerworks.inventory.item.Item;
-import powerworks.io.ControlMap;
 import powerworks.io.InputManager;
-import powerworks.io.KeyControlHandler;
 import powerworks.main.Game;
 
-public class Mouse extends ScreenObject{
+public class Mouse extends ScreenObject {
 
     Texture texture = Image.CURSOR_DEFAULT;
     Item heldItem = null;
 
     public Mouse() {
-	super(InputManager.getMouseXPixel(), InputManager.getMouseYPixel(), /* Always on top */ Integer.MAX_VALUE);
+	super(InputManager.getMouseXPixel(), InputManager.getMouseYPixel(), /*
+									     * Always
+									     * on
+									     * top
+									     */ Integer.MAX_VALUE);
+	open();
     }
 
     @Override
@@ -25,13 +29,14 @@ public class Mouse extends ScreenObject{
 
     @Override
     public void render() {
+	Renderer r = Game.getRenderEngine();
 	if (heldItem != null) {
-	    Game.getRenderEngine().renderTexture(heldItem.getTexture(), xPixel - 9, yPixel);
-	    Game.getRenderEngine().renderText(heldItem.getQuantity(), xPixel - 8, yPixel + 4);
+	    r.renderTexture(heldItem.getTexture(), xPixel - 9, yPixel);
+	    r.renderText(heldItem.getQuantity(), xPixel - 8, yPixel + 4);
 	}
-	Game.getRenderEngine().renderScreenObject(this);
+	r.renderTexture(texture, xPixel, yPixel, new RenderParams().setScale(0.5f));
     }
-    
+
     public void setTexture(Texture texture) {
 	this.texture = texture;
     }
@@ -45,24 +50,9 @@ public class Mouse extends ScreenObject{
     }
 
     @Override
-    public Texture getTexture() {
-	return texture;
-    }
-
-    @Override
     public void update() {
 	xPixel = InputManager.getMouseXPixel();
 	yPixel = InputManager.getMouseYPixel();
-	if (InputManager.getMouseButton() == 3) {
-	    texture = SyncAnimation.CURSOR_RIGHT_CLICK;
-	    SyncAnimation.CURSOR_RIGHT_CLICK.play();
-	} else if (InputManager.getMouseButton() == 1) {
-	    texture = Image.CURSOR_LEFT_CLICK;
-	    SyncAnimation.CURSOR_RIGHT_CLICK.reset();
-	} else {
-	    SyncAnimation.CURSOR_RIGHT_CLICK.reset();
-	    texture = Image.CURSOR_DEFAULT;
-	}
     }
 
     @Override
@@ -76,7 +66,7 @@ public class Mouse extends ScreenObject{
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
     }
-    
+
     @Override
     public void remove() {
 	super.remove();

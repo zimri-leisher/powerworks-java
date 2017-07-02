@@ -98,11 +98,6 @@ public class GUITextField extends GUIElement implements TextListener {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void handleChar(char c) {
 	// Escape
 	if (c == '') {
@@ -142,7 +137,7 @@ public class GUITextField extends GUIElement implements TextListener {
 
     @Override
     public String toString() {
-	return "GUI text field at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", current text of " + text
+	return "GUI text field " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", current text of " + text
 		+ ", background text of " + backgroundText + ", is active: " + active;
     }
 
@@ -152,5 +147,10 @@ public class GUITextField extends GUIElement implements TextListener {
 	backgroundText = text = null;
 	underscore = null;
 	onEnter = null;
+    }
+
+    @Override
+    public void onScrollOn(int scroll) {
+	
     }
 }

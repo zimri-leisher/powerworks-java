@@ -1,14 +1,13 @@
 package powerworks.collidable;
 
-public enum Hitbox {
+public class Hitbox {
 
-    PLAYER(-8, 0, 16, 16), 
-    TILE(0, 0, 16, 16),
-    CONVEYOR_BELT_ITEM(1, 0, 14, 16),
-    IRON_ORE_ITEM(0, 1, 16, 15),
-    TWO_BY_TWO_TILE(0, 0, 32, 32),
-    NONE(false);
-    
+    public static final Hitbox PLAYER = new Hitbox(-8, 0, 16, 16);
+    public static final Hitbox TILE = new Hitbox(0, 0, 16, 16);
+    public static final Hitbox CONVEYOR_BELT_ITEM = new Hitbox(1, 0, 14, 16);
+    public static final Hitbox IRON_ORE_ITEM = new Hitbox(0, 1, 16, 15);
+    public static final Hitbox TWO_BY_TWO_TILE = new Hitbox(0, 0, 32, 32);
+    public static final Hitbox NONE = new Hitbox(false);
     private int width, height;
     private int xStart, yStart;
     private boolean solid;
@@ -24,29 +23,29 @@ public enum Hitbox {
     private Hitbox(boolean solid) {
 	this.solid = solid;
     }
-    
+
     public boolean isSolid() {
 	return solid;
     }
-    
+
     public int getWidthPixels() {
 	return width;
     }
-    
+
     public int getHeightPixels() {
 	return height;
     }
-    
+
     public int getXStart() {
 	return xStart;
     }
-    
+
     public int getYStart() {
 	return yStart;
     }
-    
+
     @Override
     public String toString() {
-	return "(" + xStart + ", " + yStart +") - (" + (xStart + width) + ", " + (yStart + height) + ")";
+	return "Hitbox from (" + xStart + ", " + yStart + ") to (" + (xStart + width) + ", " + (yStart + height) + ")";
     }
 }

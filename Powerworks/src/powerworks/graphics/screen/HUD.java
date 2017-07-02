@@ -22,7 +22,19 @@ public class HUD {
 	return chatbar;
     }
     
+    public void open() {
+	hotbar.open();
+	healthbar.open();
+	chatbar.open();
+    }
+    
     public Healthbar getHealthbar() {
 	return healthbar;
+    }
+    
+    public void close() {
+	hotbar.close();
+	healthbar.close();
+	chatbar.close();
     }
 }

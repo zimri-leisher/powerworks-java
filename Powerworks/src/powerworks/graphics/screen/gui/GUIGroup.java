@@ -18,7 +18,7 @@ public class GUIGroup extends GUIElement {
      */
     public GUIGroup(ScreenObject parent, int xPixel, int yPixel, int layer, List<GUIElement> elements) {
 	super(parent, xPixel, yPixel, getWidthPixels(elements), getHeightPixels(elements), layer);
-	children.addAll(elements);
+	elements.forEach(this::addChild);
     }
 
     /**
@@ -30,6 +30,7 @@ public class GUIGroup extends GUIElement {
 
     public void addChild(GUIElement el) {
 	el.setParent(this);
+	el.setLayer(layer + 1, true);
 	updateDimensions();
     }
     
@@ -75,11 +76,6 @@ public class GUIGroup extends GUIElement {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void update() {
     }
 
@@ -97,6 +93,7 @@ public class GUIGroup extends GUIElement {
 
     @Override
     public String toString() {
-	return "GUI group at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
+	return "GUI group at " + id + " " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
     }
+
 }

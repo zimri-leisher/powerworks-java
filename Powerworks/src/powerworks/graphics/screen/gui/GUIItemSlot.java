@@ -35,11 +35,6 @@ public class GUIItemSlot extends GUIElement {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void render() {
 	Game.getRenderEngine().renderTexture(current, xPixel, yPixel);
 	Item i = inv.getItem(index);
@@ -130,7 +125,7 @@ public class GUIItemSlot extends GUIElement {
 
     @Override
     public String toString() {
-	return "GUI item slot at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", item: " + inv.getItem(index).toString()
+	return "GUI item slot " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", item: " + inv.getItem(index).toString()
 		+ ", is display: " + isDisplay;
     }
 
@@ -140,4 +135,5 @@ public class GUIItemSlot extends GUIElement {
 	inv = null;
 	unhigh = high = click = display = current = null;
     }
+
 }

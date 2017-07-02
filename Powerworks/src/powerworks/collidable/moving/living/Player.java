@@ -3,16 +3,9 @@ package powerworks.collidable.moving.living;
 import powerworks.block.Block;
 import powerworks.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.Collidable;
-import powerworks.collidable.Hitbox;
 import powerworks.collidable.moving.droppeditem.DroppedItem;
-import powerworks.data.Timer;
-import powerworks.event.EventHandler;
 import powerworks.event.EventListener;
-import powerworks.event.EventManager;
-import powerworks.event.PlaceBlockEvent;
-import powerworks.graphics.Image;
-import powerworks.graphics.ImageCollection;
-import powerworks.inventory.Inventory;
+import powerworks.graphics.Renderer;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
 import powerworks.io.ControlMap;
@@ -24,37 +17,21 @@ import powerworks.io.MouseControlHandler;
 import powerworks.io.MouseControlOption;
 import powerworks.io.MousePress;
 import powerworks.main.Game;
-import powerworks.task.Task;
 import powerworks.world.level.GhostBlock;
+import powerworks.world.level.Level;
 
 public class Player extends Living implements KeyControlHandler, EventListener, MouseControlHandler {
 
     public static int MOVE_SPEED = 1;
     public static int SPRINT_SPEED = 2;
-    boolean invOpen = false;
-    private String name;
-    public GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
-    private int lastMouseXPixel = 0, lastMouseYPixel = 0;
-    private boolean moving, sprinting;
-    private Timer removing = new Timer(96, 1, true);
+    private int lastMouseXPixel, lastMouseYPixel;
+    private GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
+    private boolean sprinting = false;
+    private String username;
 
-    public Player(int xPixel, int yPixel, String name) {
-	super(xPixel, yPixel, Hitbox.PLAYER, new Inventory(8, 4), "Inventory", Image.PLAYER_INVENTORY);
-	this.name = name;
-	textures = ImageCollection.PLAYER;
-	removing.runTaskOnFinish(new Task() {
-
-	    @Override
-	    public void run() {
-		Block b = Game.getLevel().getBlockFromPixel(InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel());
-		if (b != null) {
-		    b.remove();
-		    removing.resetTimes();
-		    block.setPlaceable(true);
-		}
-	    }
-	});
-	EventManager.registerEventListener(this);
+    public Player(String username) {
+	super(LivingType.PLAYER, Game.getLevel().getWidthPixels() / 2, Game.getLevel().getHeightPixels() / 2);
+	this.username = username;
 	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
 		KeyControlOption.ROTATE_SELECTED_BLOCK,
 		KeyControlOption.SLOT_1, KeyControlOption.SLOT_2, KeyControlOption.SLOT_3, KeyControlOption.SLOT_4, KeyControlOption.SLOT_5, KeyControlOption.SLOT_6, KeyControlOption.SLOT_7,
@@ -63,14 +40,10 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	InputManager.registerMouseControlHandler(this, ControlMap.DEFAULT_INGAME, MouseControlOption.PLACE_BLOCK, MouseControlOption.REMOVE_BLOCK);
     }
 
-    public Player(int x, int y) {
-	this(x, y, "Player");
-    }
-
     @Override
     public void update() {
-	long time = 0;
-	Block b = Game.getLevel().getBlockFromPixel(xPixel + hitbox.getXStart() + hitbox.getWidthPixels() / 2, yPixel + hitbox.getYStart() + hitbox.getHeightPixels());
+	Level l = Game.getLevel();
+	Block b = l.getBlockFromPixel(xPixel + hitbox.getXStart() + hitbox.getWidthPixels() / 2, yPixel + hitbox.getYStart() + hitbox.getHeightPixels());
 	if (b instanceof ConveyorBeltBlock) {
 	    int xVel = (b.getRotation() == 1) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 3) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
 	    int yVel = (b.getRotation() == 0) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 2) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
@@ -80,16 +53,14 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	    move();
 	int mouseXPixel = InputManager.getMouseLevelXPixel();
 	int mouseYPixel = InputManager.getMouseLevelYPixel();
-	if (Game.showRenderTimes())
-	    time = System.nanoTime();
 	Item item = getHeldItem();
 	if (item != null && getHeldItem().isPlaceable()) {
-	    if (true) {
+	    if (mouseXPixel != lastMouseXPixel || mouseYPixel != lastMouseYPixel) {
 		int xTile = mouseXPixel >> 4;
 		int yTile = mouseYPixel >> 4;
-		if (Game.getLevel().getBlockFromTile(xTile, yTile) == null) {
+		if (l.getBlockFromTile(xTile, yTile) == null) {
 		    if (item.getType().getPlacedBlock().getHitbox().isSolid()) {
-			if (Game.getLevel().spaceForBlock(item.getType().getPlacedBlock(), xTile, yTile))
+			if (l.spaceForBlock(item.getType().getPlacedBlock(), xTile, yTile))
 			    block.setPlaceable(true);
 			else
 			    block.setPlaceable(false);
@@ -106,12 +77,31 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	} else {
 	    block.setRender(false);
 	}
-	if (Game.showRenderTimes())
-	    System.out.println("Updating player took:        " + (System.nanoTime() - time) + " ns");
+    }
+    
+    /**
+     * The ghost block is the transparent block that shows up where you are going to place a block
+     */
+    public GhostBlock getGhostBlock() {
+	return block;
+    }
+    
+    public String getUsername() {
+	return username;
+    }
+
+    public Item getHeldItem() {
+	return Game.getHUD().getHotbar().getSelectedItem();
+    }
+
+    @Override
+    public float getScale() {
+	return 2.0f;
     }
 
     @Override
     protected void move() {
+	Level l = Game.getLevel();
 	if (velX > 0 && dir != 1)
 	    dir = 1;
 	if (velX < 0 && dir != 3)
@@ -120,30 +110,29 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	    dir = 2;
 	if (velY < 0 && dir != 0)
 	    dir = 0;
-	if (velX + xPixel + hitbox.getXStart() + hitbox.getWidthPixels() > Game.getLevel().getWidthPixels())
+	if (velX + xPixel + hitbox.getXStart() + hitbox.getWidthPixels() > l.getWidthPixels())
 	    xPixel = -hitbox.getXStart();
-	if (velY + yPixel + hitbox.getYStart() + hitbox.getHeightPixels() > Game.getLevel().getHeightPixels())
+	if (velY + yPixel + hitbox.getYStart() + hitbox.getHeightPixels() > l.getHeightPixels())
 	    yPixel = -hitbox.getYStart();
 	if (velX + xPixel + hitbox.getXStart() < 0)
-	    xPixel = Game.getLevel().getWidthPixels() - (hitbox.getXStart() + hitbox.getWidthPixels());
+	    xPixel = l.getWidthPixels() - (hitbox.getXStart() + hitbox.getWidthPixels());
 	if (velY + yPixel + hitbox.getYStart() < 0)
-	    yPixel = Game.getLevel().getHeightPixels() - (hitbox.getYStart() + hitbox.getHeightPixels());
+	    yPixel = l.getHeightPixels() - (hitbox.getYStart() + hitbox.getHeightPixels());
 	int pXPixel = xPixel, pYPixel = yPixel;
-	if (velX != 0 || velY != 0) {
-	    if (!getCollision(velX, velY)) {
+	if (!getCollision(velX, velY)) {
+	    xPixel += velX;
+	    yPixel += velY;
+	} else {
+	    if (!getCollision(velX, 0)) {
 		xPixel += velX;
+	    }
+	    if (!getCollision(0, velY)) {
 		yPixel += velY;
-	    } else {
-		if (!getCollision(velX, 0)) {
-		    xPixel += velX;
-		}
-		if (!getCollision(0, velY)) {
-		    yPixel += velY;
-		}
 	    }
 	}
 	if (pXPixel != xPixel || pYPixel != yPixel) {
-	    Game.getRenderEngine().setOffset(xPixel - Game.getRenderEngine().getWidthPixels() / 2, yPixel - Game.getRenderEngine().getHeightPixels() / 2);
+	    Renderer r = Game.getRenderEngine();
+	    r.setOffset(xPixel - r.getWidthPixels() / 2, yPixel - r.getHeightPixels() / 2);
 	    hasMoved = true;
 	} else
 	    hasMoved = false;
@@ -161,15 +150,6 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	return false;
     }
 
-    public Item getHeldItem() {
-	return Game.getHUD().getHotbar().getSelectedItem();
-    }
-
-    @Override
-    public float getScale() {
-	return 2.0f;
-    }
-
     @Override
     public void render() {
 	Game.getRenderEngine().renderLevelObject(this, 16, 16);
@@ -177,23 +157,18 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	    renderHitbox();
     }
 
-    public boolean isInvOpen() {
-	return invOpen;
-    }
-
-    public String getName() {
-	return name;
+    @Override
+    public void remove() {
+	Game.getLevel().getCollidables().remove(this);
+	Game.getLevel().getLivingEntities().remove(this);
+	Game.getLevel().getMovingEntities().remove(this);
+	username = null;
+	block = null;
     }
 
     @Override
     public String toString() {
-	return "Player named " + name + " at " + xPixel + ", "  + yPixel + ", sprinting: " + sprinting + ", inventory open: " + invOpen;
-    }
-
-    @EventHandler
-    public void handlePlaceBlockEvent(PlaceBlockEvent e) {
-	if (lastMouseXPixel >> 4 == e.xTile && lastMouseYPixel >> 4 == e.yTile)
-	    block.setPlaceable(false);
+	return "Player named " + username + " at " + xPixel + ", " + yPixel + ", inventory open: " + invGUI.isOpen();
     }
 
     @SuppressWarnings("incomplete-switch")
@@ -428,30 +403,8 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 			break;
 		}
 		break;
-	    case REMOVE_BLOCK:
-		switch (p.getType()) {
-		    case PRESSED:
-			removing.play();
-			break;
-		    case RELEASED:
-			removing.resetTimes();
-			break;
-		    default:
-			break;
-		}
-		break;
 	    default:
 		break;
 	}
-    }
-
-    @Override
-    public void remove() {
-	Game.getLevel().getCollidables().remove(this);
-	Game.getLevel().getLivingEntities().remove(this);
-	Game.getLevel().getMovingEntities().remove(this);
-	name = null;
-	block = null;
-	removing = null;
     }
 }

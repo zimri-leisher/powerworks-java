@@ -1,6 +1,7 @@
 package powerworks.graphics.screen;
 
 import powerworks.graphics.Image;
+import powerworks.graphics.Renderer;
 import powerworks.graphics.Texture;
 import powerworks.inventory.Inventory;
 import powerworks.inventory.item.Item;
@@ -15,7 +16,6 @@ public class Hotbar extends ScreenObject {
 	super(xPixel, yPixel, 1);
 	this.numSlots = numSlots;
 	this.inv = Game.getMainPlayer().getInventory();
-	open = true;
     }
 
     public int getNumberOfItems() {
@@ -39,22 +39,18 @@ public class Hotbar extends ScreenObject {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void render() {
+	Renderer r = Game.getRenderEngine();
 	for (int i = 0; i < numSlots; i++) {
 	    int xPixelT = xPixel + i * Image.HOTBAR_SLOT.getWidthPixels();
 	    if (i != currentSlot)
-		Game.getRenderEngine().renderTexture(Image.HOTBAR_SLOT, xPixelT, yPixel);
+		r.renderTexture(Image.HOTBAR_SLOT, xPixelT, yPixel);
 	    else
-		Game.getRenderEngine().renderTexture(Image.HOTBAR_SLOT_SELECTED, xPixelT, yPixel);
+		r.renderTexture(Image.HOTBAR_SLOT_SELECTED, xPixelT, yPixel);
 	    Item item = inv.getItem(i);
 	    if (item != null) {
-		Game.getRenderEngine().renderTexture(item.getTexture(), xPixelT, yPixel);
-		Game.getRenderEngine().renderText(item.getQuantity(), xPixelT + 1, yPixel + 4);
+		r.renderTexture(item.getTexture(), xPixelT, yPixel);
+		r.renderText(item.getQuantity(), xPixelT + 1, yPixel + 4);
 	    }
 	}
     }
@@ -73,13 +69,15 @@ public class Hotbar extends ScreenObject {
 
     @Override
     public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
-	xPixel = Game.getRenderEngine().getWidthPixels() / 2 - 8 * (Image.HOTBAR_SLOT.getWidthPixels() / 2);
-	yPixel = Game.getRenderEngine().getHeightPixels() - Image.HOTBAR_SLOT.getHeightPixels();
+	Renderer r = Game.getRenderEngine();
+	xPixel = r.getWidthPixels() / 2 - 8 * (Image.HOTBAR_SLOT.getWidthPixels() / 2);
+	yPixel = r.getHeightPixels() - Image.HOTBAR_SLOT.getHeightPixels();
     }
-    
+
     @Override
     public void remove() {
 	super.remove();
 	inv = null;
     }
+
 }

@@ -1,6 +1,5 @@
 package powerworks.block.machine;
 
-import powerworks.block.Block;
 import powerworks.data.Timer;
 import powerworks.inventory.item.ItemType;
 import powerworks.main.Game;
@@ -9,17 +8,17 @@ import powerworks.world.level.tile.OreTile;
 import powerworks.world.level.tile.Tile;
 import powerworks.world.level.tile.TileType;
 
-public class OreMinerBlock extends Block {
+public class OreMinerBlock extends MachineBlock {
 
     static final int TICKS_PER_MINE = 240;
     Timer t;
 
-    
     public OreMinerBlock(MachineBlockType type, int xTile, int yTile) {
 	super(type, xTile, yTile);
 	t = new Timer(TICKS_PER_MINE, 1, true);
 	t.setLoop(true);
 	t.runTaskOnFinish(new Task() {
+
 	    @Override
 	    public void run() {
 		Tile tile = Game.getLevel().getTileFromTile(xPixel, yPixel);

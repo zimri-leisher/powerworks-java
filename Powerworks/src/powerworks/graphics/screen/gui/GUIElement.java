@@ -18,7 +18,6 @@ public abstract class GUIElement extends ClickableScreenObject {
 	    // this.desc = new GUIDescription();
 	    descTimer = new Timer(15, 1, false);
 	    descTimer.runTaskOnFinish(new Task() {
-
 		@Override
 		public void run() {
 		    descShowing = true;

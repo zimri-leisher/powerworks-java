@@ -61,6 +61,8 @@ public class ChatCommandExecutor implements TextListener {
 		Player.MOVE_SPEED = Integer.parseInt(args[0]);
 	    } else if (command.equals("setsprintspeed")) {
 		Player.SPRINT_SPEED = Integer.parseInt(args[0]);
+	    } else if(command.equals("log")) {
+		Game.getLogger().log(args[0]);
 	    } else {
 		Game.getChatManager().sendMessage("Unknown command");
 	    }

@@ -32,10 +32,16 @@ public class AutoFormatGUIGroup extends GUIGroup{
     @Override
     public void addChild(GUIElement el) {
 	el.setParent(this);
+	el.setLayer(layer + 1, true);
 	el.setRelYPixel(currentYPixel);
 	el.setRelXPixel(xPixelPadding);
 	currentYPixel += yPixelSeparation + el.getHeightPixels();
 	updateDimensions();
 	heightPixels += yPixelSeparation;
+    }
+    
+    @Override
+    public String toString() {
+	return "Auto formatting GUI group " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
     }
 }

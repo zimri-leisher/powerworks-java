@@ -165,6 +165,10 @@ public class Inventory {
     public Item getItem(int index) {
 	return items[index];
     }
+    
+    public void unload() {
+	items = null;
+    }
 
     @Override
     public String toString() {

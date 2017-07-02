@@ -51,11 +51,6 @@ public class GUIDragGrip extends GUIElement {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-    
-    @Override
     public void render() {
 	super.render();
 	Game.getRenderEngine().renderTexture(texture, xPixel, yPixel);
@@ -91,7 +86,7 @@ public class GUIDragGrip extends GUIElement {
     
     @Override
     public String toString() {
-	return "GUI drag grip at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
+	return "GUI drag grip " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
     }
     
     @Override
@@ -99,4 +94,5 @@ public class GUIDragGrip extends GUIElement {
 	super.remove();
 	texture = null;
     }
+
 }

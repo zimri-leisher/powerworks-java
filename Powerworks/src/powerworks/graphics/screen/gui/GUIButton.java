@@ -41,7 +41,8 @@ public class GUIButton extends GUIElement {
     }
 
     public GUIButton(ScreenObject parent, int xPixel, int yPixel, int layer, String text, boolean defaultAvailable, Task click, Task release) {
-	this(parent, xPixel, yPixel, Image.GUI_BUTTON.getWidthPixels(), Image.GUI_BUTTON.getHeightPixels(), layer, text, Image.GUI_BUTTON, Image.GUI_BUTTON_HIGHLIGHT, Image.GUI_BUTTON_CLICK, Image.GUI_BUTTON, defaultAvailable, click, release);
+	this(parent, xPixel, yPixel, Image.GUI_BUTTON.getWidthPixels(), Image.GUI_BUTTON.getHeightPixels(), layer, text, Image.GUI_BUTTON, Image.GUI_BUTTON_HIGHLIGHT, Image.GUI_BUTTON_CLICK,
+		Image.GUI_BUTTON, defaultAvailable, click, release);
     }
 
     public void setAvailable(boolean available) {
@@ -63,11 +64,6 @@ public class GUIButton extends GUIElement {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void render() {
 	Game.getRenderEngine().renderTexture(current, xPixel, yPixel);
 	super.render();
@@ -85,7 +81,7 @@ public class GUIButton extends GUIElement {
     protected void onClose() {
 	current = (available) ? unhigh : unavail;
     }
-    
+
     public GUIText getText() {
 	return text;
     }
@@ -117,9 +113,10 @@ public class GUIButton extends GUIElement {
     @Override
     public void onMouseActionOff(MouseEvent mouse) {
     }
-    
+
     @Override
     public String toString() {
-	return "GUI button at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + " with text " + text + ", layer: " + layer + ", # of children: " + children.size();
+	return "GUI button " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + " with text " + text + ", layer: " + layer
+		+ ", # of children: " + children.size();
     }
 }

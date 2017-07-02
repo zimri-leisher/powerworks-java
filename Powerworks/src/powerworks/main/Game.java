@@ -10,7 +10,6 @@ import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.font.FontRenderContext;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -31,7 +30,9 @@ import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.screen.HUD;
 import powerworks.graphics.screen.Mouse;
 import powerworks.graphics.screen.ScreenManager;
+import powerworks.graphics.screen.ScreenObject;
 import powerworks.graphics.screen.gui.EscapeMenuGUI;
+import powerworks.graphics.screen.gui.EscapeOptionsMenuGUI;
 import powerworks.graphics.screen.gui.MainMenuGUI;
 import powerworks.graphics.screen.gui.OptionsMenuGUI;
 import powerworks.io.ControlMap;
@@ -41,60 +42,82 @@ import powerworks.io.KeyControlHandler;
 import powerworks.io.KeyControlOption;
 import powerworks.io.KeyPress;
 import powerworks.io.Logger;
-import powerworks.io.MouseWheelControlHandler;
-import powerworks.io.MouseWheelControlOption;
-import powerworks.io.MouseWheelPress;
 import powerworks.io.Statistic;
 import powerworks.task.Task;
 import powerworks.world.World;
+import powerworks.world.WorldManager;
 import powerworks.world.level.Level;
+import powerworks.world.level.LevelManager;
 
-public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler, MouseWheelControlHandler {
+public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler{
 
     private static Game game;
+    boolean running = false;
+    
     private static final long serialVersionUID = 1L;
+    
     public static final float UPDATES_PER_SECOND = 60.0f;
     public static final float FRAMES_PER_SECOND = 1000000.0f;
     public static final float MS_PER_UPDATE = 1000 / UPDATES_PER_SECOND;
     public static final float MS_PER_FRAME = 1000 / FRAMES_PER_SECOND;
     public static final float NS_PER_UPDATE = 1000000000 / UPDATES_PER_SECOND;
     public static final float NS_PER_FRAME = 1000000000 / FRAMES_PER_SECOND;
+    public static final int MAX_UPDATES_BEFORE_RENDER = 5;
+    
     private static boolean FPS_MODE = false;
     private static boolean PAUSE_IN_ESCAPE_MENU = true;
-    public static final int MAX_UPDATES_BEFORE_RENDER = 5;
+    
+    static boolean paused = false;
+    static boolean showHitboxes = false;
+    
     static int width = 300, zoomedWidth = width;
     static int height = width / 16 * 9, zoomedHeight = height;
     static int scale = 4;
+    
     static int secondCount = 0;
     static long updateCount = 0;
     static long frameCount = 0;
+    
     int prevFrameWidth = 0;
     int prevFrameHeight = 0;
-    static Player player;
-    static boolean showHitboxes = false;
+    
     static Thread gameThread;
     static JFrame frame;
-    static Renderer render;
-    static Font mainFont = null;
-    static HashMap<Integer, Font> fonts = new HashMap<Integer, Font>();
-    boolean running = false;
-    static GraphicsConfiguration gConf = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
-    static List<String> allPlayerNames;
-    static List<Player> allPlayers;
-    static World world;
-    static ScreenManager screen;
+   
+    static Renderer render; 
+    static Mouse mouse;
     static HUD hud;
+    static Cursor defCursor;
+    static ScreenManager screen;
+    
     static MainMenuGUI mainMenu;
     static OptionsMenuGUI optionsMenu;
     static EscapeMenuGUI escapeMenu;
-    static Mouse mouse;
+    static EscapeOptionsMenuGUI escapeOptionsMenu;
+    
+    static GraphicsConfiguration gConf = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+    
+    static Font mainFont = null;
+    static HashMap<Integer, Font> fonts = new HashMap<Integer, Font>();
+    
+    
+    static List<String> allPlayerNames;
+    static List<Player> allPlayers;
+    static Player player;
+    
+    static World world;
+    static WorldManager worldManager;
+    static LevelManager levelManager;
+    
+    //Required to have listeners
     static InputManager input;
+    static Logger logger;
     static ChatCommandExecutor chatCmdExecutor;
     static ChatManager chatManager;
-    static Logger logger;
+    
     static boolean showRenderTimes = false;
     static boolean showUpdateTimes = false;
-    static Cursor defCursor;
+    
 
     private Game() {
 	loadFont();
@@ -109,6 +132,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	mainMenu = new MainMenuGUI();
 	optionsMenu = new OptionsMenuGUI();
 	escapeMenu = new EscapeMenuGUI();
+	escapeOptionsMenu = new EscapeOptionsMenuGUI();
 	addKeyListener(input);
 	addMouseWheelListener(input);
 	addMouseListener(input);
@@ -122,7 +146,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		KeyControlOption.RENDER_HITBOX,
 		KeyControlOption.TOGGLE_FPS_MODE);
 	InputManager.registerKeyControlHandler(this, ControlMap.MAIN_MENU, KeyControlOption.EXIT, KeyControlOption.TOGGLE_FPS_MODE);
-	InputManager.registerMouseWheelControlHandler(this, ControlMap.DEFAULT_INGAME, MouseWheelControlOption.ZOOM_IN, MouseWheelControlOption.ZOOM_OUT);
     }
 
     private synchronized void start() {
@@ -150,6 +173,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	return game;
     }
 
+    public static boolean isPaused() {
+	return game.paused;
+    }
+
     /**
      * Sets the cursor to the default windows cursor
      */
@@ -163,6 +190,9 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		new Point(0, 0), "null"));
     }
 
+    /**
+     * Enables or disables thread waiting every cycle of the main loop
+     */
     static void setFPSMode(boolean mode) {
 	FPS_MODE = mode;
     }
@@ -181,6 +211,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     public static EscapeMenuGUI getEscapeMenuGUI() {
 	return escapeMenu;
+    }
+    
+    public static EscapeOptionsMenuGUI getEscapeOptionsMenuGUI() {
+	return escapeOptionsMenu;
     }
 
     public static void exit() {
@@ -202,23 +236,50 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static long getFramesSinceStart() {
 	return frameCount;
     }
+    
+    /**
+     * For generating, loading and unloading worlds
+     */
+    public static WorldManager getWorldManager() {
+	return worldManager;
+    }
 
+    /**
+     * For sending input to be processed by GUIs and rendering and updating GUIs/HUD 
+     */
     public static ScreenManager getScreenManager() {
 	return screen;
     }
 
+    /**
+     * For sending and accessing chat messages
+     */
     public static ChatManager getChatManager() {
 	return chatManager;
     }
-
+    
+    public static LevelManager getLevelManager() {
+	return levelManager;
+    }
+    
+    /**
+     * The HUD includes the hotbar, healthbar and chatbar
+     */
     public static HUD getHUD() {
 	return hud;
     }
 
+    /**
+     * For setting the texture. To get coordinates one should really use InputManager appropriately
+     */
     public static Mouse getMouse() {
 	return mouse;
     }
 
+    /**
+     * For drawing textures, setting clips, scaling, getting width, height, etc.
+     * @return
+     */
     public static Renderer getRenderEngine() {
 	return render;
     }
@@ -248,7 +309,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     public static Player getPlayer(String name) {
 	for (Player player : allPlayers) {
-	    if (player.getName().equals(name))
+	    if (player.getUsername().equals(name))
 		return player;
 	}
 	return null;
@@ -361,9 +422,11 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    InputManager.update();
 	    Task.update();
 	    screen.update();
-	    world.update();
+	    if (!paused)
+		world.update();
 	    Timer.update();
-	    SyncAnimation.update();
+	    if (!paused)
+		SyncAnimation.update();
 	} else if (s == State.MAIN_MENU) {
 	    InputManager.update();
 	    Task.update();
@@ -388,10 +451,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		if (s == State.INGAME) {
 		    world.render();
 		    screen.render();
-		    mouse.render();
 		} else if (s == State.MAIN_MENU) {
 		    screen.render();
-		    mouse.render();
 		}
 		g2d.dispose();
 		bufferStrat.show();
@@ -478,9 +539,17 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case EXIT:
 		switch (pressType) {
 		    case PRESSED:
-			if (State.getState() == State.INGAME)
-			    escapeMenu.open();
-			else
+			if (State.getState() == State.INGAME) {
+			    if (escapeMenu.isOpen()) {
+				escapeMenu.close();
+				if (PAUSE_IN_ESCAPE_MENU)
+				    paused = false;
+			    } else {
+				escapeMenu.open();
+				if (PAUSE_IN_ESCAPE_MENU)
+				    paused = true;
+			    }
+			} else
 			    exit();
 			break;
 		    default:
@@ -518,9 +587,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case TOGGLE_FPS_MODE:
 		switch (pressType) {
 		    case PRESSED:
-			Setting.THREAD_WAITING.setValue(!Setting.THREAD_WAITING.getValue());
-			if (State.getState() == State.INGAME)
-			    chatManager.sendMessage("FPS mode toggled to: " + Setting.THREAD_WAITING.getValue());
+			optionsMenu.getOptions().test();
+			//Setting.THREAD_WAITING.setValue(!Setting.THREAD_WAITING.getValue());
+			//if (State.getState() == State.INGAME)
+			//    chatManager.sendMessage("FPS mode toggled to: " + Setting.THREAD_WAITING.getValue());
 			break;
 		    default:
 			break;
@@ -531,7 +601,4 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	}
     }
 
-    @Override
-    public void handleMouseWheelPress(MouseWheelPress press) {
-    }
 }

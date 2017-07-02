@@ -1,11 +1,12 @@
 package powerworks.graphics.screen.gui;
 
+import powerworks.graphics.Image;
 import powerworks.graphics.Texture;
 import powerworks.graphics.screen.ScreenObject;
 import powerworks.io.MouseEvent;
 import powerworks.main.Game;
 
-public class GUIElementList extends GUIElement implements Scrollable {
+public class GUIElementList extends GUIElement implements GUIScrollBar.Scrollable {
 
     private GUIScrollBar scroll;
     private GUIGroup elements;
@@ -27,7 +28,12 @@ public class GUIElementList extends GUIElement implements Scrollable {
      */
     public void add(GUIElement el) {
 	elements.addChild(el);
-	onScroll();
+	scroll.onScrollableHeightChange();
+	onScrollbarMove();
+    }
+
+    public void test() {
+	add(new GUITexturePane(null, 0, 0, layer + 1, Image.GUI_BUTTON));
     }
     
     public GUIGroup getElements() {
@@ -40,11 +46,6 @@ public class GUIElementList extends GUIElement implements Scrollable {
 
     @Override
     public void onMouseActionOff(MouseEvent mouse) {
-    }
-
-    @Override
-    public Texture getTexture() {
-	return null;
     }
 
     @Override
@@ -73,13 +74,13 @@ public class GUIElementList extends GUIElement implements Scrollable {
     }
 
     @Override
-    public void onScroll() {
-	elements.setRelYPixel((int) ((heightPixels - elements.getHeightPixels()) * (scroll.getCurrentPos() / (double) scroll.getMaxPos())));
+    public void onScrollbarMove() {
+	elements.setRelYPixel((int) (Math.min(0, heightPixels - elements.getHeightPixels()) * (double) (scroll.getCurrentPos() / (double) scroll.getMaxPos())));
     }
 
     @Override
     public String toString() {
-	return "GUI element list at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
+	return "GUI element list " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size();
     }
 
     @Override
@@ -87,5 +88,20 @@ public class GUIElementList extends GUIElement implements Scrollable {
 	super.remove();
 	scroll = null;
 	elements = null;
+    }
+
+    @Override
+    public void onScrollOn(int scroll) {
+	this.scroll.setCurrentPos(this.scroll.getCurrentPos() + scroll);
+    }
+
+    @Override
+    public int getViewHeightPixels() {
+	return heightPixels;
+    }
+
+    @Override
+    public int getMaxHeightPixels() {
+	return elements.getHeightPixels();
     }
 }

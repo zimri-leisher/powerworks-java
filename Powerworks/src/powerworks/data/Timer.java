@@ -61,7 +61,7 @@ public class Timer {
     }
 
     private void nextUpdate() {
-	if (!world || !(Setting.PAUSE_IN_ESCAPE_MENU.getValue() && Game.getEscapeMenuGUI().isOpen())) {
+	if (!world || !(Setting.PAUSE_IN_ESCAPE_MENU.getValue() && Game.isPaused())) {
 	    updateCount++;
 	    if (nUpdates > 0 && updateCount % nUpdates == 0)
 		perNUpdates.run();

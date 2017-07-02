@@ -1,14 +1,12 @@
 package powerworks.block.machine;
 
 import powerworks.block.Block;
-import powerworks.block.BlockType;
 
-public abstract class MachineBlock extends Block{
+public abstract class MachineBlock extends Block<MachineBlockType>{
 
-    // Cast to get on sound
     boolean on;
     
-    public MachineBlock(BlockType type, int xTile, int yTile) {
+    public MachineBlock(MachineBlockType type, int xTile, int yTile) {
 	super(type, xTile, yTile);
     }
 }

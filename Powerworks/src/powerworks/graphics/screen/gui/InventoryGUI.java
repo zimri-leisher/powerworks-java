@@ -16,16 +16,16 @@ public class InventoryGUI extends GUI {
     
     public InventoryGUI(Inventory inv, Texture background, String name) {
 	super((Game.getScreenWidth() - background.getWidthPixels()) / 2, (Game.getScreenHeight() - background.getHeightPixels()) / 2, 1);
-	int width = inv.getWidth() * 18 + 20;
-	int height = inv.getHeight() * 18 + 20;
+	int width = inv.getWidth() * 18 + 10;
+	int height = inv.getHeight() * 18 + 10;
 	items = new GUIItemSlot[inv.getWidth() * inv.getHeight()];
 	for(int y = 0; y < inv.getHeight(); y++) {
 	    for(int x = 0; x < inv.getWidth(); x++) {
-		items[x + y * inv.getWidth()] = new GUIItemSlot(this, 10 + 18 * x, 10 + 18 * y, 16, 16, this.layer + 2, inv, x + y * inv.getWidth(), false);
+		items[x + y * inv.getWidth()] = new GUIItemSlot(this, 5 + 18 * x, 5 + 18 * y, 16, 16, this.layer + 2, inv, x + y * inv.getWidth(), false);
 	    }
 	}
 	this.background = new GUITexturePane(this, 0, 0, width, height, this.layer + 1, background);
-	this.grip = new GUIDragGrip(this, width - 9, 1, this.layer + 2);
+	this.grip = new GUIDragGrip(this, width - 5, 1, this.layer + 2);
 	this.name = new GUIText(this, 2, 6, this.layer + 2, name);
     }
     

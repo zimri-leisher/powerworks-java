@@ -15,14 +15,14 @@ public class Tile extends LevelObject {
     public Tile(TileType type, int xTile, int yTile, int rotation) {
 	super(xTile << 4, yTile << 4);
 	this.type = type;
-	texture = type.getTexture();
+	texture = type.getRandomTexture();
 	this.rotation = rotation;
     }
 
     public Tile(TileType type, int xTile, int yTile) {
 	super(xTile << 4, yTile << 4);
 	this.type = type;
-	texture = type.getTexture();
+	texture = type.getRandomTexture();
 	if (type.rotateRandomly) {
 	    Random rand = new Random();
 	    rotation = rand.nextInt(4);
@@ -52,7 +52,7 @@ public class Tile extends LevelObject {
 	} else {
 	    rotation = 0;
 	}
-	texture = type.getTexture();
+	texture = type.getRandomTexture();
     }
 
     @Override

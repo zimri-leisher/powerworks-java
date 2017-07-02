@@ -1,19 +1,25 @@
 package powerworks.block;
 
 import powerworks.audio.Sound;
-import powerworks.block.machine.OreMinerBlock;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
+import powerworks.data.Timer;
+import powerworks.graphics.Image;
+import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.Texture;
+import powerworks.io.ControlPressType;
+import powerworks.io.MouseEvent;
 import powerworks.main.Game;
+import powerworks.task.Task;
 
-public class Block extends Collidable {
+public class Block<T extends BlockType> extends Collidable {
 
-    protected BlockType type;
-    private boolean requiresUpdate = true;
+    protected T type;
+    private boolean requiresUpdate = true, removing = false;
+    private Timer removingTimer;
     private int rotation = 0;
 
-    public Block(BlockType type, int xTile, int yTile) {
+    public Block(T type, int xTile, int yTile) {
 	super(xTile << 4, yTile << 4, type.getTextureXPixelOffset(), type.getTextureYPixelOffset(), type.hitbox);
 	this.type = type;
 	requiresUpdate = type.defaultRequiresUpdate;
@@ -35,7 +41,7 @@ public class Block extends Collidable {
     public void remove() {
 	if (type.hitbox.isSolid())
 	    Game.getLevel().getCollidables().remove(this);
-	Block[] blocks = Game.getLevel().getBlocks();
+	Block<?>[] blocks = Game.getLevel().getBlocks();
 	for (int y = 0; y < type.heightTiles; y++) {
 	    int ya = y + yPixel >> 4;
 	    for (int x = 0; x < type.widthTiles; x++) {
@@ -69,8 +75,46 @@ public class Block extends Collidable {
 	return yPixel >> 4;
     }
 
-    public BlockType getType() {
+    public T getType() {
 	return type;
+    }
+
+    @Override
+    public void onMouseActionOn(MouseEvent e) {
+	ControlPressType p = e.getType();
+	if (e.getButton() == 3) {
+	    switch (p) {
+		case PRESSED:
+		    removing = true;
+		    removingTimer = new Timer(108, 1, true);
+		    removingTimer.runTaskOnFinish(new Task() {
+
+			@Override
+			public void run() {
+			    remove();
+			    SyncAnimation.CURSOR_RIGHT_CLICK.stop();
+			    SyncAnimation.CURSOR_RIGHT_CLICK.reset();
+			    Game.getMouse().setTexture(Image.CURSOR_DEFAULT);
+			}
+		    });
+		    Game.getMouse().setTexture(SyncAnimation.CURSOR_RIGHT_CLICK);
+		    SyncAnimation.CURSOR_RIGHT_CLICK.play();
+		    break;
+		case RELEASED:
+		    removingTimer.resetTimes();
+		    removingTimer.stop();
+		    removing = false;
+		    SyncAnimation.CURSOR_RIGHT_CLICK.stop();
+		    SyncAnimation.CURSOR_RIGHT_CLICK.reset();
+		    Game.getMouse().setTexture(Image.CURSOR_DEFAULT);
+		    break;
+	    }
+	}
+    }
+
+    @Override
+    public void onMouseLeave() {
+	removing = false;
     }
 
     public void update() {
@@ -98,7 +142,7 @@ public class Block extends Collidable {
     public Hitbox getHitbox() {
 	return type.hitbox;
     }
-
+    
     @Override
     public int getXPixel() {
 	return xPixel;

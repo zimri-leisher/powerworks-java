@@ -38,8 +38,12 @@ public class OptionsMenuGUI extends GUI {
 	    }
 	});
     }
-
+    
     public GUIElementList getOptions() {
 	return options;
+    }
+    
+    @Override
+    public void onScreenSizeChange(int oldW, int oldH) {
     }
 }

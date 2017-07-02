@@ -22,8 +22,9 @@ public abstract class Moving extends Collidable {
     protected ImageCollection textures;
     protected int dir = 0;
 
-    public Moving(int xPixel, int yPixel, Hitbox hitbox) {
+    public Moving(int xPixel, int yPixel, Hitbox hitbox, ImageCollection textures) {
 	super(xPixel, yPixel, hitbox);
+	this.textures = textures;
 	Game.getLevel().getMovingEntities().add(this);
     }
 

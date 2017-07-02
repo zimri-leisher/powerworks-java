@@ -8,45 +8,41 @@ import powerworks.graphics.ImageCollection;
 import powerworks.graphics.Texture;
 
 public enum TileType {
+    IRON_ORE(ImageCollection.GRASS_IRON_ORE_TILE, 1, true, true, "Iron Ore", 2), GRASS(ImageCollection.GRASS_TILE, 1, true, false, "Grass", 1), TEST(Image.ERROR, 1, false, false, "Test", 0,
+	    Sound.GRASS_FOOTSTEP);
 
-    IRON_ORE(ImageCollection.GRASS_IRON_ORE_TILE, 1, true, true, "Iron Ore", 2), 
-    GRASS(ImageCollection.GRASS_TILE, 1, true, false, "Grass", 1), 
-    VOID(Image.VOID, 1, false, false, "Void", 0, Sound.GRASS_FOOTSTEP),
-    TEST(Image.ERROR, 1, false, false, "Test", 0, Sound.GRASS_FOOTSTEP);
-    
     int id;
     String name;
-    Texture[] textures;
+    ImageCollection textures;
     int movementSpeed;
     boolean rotateRandomly;
     Sound footstep;
 
     private TileType(Texture texture, int movementSpeed, boolean rotateRandomly, boolean breakable,
 	    String name, int id, Sound footstep) {
-	this.textures = new Texture[1];
-	this.textures[0] = texture;
-	this.movementSpeed = movementSpeed;
-	this.rotateRandomly = rotateRandomly;
-	this.name = name;
-	this.id = id;
-	this.footstep = footstep;
-    }	
-    
-    private TileType(ImageCollection textures, int movementSpeed, boolean rotateRandomly, boolean breakable,
-	    String name, int id, Sound footstep) {
-	this.textures = textures.getTextures();
+	this.textures = ImageCollection.createCollection(texture);
 	this.movementSpeed = movementSpeed;
 	this.rotateRandomly = rotateRandomly;
 	this.name = name;
 	this.id = id;
 	this.footstep = footstep;
     }
-    
+
+    private TileType(ImageCollection textures, int movementSpeed, boolean rotateRandomly, boolean breakable,
+	    String name, int id, Sound footstep) {
+	this.textures = textures;
+	this.movementSpeed = movementSpeed;
+	this.rotateRandomly = rotateRandomly;
+	this.name = name;
+	this.id = id;
+	this.footstep = footstep;
+    }
+
     private TileType(ImageCollection textures, int movementSpeed, boolean rotateRandomly, boolean breakable,
 	    String name, int id) {
 	this(textures, movementSpeed, rotateRandomly, breakable, name, id, Sound.GRASS_FOOTSTEP);
     }
-    
+
     private TileType(Texture texture, int movementSpeed, boolean rotateRandomly, boolean breakable,
 	    String name, int id) {
 	this(texture, movementSpeed, rotateRandomly, breakable, name, id, Sound.GRASS_FOOTSTEP);
@@ -55,33 +51,26 @@ public enum TileType {
     public int getMovementSpeed() {
 	return movementSpeed;
     }
-    
+
     public Sound getFootstepSound() {
 	return footstep;
     }
 
-    public Texture getTexture() {
-	if (textures.length == 1) {
-	    return textures[0];
-	}
-	Random rand = new Random();
-	return textures[rand.nextInt(textures.length)];
+    public Texture getRandomTexture() {
+	return textures.getTexture((int) (Math.random() * textures.size()));
     }
 
     public int getNumTextures() {
-	return textures.length;
+	return textures.size();
     }
 
     public Texture getTexture(int index) {
-	if (index > textures.length) {
-	    throw new ArrayIndexOutOfBoundsException("Material only has " + textures.length + " textures");
-	}
-	return textures[index];
+	return textures.getTexture(index);
     }
-    
+
     public static TileType getTileType(int id) throws NoSuchTileException {
-	for(TileType mat : values()) {
-	    if(mat.id == id) {
+	for (TileType mat : values()) {
+	    if (mat.id == id) {
 		return mat;
 	    }
 	}

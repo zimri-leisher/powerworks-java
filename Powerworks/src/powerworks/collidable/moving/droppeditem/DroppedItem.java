@@ -3,6 +3,7 @@ package powerworks.collidable.moving.droppeditem;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.moving.Moving;
 import powerworks.collidable.moving.living.Player;
+import powerworks.graphics.ImageCollection;
 import powerworks.graphics.Texture;
 import powerworks.inventory.item.ItemType;
 import powerworks.main.Game;
@@ -12,7 +13,7 @@ public class DroppedItem extends Moving {
     ItemType type;
 
     public DroppedItem(ItemType type, int xPixel, int yPixel) {
-	super(xPixel, yPixel, type.getDroppedHitbox());
+	super(xPixel, yPixel, type.getDroppedHitbox(), ImageCollection.createCollection(type.getTexture()));
 	this.type = type;
 	Game.getLevel().getDroppedItems().add(this);
     }

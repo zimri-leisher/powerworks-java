@@ -20,7 +20,7 @@ public abstract class Task {
 	    Iterator<Task> i = scheduled.iterator();
 	    while (i.hasNext()) {
 		Task r = i.next();
-		if (!r.world || !(Setting.PAUSE_IN_ESCAPE_MENU.getValue() && Game.getEscapeMenuGUI().isOpen())) {
+		if (!r.world || !(Setting.PAUSE_IN_ESCAPE_MENU.getValue() && Game.isPaused())) {
 		    if (r.cancel)
 			i.remove();
 		    else {

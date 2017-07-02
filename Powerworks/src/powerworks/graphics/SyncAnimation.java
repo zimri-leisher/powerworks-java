@@ -30,7 +30,7 @@ public enum SyncAnimation implements Texture {
     
     private SyncAnimation(ImageCollection images, int[] frameTimes, boolean loop, double speed, boolean startOnLoad) {
 	this(images, frameTimes, loop, speed);
-	this.playing = true;
+	this.playing = startOnLoad;
     }
 
     public void setSpeed(double speed) {

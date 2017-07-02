@@ -1,10 +1,7 @@
 package powerworks.world.level;
 
 import java.awt.Rectangle;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -21,11 +18,13 @@ import powerworks.event.PlaceBlockEvent;
 import powerworks.exception.NoSuchTileException;
 import powerworks.inventory.item.ItemType;
 import powerworks.io.InputManager;
+import powerworks.io.MouseEvent;
 import powerworks.io.Statistic;
 import powerworks.main.Game;
 import powerworks.world.level.tile.Tile;
 import powerworks.world.level.tile.TileType;
 
+@SuppressWarnings("rawtypes")
 public abstract class Level {
 
     protected Random rand;
@@ -73,7 +72,7 @@ public abstract class Level {
 	return droppedItems;
     }
 
-    public Block[] getBlocks() {
+    public Block<?>[] getBlocks() {
 	return blocks;
     }
 
@@ -90,46 +89,7 @@ public abstract class Level {
 	}
     }
 
-    public int getWidthPixels() {
-	return width << 4;
-    }
-
-    public int getHeightPixels() {
-	return height << 4;
-    }
-
-    public int getHeightTiles() {
-	return height;
-    }
-
-    public int getWidthTiles() {
-	return width;
-    }
-
-    public void update() {
-	boolean show = Game.showUpdateTimes();
-	long time = 0;
-	if (show)
-	    time = System.nanoTime();
-	for (int y = 0; y < height; y++) {
-	    for (int x = 0; x < width; x++) {
-		int coord = x + y * width;
-		if (blocks[coord] != null && blocks[coord].requiresUpdate())
-		    blocks[x + y * width].update();
-	    }
-	}
-	if (show) {
-	    System.out.println("Updating blocks took:        " + (System.nanoTime() - time) + " ns");
-	    time = System.nanoTime();
-	}
-	for (Living e : livingEntities) {
-	    e.update();
-	}
-	for (DroppedItem item : droppedItems)
-	    item.update();
-	if (show) {
-	    System.out.println("Updating dropped items took: " + (System.nanoTime() - time) + " ns");
-	}
+    public void onMouseAction(MouseEvent e) {
     }
 
     public void render() {
@@ -180,8 +140,50 @@ public abstract class Level {
 	}
 	for (DroppedItem item : droppedItems.getIntersecting(xPixel0, yPixel0, xPixel1 - xPixel0, yPixel1 - yPixel0))
 	    item.render();
-	p.block.render();
+	p.getGhostBlock().render();
 	p.render();
+    }
+
+    public int getWidthPixels() {
+	return width << 4;
+    }
+
+    public int getHeightPixels() {
+	return height << 4;
+    }
+
+    public int getHeightTiles() {
+	return height;
+    }
+
+    public int getWidthTiles() {
+	return width;
+    }
+
+    public void update() {
+	boolean show = Game.showUpdateTimes();
+	long time = 0;
+	if (show)
+	    time = System.nanoTime();
+	for (int y = 0; y < height; y++) {
+	    for (int x = 0; x < width; x++) {
+		int coord = x + y * width;
+		if (blocks[coord] != null && blocks[coord].requiresUpdate())
+		    blocks[x + y * width].update();
+	    }
+	}
+	if (show) {
+	    System.out.println("Updating blocks took:        " + (System.nanoTime() - time) + " ns");
+	    time = System.nanoTime();
+	}
+	for (Living e : livingEntities) {
+	    e.update();
+	}
+	for (DroppedItem item : droppedItems)
+	    item.update();
+	if (show) {
+	    System.out.println("Updating dropped items took: " + (System.nanoTime() - time) + " ns");
+	}
     }
 
     /**
@@ -393,7 +395,7 @@ public abstract class Level {
 	id = Integer.parseInt(split[2].substring(1));
 	tiles[x + y * width] = new Tile(TileType.getTileType(id), y, x);
     }
-    
+
     public void unload() {
 	rand = null;
 	chunks = null;

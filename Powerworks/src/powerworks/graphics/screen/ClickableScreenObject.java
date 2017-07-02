@@ -81,7 +81,15 @@ public abstract class ClickableScreenObject extends ScreenObject {
     public abstract void onMouseEnter();
 
     public abstract void onMouseLeave();
-    
+
+    /**
+     * This is an example of the Adapter pattern wherein a parent abstract class
+     * provides concrete code for a little used method so as not to force child
+     * classes to always override it
+     */
+    public void onScrollOn(int scroll) {
+    }
+
     @Override
     public void remove() {
 	super.remove();

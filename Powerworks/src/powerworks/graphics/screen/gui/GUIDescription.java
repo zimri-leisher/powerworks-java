@@ -1,6 +1,5 @@
 package powerworks.graphics.screen.gui;
 
-import powerworks.graphics.Texture;
 import powerworks.graphics.screen.ScreenObject;
 import powerworks.io.MouseEvent;
 
@@ -21,11 +20,6 @@ public class GUIDescription extends GUIElement {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void update() {
     }
 
@@ -43,11 +37,12 @@ public class GUIDescription extends GUIElement {
     
     @Override
     public String toString() {
-	return "GUI description at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + " with text " + text + ", layer: " + layer + ", # of children: " + children.size();
+	return "GUI description " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + " with text " + text + ", layer: " + layer + ", # of children: " + children.size();
     }
     
     @Override
     public void remove() {
 	text = null;
     }
+
 }

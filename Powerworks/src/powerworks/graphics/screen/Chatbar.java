@@ -4,9 +4,11 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import powerworks.chat.ChatManager;
 import powerworks.data.Timer;
 import powerworks.graphics.Image;
-import powerworks.graphics.Texture;
+import powerworks.graphics.RenderParams;
+import powerworks.graphics.Renderer;
 import powerworks.main.Game;
 
 public class Chatbar extends ScreenObject {
@@ -17,7 +19,6 @@ public class Chatbar extends ScreenObject {
 
     protected Chatbar(int xPixel, int yPixel) {
 	super(xPixel, yPixel, 1);
-	open = true;
     }
 
     public void showUnderscore(boolean show) {
@@ -48,20 +49,17 @@ public class Chatbar extends ScreenObject {
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void render() {
-	Map<Timer, String> messages = Game.getChatManager().getMessagesWithTimers();
-	String text = Game.getChatManager().getCurrentText();
+	Renderer r = Game.getRenderEngine();
+	ChatManager c = Game.getChatManager();
+	Map<Timer, String> messages = c.getMessagesWithTimers();
+	String text = c.getCurrentText();
 	if (active) {
-	    Game.getRenderEngine().renderTexture(Image.CHAT_BAR, xPixel, yPixel, 1.0f, chatbarWidthScale, 1.0f, 0, 1.0f, true);
+	    r.renderTexture(Image.CHAT_BAR, xPixel, yPixel, new RenderParams().setWidthScale(chatbarWidthScale));
 	    String newText = text;
 	    if (underscoreShown)
 		newText += "_";
-	    Game.getRenderEngine().renderText(newText, xPixel + 2, yPixel + 7, 36);
+	    r.renderText(newText, xPixel + 2, yPixel + 7, 36);
 	}
 	Iterator<Entry<Timer, String>> i = messages.entrySet().iterator();
 	int d = messages.size();
@@ -70,8 +68,8 @@ public class Chatbar extends ScreenObject {
 	    try {
 		e = i.next();
 		int yPixelL = yPixel + d * Image.CHAT_BAR.getHeightPixels();
-		Game.getRenderEngine().renderTexture(Image.CHAT_BAR, xPixel, yPixelL, 1.0f, chatbarWidthScale, 1.0f, 0, (float) Math.min(1, 2 - (e.getKey().getCurrentUpdate() / 500.0f)), true);
-		Game.getRenderEngine().renderText(e.getValue(), xPixel + 2, yPixelL + 7, 36);
+		r.renderTexture(Image.CHAT_BAR, xPixel, yPixelL, new RenderParams().setWidthScale(chatbarWidthScale).setAlpha((float) Math.min(1, 2 - (e.getKey().getCurrentUpdate() / 500.0f))));
+		r.renderText(e.getValue(), xPixel + 2, yPixelL + 7, 36);
 		d--;
 	    } catch (ConcurrentModificationException e1) {
 	    }
@@ -95,4 +93,10 @@ public class Chatbar extends ScreenObject {
     public void onClose() {
 	
     }
+    
+    @Override
+    public String toString() {
+	return "Chatbar at " + xPixel + ", " + yPixel + " with id " + id;
+    }
+
 }

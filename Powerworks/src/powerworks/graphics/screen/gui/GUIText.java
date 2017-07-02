@@ -28,11 +28,6 @@ public class GUIText extends GUIElement {
 	this(parent, xPixel, yPixel, layer, text, 28);
     }
 
-    @Override
-    public Texture getTexture() {
-	return null;
-    }
-    
     public void setText(String text) {
 	this.text = text;
     }
@@ -76,12 +71,17 @@ public class GUIText extends GUIElement {
 
     @Override
     public String toString() {
-	return "GUI text at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", text: " + text;
+	return "GUI text " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", text: " + text;
     }
 
     @Override
     public void remove() {
 	super.remove();
 	text = null;
+    }
+
+    @Override
+    public void onScrollOn(int scroll) {
+	
     }
 }

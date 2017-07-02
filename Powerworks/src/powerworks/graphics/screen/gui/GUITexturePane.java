@@ -22,13 +22,8 @@ public class GUITexturePane extends GUIElement {
     }
 
     @Override
-    public Texture getTexture() {
-	return texture;
-    }
-
-    @Override
     public void render() {
-	Game.getRenderEngine().renderTexture(true, texture, xPixel, yPixel, widthPixels, heightPixels, 0, 1.0f, true);
+	Game.getRenderEngine().renderTexture(true, texture, xPixel, yPixel, widthPixels, heightPixels);
 	super.render();
     }
 
@@ -66,7 +61,7 @@ public class GUITexturePane extends GUIElement {
 
     @Override
     public String toString() {
-	return "GUI texture pane at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size()
+	return "GUI texture pane " + id + " at " + xPixel + ", " + yPixel + ", width pixels: " + widthPixels + ", height pixels: " + heightPixels + ", layer: " + layer + ", # of children: " + children.size()
 		+ ", texture of " + texture.toString();
     }
 
@@ -75,4 +70,5 @@ public class GUITexturePane extends GUIElement {
 	super.remove();
 	texture = null;
     }
+
 }

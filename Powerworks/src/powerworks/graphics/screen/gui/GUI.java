@@ -10,11 +10,6 @@ public abstract class GUI extends ScreenObject{
     }
 
     @Override
-    public Texture getTexture() {
-	return null;
-    }
-
-    @Override
     public void update() {
 	
     }

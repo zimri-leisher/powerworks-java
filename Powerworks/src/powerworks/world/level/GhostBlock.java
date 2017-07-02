@@ -2,6 +2,7 @@ package powerworks.world.level;
 
 import powerworks.block.BlockType;
 import powerworks.graphics.Image;
+import powerworks.graphics.RenderParams;
 import powerworks.graphics.Texture;
 import powerworks.main.Game;
 
@@ -65,16 +66,16 @@ public class GhostBlock extends LevelObject {
     @Override
     public void render() {
 	if (render) {
-	    Game.getRenderEngine().renderTexture(type.getTextures()[rotation], xPixel + type.getTextureXPixelOffset(), yPixel + type.getTextureYPixelOffset(), 1, 1, 1, rotation, 0.5f, false);
-	    Game.getRenderEngine().renderTexture(Image.ARROW, xPixel + type.getTextureXPixelOffset(), yPixel + type.getTextureYPixelOffset(), 1, 1, 1, rotation, 0.5f, false);
+	    Game.getRenderEngine().renderTexture(type.getTextures()[rotation], xPixel + type.getTextureXPixelOffset(), yPixel + type.getTextureYPixelOffset(), new RenderParams().setRotation(rotation).setAlpha(0.5f).setScreenObject(false));
+	    Game.getRenderEngine().renderTexture(Image.ARROW, xPixel + type.getTextureXPixelOffset(), yPixel + type.getTextureYPixelOffset(), new RenderParams().setRotation(rotation).setAlpha(0.5f).setScreenObject(false));
 	    if (placeable) {
 		float scaleWidth = (float) (type.getWidthTiles() << 4) / (float) Image.BLOCK_PLACEABLE.getWidthPixels();
 		float scaleHeight = (float) (type.getHeightTiles() << 4) / (float) Image.BLOCK_PLACEABLE.getHeightPixels();
-		Game.getRenderEngine().renderTexture(Image.BLOCK_PLACEABLE, xPixel, yPixel, 1, scaleWidth, scaleHeight, 0, 1f, false);
+		Game.getRenderEngine().renderTexture(Image.BLOCK_PLACEABLE, xPixel, yPixel, new RenderParams().setWidthScale(scaleWidth).setHeightScale(scaleHeight).setScreenObject(false));
 	    } else {
 		float scaleWidth = (float) (type.getWidthTiles() << 4) / (float) Image.BLOCK_NOT_PLACEABLE.getWidthPixels();
 		float scaleHeight = (float) (type.getHeightTiles() << 4) / (float) Image.BLOCK_NOT_PLACEABLE.getHeightPixels();
-		Game.getRenderEngine().renderTexture(Image.BLOCK_NOT_PLACEABLE, xPixel, yPixel, 1, scaleWidth, scaleHeight, 0, 1f, false);
+		Game.getRenderEngine().renderTexture(Image.BLOCK_NOT_PLACEABLE, xPixel, yPixel, new RenderParams().setWidthScale(scaleWidth).setHeightScale(scaleHeight).setScreenObject(false));
 	    }
 	}
     }

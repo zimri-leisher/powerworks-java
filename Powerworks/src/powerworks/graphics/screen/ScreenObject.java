@@ -52,11 +52,6 @@ public abstract class ScreenObject {
 	}
 
 	@Override
-	public Texture getTexture() {
-	    return null;
-	}
-
-	@Override
 	public void update() {
 	}
 
@@ -71,9 +66,19 @@ public abstract class ScreenObject {
 	@Override
 	public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
 	}
+
+	@Override
+	public String toString() {
+	    return "Default screen object parent";
+	}
+    }
+
+    public static void print() {
+	System.out.println(noParent.p(""));
     }
 
     private static ScreenObject noParent = new NoParent();
+    private static int nextId = 0;
 
     static NoParent getNoParentObject() {
 	return (NoParent) noParent;
@@ -88,6 +93,7 @@ public abstract class ScreenObject {
      */
     protected int relXPixel, relYPixel;
     protected int layer;
+    protected int id;
     protected ScreenObject parent;
     protected List<ScreenObject> children;
     protected boolean open = false;
@@ -113,7 +119,9 @@ public abstract class ScreenObject {
 	this.xPixel = xPixel + this.parent.xPixel;
 	this.yPixel = yPixel + this.parent.yPixel;
 	this.layer = layer;
+	id = nextId++;
 	Game.getScreenManager().getScreenObjects().add(this);
+	System.out.println("adding " + getClass().getSimpleName() + " to " + this.parent.getClass().getSimpleName());
 	this.parent.children.add(this);
     }
 
@@ -137,6 +145,7 @@ public abstract class ScreenObject {
 	this.parent.children.remove(this);
 	this.parent = parent;
 	parent.children.add(this);
+	System.out.println("moving " + getClass().getSimpleName() + " to " + this.parent.getClass().getSimpleName());
 	onParentMove();
     }
 
@@ -146,6 +155,13 @@ public abstract class ScreenObject {
 
     public List<ScreenObject> getChildren() {
 	return children;
+    }
+
+    /**
+     * A unique number that identifies this object
+     */
+    public int getID() {
+	return id;
     }
 
     public boolean isOpen() {
@@ -176,14 +192,11 @@ public abstract class ScreenObject {
     }
 
     /**
-     * Sets the layer for this.
-     * If doChildren is true it will change the layer for children relative to this layer change
+     * Sets the layer for this. If doChildren is true it will change the layer
+     * for children relative to this layer change
      **/
     public void setLayer(int layer, boolean doChildren) {
-	int diff = layer - this.layer;
 	this.layer = layer;
-	if (doChildren)
-	    children.forEach(obj -> setLayer(obj.layer + diff, true));
     }
 
     /**
@@ -288,11 +301,6 @@ public abstract class ScreenObject {
     }
 
     /**
-     * Should return null if it does not render through renderScreenObject
-     */
-    public abstract Texture getTexture();
-
-    /**
      * Rendering will not be called by any automatic means (i.e. <i> not </i>
      * thru Renderer) Automatically calls the render methods for all children of
      * this object in order of their layers
@@ -317,15 +325,27 @@ public abstract class ScreenObject {
 	children.forEach(ScreenObject::onParentMove);
     }
 
+    private String p(String space) {
+	String ret = space + "open: " + open + ", " + toString();
+	if (children.size() != 0)
+	    ret += ":";
+	System.out.println(ret);
+	space += "  ";
+	for (ScreenObject e : children) {
+	    ret += "\n" + space + e.p(space);
+	}
+	return ret;
+    }
+
     /**
      * Closes and frees up memory of this and all children
      */
     public void remove() {
 	close();
 	Game.getScreenManager().getScreenObjects().remove(this);
+	children.forEach(ScreenObject::remove);
 	children = null;
 	parent = null;
-	children.forEach(ScreenObject::remove);
     }
 
     /**
