@@ -1,213 +1,173 @@
 package powerworks.audio;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import com.adonax.audiocue.AudioCue;
+import com.adonax.audiocue.AudioCueInstanceEvent;
+import com.adonax.audiocue.AudioCueListener;
 import powerworks.main.Game;
+import powerworks.main.Setting;
 
 public class AudioManager {
 
-    static final AudioFormat FORMAT = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 1, 4, 44100, false);
-    static DataLine.Info outStreamInfo = new DataLine.Info(SourceDataLine.class, FORMAT);
-    static final int HEARING_THRESHOLD = 150;
-    static double soundVol = 1.0;
-    static double musicVol = 1.0;
-    static List<ActiveSound> sounds = new ArrayList<ActiveSound>();
-    static int nextID = 0;
-    static Thread audioOutputThread;
-    static SourceDataLine outStream;
-    static AudioOutputThread audioOutput;
+    private static double VOLUME_MULTIPLIER = 1;
+    private static int MAX_HEARING_DISTANCE_PIXELS = 100;
+    private static boolean SOUND_ENABLED = true;
+    private static boolean LEVEL_SOUNDS_PAUSED = false;
+    AudioHearer ears;
+    CopyOnWriteArrayList<SoundSource> levelSounds = new CopyOnWriteArrayList<SoundSource>();
+    CopyOnWriteArrayList<SoundSource> forceUpdate = new CopyOnWriteArrayList<SoundSource>();
+    Map<Sound, Integer> otherSounds = new HashMap<Sound, Integer>();
+    int lastXPixel, lastYPixel;
 
-    static class ActiveSound {
+    public void load() {
+	Sound.load();
+    }
 
-	boolean loop;
-	int loopIterations = -1;
-	int loopIteration = -1;
-	int xPixel, yPixel;
-	double vol;
-	long currentPos = 0;
-	long delayBetweenLoops = 0;
-	Sound sound;
-	int id = -1;
+    public void close() {
+	Sound.close();
+    }
 
-	private ActiveSound(Sound sound, int xPixel, int yPixel, double vol) {
-	    this(sound, xPixel, yPixel, vol, false, -1, -1);
-	}
+    public void closeSoundSources() {
+	levelSounds.forEach(SoundSource::close);
+    }
 
-	private ActiveSound(Sound s, int xPixel, int yPixel, double vol, boolean loop, int loopIterations, long delayBetweenLoops) {
-	    this.sound = s;
+    public class SoundSource {
+
+	int xPixel, yPixel, instance;
+	Sound s;
+	boolean loop, playing = true;
+
+	SoundSource(int xPixel, int yPixel, int instance, Sound s, boolean loop) {
 	    this.xPixel = xPixel;
 	    this.yPixel = yPixel;
-	    this.vol = vol;
+	    this.instance = instance;
 	    this.loop = loop;
-	    this.delayBetweenLoops = delayBetweenLoops;
-	    this.loopIterations = loopIterations;
-	    if (loop) {
-		id = nextID++;
-		loopIteration = 0;
-	    }
+	    this.s = s;
 	}
 
-	@Override
-	public String toString() {
-	    return sound + ", loop=" + loop + ", vol=" + vol + ", at " + xPixel + ", " + yPixel;
+	public void setXPixel(int xPixel) {
+	    this.xPixel = xPixel;
+	    forceUpdate();
 	}
-    }
 
-    public static Clip getClip(AudioInputStream input) {
-	DataLine.Info newInfo = new DataLine.Info(Clip.class, FORMAT);
-	Clip outMem = null;
-	try {
-	    outMem = (Clip) AudioSystem.getLine(newInfo);
-	    outMem.open(input);
-	} catch (LineUnavailableException | IOException e) {
-	    e.printStackTrace();
+	public void setYPixel(int yPixel) {
+	    this.yPixel = yPixel;
+	    forceUpdate();
 	}
-	if (!AudioSystem.isLineSupported(newInfo)) {
-	    Game.getLogger().error("Output audio line not supported");
-	}
-	return outMem;
-    }
-
-    @SuppressWarnings("resource")
-    public static AudioInputStream getAudioInputStream(URL url) {
-	AudioInputStream input = null;
-	try {
-	    input = AudioSystem.getAudioInputStream(url);
-	} catch (UnsupportedAudioFileException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	} catch (IOException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
-	AudioFormat format = input.getFormat();
-	AudioFormat mono16 = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 1, 2, 44100, false);
-	if (format.matches(FORMAT) || format.matches(mono16))
-	    return input;
-	else if (AudioSystem.isConversionSupported(FORMAT, format))
-	    input = AudioSystem.getAudioInputStream(FORMAT, input);
-	else if (AudioSystem.isConversionSupported(mono16, format))
-	    input = AudioSystem.getAudioInputStream(mono16, input);
-	else {
-	    Game.getLogger().error("Unable to convert audio to compatible format");
-	    try {
-		input.close();
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	    return null;
-	}
-	return input;
-    }
-
-    public AudioManager() {
-	try {
-	    outStream = (SourceDataLine) AudioSystem.getLine(outStreamInfo);
-	    if (!AudioSystem.isLineSupported(outStreamInfo)) {
-		Game.getLogger().error("Output audio line not supported");
-	    }
-	    outStream.open(FORMAT);
-	} catch (LineUnavailableException e) {
-	    e.printStackTrace();
-	}
-	audioOutput = new AudioOutputThread();
-	audioOutputThread = new Thread(audioOutput);
-	audioOutputThread.start();
-    }
-
-    public static void playMusic(Music m) {
-	if (outStream.isActive()) {
-	    outStream.stop();
-	    outStream.flush();
-	}
-	// TODO
-	outStream.start();
-    }
-    
-    static class AudioOutputThread implements Runnable {
-
-	private AtomicBoolean running;
-	private SourceDataLine out;
-	
 
 	public void stop() {
-	    running.set(false);
+	    s.stop(instance);
+	    playing = false;
 	}
 
-	public synchronized void write(byte[] data) {
+	public void start() {
+	    s.start(instance);
+	    playing = true;
 	}
 
-	@Override
-	public void run() {
-	    running.set(true);
-	    int bufSize = (int) FORMAT.getFrameRate() * FORMAT.getFrameSize();
-	    byte[] audioBuffer = new byte[bufSize];
-	    int maxFramesPerUpdate = (int) ((FORMAT.getFrameRate() / 1000) * 25);
-	    int numBytesRead = 0;
-	    double framesAccrued = 0;
-	    long lastUpdate = System.nanoTime();
-	    while (running.get()) {
-		long currTime = System.nanoTime();
-		double delta = currTime - lastUpdate;
-		double secDelta = (delta / 1000000000L);
-		framesAccrued += secDelta * FORMAT.getFrameRate();
-		int framesToRead = (int) framesAccrued;
-		int framesToSkip = 0;
-		if (framesToRead > maxFramesPerUpdate) {
-		    framesToSkip = framesToRead - maxFramesPerUpdate;
-		    framesToRead = maxFramesPerUpdate;
-		}
-		if (framesToSkip > 0) {
-		    int bytesToSkip = framesToSkip * FORMAT.getFrameSize();
-		}
-		if (framesToRead > 0) {
-			int bytesToRead = framesToRead *
-				FORMAT.getFrameSize();
-			int tmpBytesRead = 0; //this.mixer.read(audioBuffer,
-					//numBytesRead, bytesToRead);
-			numBytesRead += tmpBytesRead; //mark how many read
-			//fill rest with zeroes
-			int remaining = bytesToRead - tmpBytesRead;
-			for (int i = 0; i < remaining; i++) {
-				audioBuffer[numBytesRead + i] = 0;
-			}
-			numBytesRead += remaining; //mark zeroes read
+	public void close() {
+	    s.close(instance);
+	    levelSounds.remove(this);
+	    forceUpdate.remove(this);
+	    s = null;
+	}
+
+	private void forceUpdate() {
+	    forceUpdate.add(this);
+	}
+	
+	public boolean isLegitimate() {
+	    return instance != -1;
+	}
+    }
+    
+    public void enableSound(boolean e) {
+	SOUND_ENABLED = e;
+    }
+    
+    public boolean isSoundEnabled() {
+	return SOUND_ENABLED;
+    }
+
+    public void setAudioHearer(AudioHearer e) {
+	ears = e;
+    }
+
+    /**
+     * Plays a sound with full volume, no pan and no looping
+     */
+    public void play(Sound s) {
+	if (!SOUND_ENABLED)
+	    return;
+	int i = s.play();
+	if (i != -1)
+	    otherSounds.put(s, i);
+    }
+
+    public SoundSource play(Sound s, int xPixel, int yPixel, boolean loop) {
+	if (!SOUND_ENABLED)
+	    return null;
+	if (ears == null)
+	    return null;
+	SoundSource src = new SoundSource(xPixel, yPixel, s.play(
+		getVolume(xPixel, yPixel),
+		getPan(xPixel, yPixel), 1, (loop) ? -1 : 0), s, loop);
+	if (src.instance != -1)
+	    levelSounds.add(src);
+	return (src.instance != -1) ? src : null;
+    }
+
+    private double getVolume(int xPixel, int yPixel) {
+	double d = (Math.max(MAX_HEARING_DISTANCE_PIXELS - (Math.sqrt(Math.pow(xPixel - ears.getXPixel(), 2) + Math.pow(yPixel - ears.getYPixel(), 2))), 0) / MAX_HEARING_DISTANCE_PIXELS)
+		* VOLUME_MULTIPLIER;
+	return d;
+    }
+
+    private double getPan(int xPixel, int yPixel) {
+	return Math.max(Math.min((xPixel - ears.getXPixel()) / MAX_HEARING_DISTANCE_PIXELS, 1), -1);
+    }
+
+    public void update() {
+	if (!SOUND_ENABLED)
+	    return;
+	if (ears == null)
+	    return;
+	if (Setting.PAUSE_IN_ESCAPE_MENU.getValue() && Game.isPaused() && !LEVEL_SOUNDS_PAUSED) {
+	    LEVEL_SOUNDS_PAUSED = true;
+	    for (SoundSource s : levelSounds)
+		s.stop();
+	    return;
+	} else if(Setting.PAUSE_IN_ESCAPE_MENU.getValue() && !Game.isPaused() && LEVEL_SOUNDS_PAUSED) {
+	    LEVEL_SOUNDS_PAUSED = false;
+	    for(SoundSource s : levelSounds)
+		s.start();
+	}
+	int xPixel = ears.getXPixel();
+	int yPixel = ears.getYPixel();
+	if (lastXPixel != xPixel || lastYPixel != yPixel) {
+	    lastXPixel = xPixel;
+	    lastYPixel = yPixel;
+	    for (SoundSource s : levelSounds) {
+		double vol = getVolume(s.xPixel, s.yPixel);
+		if (vol != 0) {
+		    if (!s.playing)
+			s.start();
+		    s.s.setVolume(getVolume(s.xPixel, s.yPixel), s.instance);
+		    s.s.setPan(getPan(s.xPixel, s.yPixel), s.instance);
+		} else {
+		    if (s.playing)
+			s.stop();
 		}
 	    }
 	}
-    }
-
-    static byte[] getBytes(AudioInputStream stream) throws IOException {
-	int bufSize = (int) FORMAT.getSampleRate() * FORMAT.getChannels() * FORMAT.getFrameSize();
-	byte[] buf = new byte[bufSize];
-	ByteList list = new ByteList(bufSize);
-	int numRead = 0;
-	while ((numRead = stream.read(buf)) > -1) {
-	    for (int i = 0; i < numRead; i++) {
-		list.add(buf[i]);
-	    }
-	}
-	return list.asArray();
-    }
-
-    public static void close() {
-	outStream.close();
-	audioOutput.running.set(false);
-	try {
-	    audioOutputThread.join();
-	} catch (InterruptedException e) {
-	    e.printStackTrace();
+	for (SoundSource s : forceUpdate) {
+	    s.s.setVolume(getVolume(s.xPixel, s.yPixel), s.instance);
+	    s.s.setPan(getPan(s.xPixel, s.yPixel), s.instance);
+	    forceUpdate.remove(s);
 	}
     }
 }

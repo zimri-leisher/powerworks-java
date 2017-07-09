@@ -19,6 +19,7 @@ public enum State {
 	    Game.hud.close();
 	    Game.mainMenu.open();
 	    Game.paused = false;
+	    Game.world.unloadWorld();
 	    InputManager.setMapping(ControlMap.MAIN_MENU);
 	}
     }, new Task() {
@@ -33,16 +34,18 @@ public enum State {
 	public void run() {
 	    InputManager.setMapping(ControlMap.DEFAULT_INGAME);
 	    long seed = (new Random()).nextInt(4096);
-	    Game.worldManager = new WorldManager();
-	    Game.levelManager = new LevelManager();
-	    Game.world = Game.worldManager.genWorld(256, 256, seed);
+	    Game.world = new WorldManager();
+	    Game.level = new LevelManager();
+	    Game.world.setCurrentWorld(Game.world.genWorld(256, 256, seed));
 	    Game.player = new Player("Player");
+	    Game.player.addToLevel();
+	    Game.audio.setAudioHearer(Game.player);
 	    Game.render.setOffset(Game.player.getXPixel() - Game.width / 2, Game.player.getYPixel() - Game.height / 2);
 	    Game.allPlayerNames = new ArrayList<String>();
 	    Game.allPlayerNames.add(Game.player.getUsername());
 	    Game.allPlayers = new ArrayList<Player>();
 	    Game.allPlayers.add(Game.player);
-	    if(Game.hud == null) {
+	    if (Game.hud == null) {
 		Game.hud = new HUD();
 	    }
 	    Game.hud.open();
@@ -55,6 +58,7 @@ public enum State {
 	}
     });
 
+    private static State NEXT_STATE = null;
     Task on, off;
 
     private State(Task on, Task off) {
@@ -66,9 +70,16 @@ public enum State {
 
     // http://imgur.com/gallery/PRjAC
     public static void setState(State s) {
-	CURRENT_STATE.off.run();
-	CURRENT_STATE = s;
-	s.on.run();
+	NEXT_STATE = s;
+    }
+
+    public static void update() {
+	if (NEXT_STATE != null) {
+	    CURRENT_STATE.off.run();
+	    CURRENT_STATE = NEXT_STATE;
+	    NEXT_STATE.on.run();
+	    NEXT_STATE = null;
+	}
     }
 
     public static State getState() {

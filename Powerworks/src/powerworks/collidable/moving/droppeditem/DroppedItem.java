@@ -1,6 +1,6 @@
 package powerworks.collidable.moving.droppeditem;
 
-import powerworks.collidable.Collidable;
+import powerworks.collidable.Hitbox;
 import powerworks.collidable.moving.Moving;
 import powerworks.collidable.moving.living.Player;
 import powerworks.graphics.ImageCollection;
@@ -13,37 +13,44 @@ public class DroppedItem extends Moving {
     ItemType type;
 
     public DroppedItem(ItemType type, int xPixel, int yPixel) {
-	super(xPixel, yPixel, type.getDroppedHitbox(), ImageCollection.createCollection(type.getTexture()));
+	super(xPixel, yPixel, Hitbox.DROPPED_ITEM, ImageCollection.createCollection(type.getTexture()));
 	this.type = type;
-	Game.getLevel().getDroppedItems().add(this);
+    }
+    
+    @Override
+    public void addToLevel() {
+	super.addToLevel();
+	currentChunk.getDroppedItems().add(this);
+    }
+    
+    public ItemType getType() {
+	return type;
     }
 
     @Override
     public Texture getTexture() {
 	return type.getTexture();
     }
-
-    @Override
-    public void render() {
-	Game.getRenderEngine().renderLevelObject(this);
-	if(Game.showHitboxes())
-	    renderHitbox();
+    
+    public float getScale() {
+	return 0.5f;
     }
     
     @Override
+    public void renderHitbox() {
+	super.renderHitbox(0x00474F);
+    }
+
+    @Override
     protected boolean getCollision(int moveX, int moveY) {
-	for(Collidable col : Game.getLevel().getCollidables().getIntersecting(xPixel + hitbox.getXStart() + moveX, yPixel + hitbox.getYStart() + moveY, hitbox.getWidthPixels(), hitbox.getHeightPixels())) {
-	    if(!(col instanceof Player) && col != this)
-		return true;
-	}
-	return false;
+	return Game.getLevel().anyCollidableIntersecting(hitbox, moveX + xPixel, moveY + yPixel, c -> c != this && !(c instanceof Player));
     }
 
     @Override
     public void remove() {
 	super.remove();
 	type = null;
-	Game.getLevel().getDroppedItems().remove(this);
+	currentChunk.getDroppedItems().remove(this);
     }
     
     @Override

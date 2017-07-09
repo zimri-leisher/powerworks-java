@@ -1,9 +1,9 @@
 package powerworks.collidable.moving;
 
-import powerworks.block.Block;
-import powerworks.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.Collidable;
 import powerworks.collidable.Hitbox;
+import powerworks.collidable.block.Block;
+import powerworks.collidable.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.moving.living.Player;
 import powerworks.data.SpatialOrganizer;
 import powerworks.event.EventManager;
@@ -11,6 +11,7 @@ import powerworks.event.ViewMoveEvent;
 import powerworks.graphics.ImageCollection;
 import powerworks.graphics.Texture;
 import powerworks.main.Game;
+import powerworks.world.level.Chunk;
 
 public abstract class Moving extends Collidable {
 
@@ -25,16 +26,17 @@ public abstract class Moving extends Collidable {
     public Moving(int xPixel, int yPixel, Hitbox hitbox, ImageCollection textures) {
 	super(xPixel, yPixel, hitbox);
 	this.textures = textures;
-	Game.getLevel().getMovingEntities().add(this);
+    }
+    
+    @Override
+    public void addToLevel() {
+	super.addToLevel();
+	System.out.println(currentChunk);
+	currentChunk.getMovingEntities().add(this);
     }
 
     protected boolean getCollision(int moveX, int moveY) {
-	for (Collidable col : Game.getLevel().getCollidables().getIntersecting(xPixel + moveX + hitbox.getXStart(), yPixel + moveY + hitbox.getYStart(), hitbox.getWidthPixels(),
-		hitbox.getHeightPixels())) {
-	    if (col != this)
-		return true;
-	}
-	return false;
+	return Game.getLevel().anyCollidableIntersecting(hitbox, moveX + xPixel, moveY + yPixel, c -> c != this);
     }
 
     @Override
@@ -78,14 +80,19 @@ public abstract class Moving extends Collidable {
 		yPixel += velY;
 	    }
 	}
-	if (pXPixel != xPixel || pYPixel != yPixel)
+	if (pXPixel != xPixel || pYPixel != yPixel) {
 	    hasMoved = true;
-	else
+	    onMove(pXPixel, pYPixel);
+	} else
 	    hasMoved = false;
 	velX /= AIR_DRAG;
 	velY /= AIR_DRAG;
     }
-
+    
+    protected void onMove(int pXPixel, int pYPixel) {
+	currentChunk = Game.getLevel().updateChunk(this);
+    }
+    
     @Override
     public Texture getTexture() {
 	return textures.getTexture(dir);
@@ -142,9 +149,9 @@ public abstract class Moving extends Collidable {
     public void remove() {
 	super.remove();
 	textures = null;
-	Game.getLevel().getMovingEntities().remove(this);
+	currentChunk.getMovingEntities().remove(this);
     }
-    
+
     @Override
     public String toString() {
 	return "Moving object at " + xPixel + ", " + yPixel + ", with x velocity " + velX + " and y velocity " + velY + ", direction of " + dir;

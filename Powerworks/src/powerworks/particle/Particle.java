@@ -9,17 +9,11 @@ public class Particle extends LevelObject{
     
     protected Particle(int xPixel, int yPixel) {
 	super(xPixel, yPixel);
-	// TODO Auto-generated constructor stub
     }
 
     @Override
     public Texture getTexture() {
 	return null;
-    }
-
-    @Override
-    public void render() {
-	
     }
 
     @Override
@@ -31,4 +25,5 @@ public class Particle extends LevelObject{
     public void remove() {
 	
     }
+
 }

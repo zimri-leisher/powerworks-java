@@ -25,6 +25,7 @@ public class Image implements Texture {
     public static final Image IRON_ORE_ITEM = new Image("/textures/screen/item/iron_ore_raw.png");
     public static final Image CONVEYOR_BELT_ITEM = new Image("/textures/screen/item/conveyor_belt.png");
     public static final Image IRON_INGOT = new Image("/textures/screen/item/iron_ingot.png");
+    public static final Image MAIN_MENU_LOGO = new Image("/textures/misc/main_menu_logo.png");
     public static final Image GUI_DEFAULT_CORNER_TOP_RIGHT = new Image("/textures/screen/gui/default/top_right_corner.png");
     public static final Image GUI_DEFAULT_CORNER_TOP_LEFT = new Image("/textures/screen/gui/default/top_left_corner.png");
     public static final Image GUI_DEFAULT_CORNER_BOTTOM_RIGHT = new Image("/textures/screen/gui/default/bottom_right_corner.png");

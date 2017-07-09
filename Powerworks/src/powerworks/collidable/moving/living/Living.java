@@ -33,7 +33,12 @@ public abstract class Living extends Moving {
 	if (type.shouldCreateInvGUI()) {
 	    invGUI = new InventoryGUI(inv, Image.Utils.getImage(Image.Utils.genRectangle(type.getInvWidth() * 18 + 10, type.getInvHeight() * 18 + 10)), type.getName());
 	}
-	Game.getLevel().getLivingEntities().add(this);
+    }
+    
+    @Override
+    public void addToLevel() {
+	super.addToLevel();
+	currentChunk.getLivingEntities().add(this);
     }
 
     public Inventory getInventory() {
@@ -41,11 +46,11 @@ public abstract class Living extends Moving {
     }
 
     public AI getAI() {
-	return type.ai;
+	return type.getAI();
     }
 
     public InventoryGUI getInvGUI() {
-	return (invGUI == null) ? invGUI = new InventoryGUI(inv, Image.Utils.getImage(Image.Utils.genRectangle(type.invWidth * 18 + 20, type.invHeight * 18 + 20)), type.name) : invGUI;
+	return (invGUI == null) ? invGUI = new InventoryGUI(inv, Image.Utils.getImage(Image.Utils.genRectangle(type.getInvWidth() * 18 + 20, type.getInvHeight() * 18 + 20)), type.getName()) : invGUI;
     }
 
     public Equipment getEquipment() {
@@ -70,11 +75,12 @@ public abstract class Living extends Moving {
 	equips.unload();
 	equips = null;
 	type = null;
+	currentChunk.getLivingEntities().remove(this);
     }
 
     @Override
     public String toString() {
-	return "Living object at " + xPixel + ", " + yPixel + ", with a health value of " + health + "/" + type.health + ", with equipment "
-		+ equips.toString() + " and AI " + type.ai.toString();
+	return "Living object at " + xPixel + ", " + yPixel + ", with a health value of " + health + "/" + type.getMaxHealth() + ", with equipment "
+		+ equips.toString() + " and AI " + getAI().toString();
     }
 }

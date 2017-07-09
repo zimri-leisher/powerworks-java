@@ -1,6 +1,6 @@
 package powerworks.inventory.item;
 
-import powerworks.block.BlockType;
+import powerworks.collidable.block.BlockType;
 import powerworks.graphics.Texture;
 
 public class Item {

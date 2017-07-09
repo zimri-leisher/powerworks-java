@@ -5,47 +5,37 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import powerworks.block.Block;
-import powerworks.block.BlockType;
+import java.util.function.Predicate;
 import powerworks.collidable.Collidable;
+import powerworks.collidable.Hitbox;
+import powerworks.collidable.block.Block;
+import powerworks.collidable.block.BlockType;
 import powerworks.collidable.moving.Moving;
 import powerworks.collidable.moving.droppeditem.DroppedItem;
 import powerworks.collidable.moving.living.Living;
 import powerworks.collidable.moving.living.Player;
-import powerworks.data.SpatialOrganizer;
-import powerworks.event.EventManager;
-import powerworks.event.PlaceBlockEvent;
-import powerworks.exception.NoSuchTileException;
 import powerworks.inventory.item.ItemType;
-import powerworks.io.InputManager;
-import powerworks.io.MouseEvent;
-import powerworks.io.Statistic;
 import powerworks.main.Game;
 import powerworks.world.level.tile.Tile;
 import powerworks.world.level.tile.TileType;
 
-@SuppressWarnings("rawtypes")
 public abstract class Level {
 
     protected Random rand;
     protected int width;
     protected int height;
+    protected int widthChunks;
+    protected int heightChunks;
     protected Chunk[] chunks;
-    protected Tile[] tiles;
-    protected Block[] blocks;
-    protected SpatialOrganizer<Collidable> collidables = new SpatialOrganizer<Collidable>();
-    protected SpatialOrganizer<DroppedItem> droppedItems = new SpatialOrganizer<DroppedItem>();
-    protected SpatialOrganizer<Living> livingEntities = new SpatialOrganizer<Living>();
-    protected SpatialOrganizer<Moving> movingEntities = new SpatialOrganizer<Moving>();
     protected String path = null;
     protected long seed;
 
     protected Level(int width, int height, long seed) {
 	this.width = width;
 	this.height = height;
-	tiles = new Tile[width * height];
-	blocks = new Block[width * height];
-	chunks = new Chunk[blocks.length / Chunk.CHUNK_SIZE];
+	widthChunks = width / Chunk.CHUNK_SIZE;
+	heightChunks = height / Chunk.CHUNK_SIZE;
+	chunks = new Chunk[widthChunks * heightChunks];
 	this.seed = seed;
 	rand = new Random(seed);
 	generateLevel();
@@ -56,48 +46,14 @@ public abstract class Level {
      */
     protected abstract void generateLevel();
 
-    public SpatialOrganizer<Moving> getMovingEntities() {
-	return movingEntities;
-    }
+    protected abstract Chunk generateChunk(int xChunk, int yChunk);
 
-    public SpatialOrganizer<Living> getLivingEntities() {
-	return livingEntities;
-    }
-
-    public SpatialOrganizer<Collidable> getCollidables() {
-	return collidables;
-    }
-
-    public SpatialOrganizer<DroppedItem> getDroppedItems() {
-	return droppedItems;
-    }
-
-    public Block<?>[] getBlocks() {
-	return blocks;
-    }
-
-    public Tile[] getTiles() {
-	return tiles;
-    }
-
-    public void saveLevel() {
-	if (path != null) {
-	    File fileCheck = new File(path);
-	    if (!fileCheck.exists()) {
-		fileCheck.mkdirs();
-	    }
-	}
-    }
-
-    public void onMouseAction(MouseEvent e) {
+    public String getPath() {
+	return path;
     }
 
     public void render() {
-	boolean show = Game.showRenderTimes();
 	Player p = Game.getMainPlayer();
-	long time = 0;
-	if (show)
-	    time = System.nanoTime();
 	Rectangle bounds = Game.getRenderEngine().getCurrentViewArea();
 	int xPixel0 = (int) bounds.getMinX();
 	int xPixel1 = (int) bounds.getMaxX();
@@ -111,37 +67,179 @@ public abstract class Level {
 	int maxX = Math.min(xTile1, width);
 	int minY = Math.max(yTile0, 0);
 	int minX = Math.max(xTile0, 0);
-	if (show) {
-	    long diff = System.nanoTime() - time;
-	    Game.getLogger().p(diff);
-	    Game.getLogger().addAndLog(Statistic.CALC_RENDER_OFFSETS, (int) diff, true);
-	    time = System.nanoTime();
-	}
 	for (int y = minY; y < maxY; y++) {
-	    int yc = y * width;
 	    for (int x = minX; x < maxX; x++) {
-		if (!(x < 0 || y < 0 || x >= width || y >= height)) {
-		    int coord = x + yc;
-		    tiles[coord].render();
+		Chunk c = getAndLoadChunkAtTile(x, y);
+		c.getTile(x - c.getXTile(), y - c.getYTile()).render();
+	    }
+	}
+	for (int y = maxY; y >= minY; y--) {
+	    for (int x = minX; x < maxX; x++) {
+		Chunk c = getAndLoadChunkAtTile(x, y);
+		Block b = c.getBlock(x - c.getXTile(), y - c.getYTile());
+		if (b != null && b.getXTile() == x && b.getYTile() == y) {
+		    b.render();
 		}
 	    }
 	}
-	int playerYTile = ((p.getYPixel() + p.getTexture().getHeightPixels()) >> 4);
-	for (int y = maxY; y >= minY; y--) {
-	    int yc = y * width;
-	    for (int x = minX; x < maxX; x++) {
-		if (!(x < 0 || y < 0 || x >= width || y >= height)) {
-		    int coord = x + yc;
-		    if (blocks[coord] != null) {
-			blocks[coord].render();
+	for (int y = minY; y < maxY; y += Chunk.CHUNK_SIZE) {
+	    for (int x = minX; x < maxX; x += Chunk.CHUNK_SIZE) {
+		Chunk c = getAndLoadChunkAtTile(x, y);
+		c.getDroppedItems().getIntersecting(xPixel0, yPixel0, xPixel1, yPixel1).forEach(DroppedItem::render);
+	    }
+	}
+	p.getGhostBlock().render();
+	p.render();
+    }
+
+    public void update() {
+	for (int y = 0; y < heightChunks; y++) {
+	    for (int x = 0; x < widthChunks; x++) {
+		Chunk c = chunks[x + y * widthChunks];
+		if (c != null) {
+		    if (c.keepLoaded())
+			c.update();
+		    else {
+			// unloadChunk(x, y);
 		    }
 		}
 	    }
 	}
-	for (DroppedItem item : droppedItems.getIntersecting(xPixel0, yPixel0, xPixel1 - xPixel0, yPixel1 - yPixel0))
-	    item.render();
-	p.getGhostBlock().render();
-	p.render();
+    }
+
+    public List<Chunk> getChunksInBoundaryTiles(int xTile, int yTile, int widthTiles, int heightTiles) {
+	List<Chunk> returnObj = new ArrayList<Chunk>();
+	for (int yC = yTile >> 3; yC < ((heightTiles + yTile) >> 3) + 1; yC++) {
+	    for (int xC = xTile >> 3; xC < ((widthTiles + xTile) >> 3) + 1; xC++) {
+		if (xC < 0 || yC < 0 || xC >= widthChunks || yC >= heightChunks)
+		    break;
+		returnObj.add(getAndLoadChunk(xC, yC));
+	    }
+	}
+	return returnObj;
+    }
+
+    public List<Chunk> getChunksInBoundaryPixels(int xPixel, int yPixel, int widthPixels, int heightPixels) {
+	return getChunksInBoundaryTiles(xPixel >> 4, yPixel >> 4, (widthPixels >> 4) + 1, (heightPixels >> 4) + 1);
+    }
+
+    public Chunk getChunkAtPixel(int xPixel, int yPixel) {
+	return getChunkAtTile(xPixel >> 4, yPixel >> 4);
+    }
+
+    public Chunk getChunkAtTile(int xTile, int yTile) {
+	return getChunk(xTile >> 3, yTile >> 3);
+    }
+
+    public Chunk getChunk(int xChunk, int yChunk) {
+	return chunks[xChunk + yChunk * widthChunks];
+    }
+
+    public Chunk getChunk(int index) {
+	return chunks[index];
+    }
+
+    public Chunk[] getChunks() {
+	return chunks;
+    }
+
+    public void unloadChunk(int xChunk, int yChunk) {
+	int coord = xChunk + yChunk * widthChunks;
+	chunks[coord].unload();
+	chunks[coord] = null;
+    }
+
+    public Chunk loadChunkAtPixel(int xPixel, int yPixel) {
+	return loadChunkAtTile(xPixel >> 4, yPixel >> 4);
+    }
+
+    public Chunk loadChunkAtTile(int xTile, int yTile) {
+	return loadChunk(xTile >> 3, yTile >> 3);
+    }
+
+    public Chunk loadChunk(int xChunk, int yChunk) {
+	Chunk c = generateChunk(xChunk, yChunk);
+	chunks[xChunk + yChunk * widthChunks] = c;
+	return c;
+    }
+
+    public Chunk getAndLoadChunkAtPixel(int xPixel, int yPixel) {
+	return getAndLoadChunkAtTile(xPixel >> 4, yPixel >> 4);
+    }
+
+    public Chunk getAndLoadChunkAtTile(int xTile, int yTile) {
+	return getAndLoadChunk(xTile >> 3, yTile >> 3);
+    }
+
+    /**
+     * Loads the chunk if it is necessary
+     */
+    public Chunk getAndLoadChunk(int xChunk, int yChunk) {
+	Chunk c = getChunk(xChunk, yChunk);
+	if (c == null)
+	    return loadChunk(xChunk, yChunk);
+	return c;
+    }
+
+    public Tile getTileFromPixel(int xPixel, int yPixel) {
+	int xTile = xPixel >> 4;
+	int yTile = yPixel >> 4;
+	return getTileFromTile(xTile, yTile);
+    }
+
+    public Tile getTileFromTile(int xTile, int yTile) {
+	if (!(xTile < 0 || yTile < 0 || xTile >= width || yTile >= height)) {
+	    Chunk c = getAndLoadChunkAtTile(xTile, yTile);
+	    return c.getTile(xTile - c.getXTile(), yTile - c.getYTile());
+	}
+	return null;
+    }
+
+    public Block getBlockFromPixel(int xPixel, int yPixel) {
+	int xTile = xPixel >> 4;
+	int yTile = yPixel >> 4;
+	return getBlockFromTile(xTile, yTile);
+    }
+
+    public Block getBlockFromTile(int xTile, int yTile) {
+	if (!(xTile < 0 || yTile < 0 || xTile >= width || yTile >= height)) {
+	    Chunk c = getAndLoadChunkAtTile(xTile, yTile);
+	    return c.getBlock(xTile - c.getXTile(), yTile - c.getYTile());
+	}
+	return null;
+    }
+
+    private void setTile(Tile t, int xTile, int yTile) {
+	Chunk c = getAndLoadChunkAtTile(xTile, yTile);
+	c.setTile(t, xTile - c.getXTile(), yTile - c.getYTile());
+    }
+
+    private void setBlock(Block b, int xTile, int yTile) {
+	Chunk c = getAndLoadChunkAtTile(xTile, yTile);
+	int xC = xTile - c.getXTile();
+	int yC = yTile - c.getYTile();
+	Block t = c.getBlock(xC, yC);
+	if (t != null)
+	    t.remove();
+	c.setBlock(b, xC, yC);
+    }
+
+    public void removeBlock(Block b) {
+	int xTile = b.getXTile();
+	int yTile = b.getYTile();
+	Chunk c = getAndLoadChunkAtTile(xTile, yTile);
+	for (int y = yTile; y < yTile + b.getHeightTiles(); y++) {
+	    for (int x = xTile; x < xTile + b.getWidthTiles(); x++) {
+		c.deleteBlock(x - c.getXTile(), y - c.getYTile());
+	    }
+	}
+    }
+
+    public void removeTile(Tile t) {
+	int xTile = t.getXTile();
+	int yTile = t.getYTile();
+	Chunk c = getAndLoadChunk(xTile, yTile);
+	c.deleteTile(xTile - c.getXTile(), yTile - c.getYTile());
     }
 
     public int getWidthPixels() {
@@ -160,32 +258,6 @@ public abstract class Level {
 	return width;
     }
 
-    public void update() {
-	boolean show = Game.showUpdateTimes();
-	long time = 0;
-	if (show)
-	    time = System.nanoTime();
-	for (int y = 0; y < height; y++) {
-	    for (int x = 0; x < width; x++) {
-		int coord = x + y * width;
-		if (blocks[coord] != null && blocks[coord].requiresUpdate())
-		    blocks[x + y * width].update();
-	    }
-	}
-	if (show) {
-	    System.out.println("Updating blocks took:        " + (System.nanoTime() - time) + " ns");
-	    time = System.nanoTime();
-	}
-	for (Living e : livingEntities) {
-	    e.update();
-	}
-	for (DroppedItem item : droppedItems)
-	    item.update();
-	if (show) {
-	    System.out.println("Updating dropped items took: " + (System.nanoTime() - time) + " ns");
-	}
-    }
-
     /**
      * Adds a DroppedItem object to the level if it is able to fit
      * 
@@ -199,7 +271,7 @@ public abstract class Level {
      */
     public boolean tryDropItem(ItemType type, int xPixel, int yPixel) {
 	if (spaceForDroppedItem(type, xPixel, yPixel)) {
-	    new DroppedItem(type, xPixel, yPixel);
+	    new DroppedItem(type, xPixel, yPixel).addToLevel();
 	    return true;
 	}
 	return false;
@@ -216,8 +288,8 @@ public abstract class Level {
      *            the y pixel to check at
      * @return true if there is space, false otherwise
      */
-    private boolean spaceForDroppedItem(ItemType type, int xPixel, int yPixel) {
-	return !(collidables.anyIntersecting(xPixel, yPixel, type.getDroppedHitbox().getWidthPixels(), type.getDroppedHitbox().getHeightPixels()));
+    public boolean spaceForDroppedItem(ItemType type, int xPixel, int yPixel) {
+	return !anyCollidableIntersecting(Hitbox.DROPPED_ITEM, xPixel, yPixel, c -> !(c instanceof Player));
     }
 
     /**
@@ -235,39 +307,17 @@ public abstract class Level {
 	if (spaceForBlock(type, xTile, yTile)) {
 	    Block block = type.createInstance(xTile, yTile);
 	    block.setRotation(rotation);
+	    block.addToLevel();
 	    for (int y = 0; y < type.getHeightTiles(); y++) {
 		int yc = y + yTile;
 		for (int x = 0; x < type.getWidthTiles(); x++) {
 		    int xc = x + xTile;
-		    blocks[xc + yc * width] = block;
-		    EventManager.sendEvent(new PlaceBlockEvent(block, xc, yc));
+		    setBlock(block, xc, yc);
 		}
 	    }
 	    return true;
 	}
 	return false;
-    }
-
-    public void setBlock(BlockType type, int xTile, int yTile) {
-	blocks[xTile + yTile * width] = type.createInstance(xTile, yTile);
-    }
-
-    public List<Block> getAdjacentBlocks(Block b) {
-	int xTile = b.getXTile();
-	int yTile = b.getYTile();
-	List<Block> adj = new ArrayList<Block>();
-	for (int y = -1; y < 2; y++) {
-	    int ya = y + yTile;
-	    for (int x = -1; x < 2; x++) {
-		int xa = x + xTile;
-		if (xa < 0 || ya < 0 || xa >= width || ya >= height)
-		    break;
-		Block n = blocks[xa + ya * width];
-		if (n != null)
-		    adj.add(blocks[xa + ya * width]);
-	    }
-	}
-	return adj;
     }
 
     /**
@@ -291,24 +341,37 @@ public abstract class Level {
 		}
 	    }
 	}
+	if (type.getHitbox() == Hitbox.NONE)
+	    return true;
 	int xPixel = xTile << 4;
 	int yPixel = yTile << 4;
-	return !(collidables.anyIntersecting(xPixel, yPixel, type.getHitbox().getWidthPixels(), type.getHitbox().getHeightPixels()));
+	return !(anyCollidableIntersecting(type.getHitbox(), xPixel, yPixel));
+    }
+    
+    public void replaceTile(int xTile, int yTile, TileType type) {
+	setTile(type.createInstance(xTile, yTile), xTile, yTile);
     }
 
     /**
-     * Replaces any block at the location with the new BlockType
-     * 
-     * @param xTile
-     *            the x tile to replace
-     * @param yTile
-     *            the y tile to replace
-     * @param typeToReplaceWith
-     *            the BlockType to replace with
+     * Adjusts the chunk of the moving entity appropriately
      */
-    public void replaceBlock(int xTile, int yTile, BlockType typeToReplaceWith) {
-	blocks[xTile + yTile * width].remove();
-	blocks[xTile + yTile * width] = typeToReplaceWith.createInstance(xTile, yTile);
+    public Chunk updateChunk(Moving m) {
+	Chunk last = m.getCurrentChunk();
+	Chunk current = getAndLoadChunkAtPixel(m.getXPixel(), m.getYPixel());
+	if(last != current) {
+	    removeMovingFromChunk(last, m);
+	    m.addToLevel();
+	}
+	return current;
+    }
+
+    private void removeMovingFromChunk(Chunk c, Moving m) {
+	c.getCollidables().remove(m);
+	c.getMovingEntities().remove(m);
+	if (m instanceof Living)
+	    c.getLivingEntities().remove((Living) m);
+	else if (m instanceof DroppedItem)
+	    c.getDroppedItems().remove((DroppedItem) m);
     }
 
     /**
@@ -323,88 +386,68 @@ public abstract class Level {
      * @return the list of DroppedItems that are within the radius
      */
     public List<DroppedItem> getDroppedItems(int xPixel, int yPixel, int radius) {
-	return droppedItems.getIntersecting(xPixel - radius, yPixel - radius, radius * 2, radius * 2);
+	List<DroppedItem> items = new ArrayList<DroppedItem>();
+	for (Chunk c : getChunksInBoundaryPixels(xPixel - radius, yPixel - radius, radius * 2, radius * 2)) {
+	    items.addAll(c.getDroppedItems().getIntersecting(xPixel - radius, yPixel - radius, radius * 2, radius * 2));
+	}
+	return items;
     }
 
-    /**
-     * Gets a Tile object from those existing already
-     * 
-     * @param xPixel
-     *            the x pixel to look at
-     * @param yPixel
-     *            the y pixel to look at
-     * @return the Tile object, Tile.voidTile if there is not one at the
-     *         location
-     */
-    public Tile getTileFromPixel(int xPixel, int yPixel) {
-	int xTile = xPixel >> 4;
-	int yTile = yPixel >> 4;
-	return getTileFromTile(xTile, yTile);
+    public List<Collidable> getIntersectingCollidables(int xPixel, int yPixel, int widthPixels, int heightPixels) {
+	List<Collidable> cols = new ArrayList<Collidable>();
+	for (Chunk c : getChunksInBoundaryPixels(xPixel, yPixel, widthPixels, heightPixels)) {
+	    cols.addAll(c.collidables.getIntersecting(xPixel, yPixel, widthPixels, heightPixels));
+	}
+	return cols;
     }
 
-    /**
-     * Gets a Tile object from those existing already
-     * 
-     * @param xTile
-     *            the x tile to look at
-     * @param yTile
-     *            the y tile to look at
-     * @return the Tile object
-     */
-    public Tile getTileFromTile(int xTile, int yTile) {
-	if (!(xTile < 0 || yTile < 0 || xTile >= width || yTile >= height))
-	    return tiles[(xTile) + (yTile) * width];
-	return null;
+    public List<Collidable> getIntersectingCollidables(int xPixel, int yPixel, int widthPixels, int heightPixels, Predicate<Collidable> condition) {
+	List<Collidable> cols = new ArrayList<Collidable>();
+	for (Chunk c : getChunksInBoundaryPixels(xPixel, yPixel, widthPixels, heightPixels)) {
+	    cols.addAll(c.collidables.getIntersecting(xPixel, yPixel, widthPixels, heightPixels, condition));
+	}
+	return cols;
     }
 
-    /**
-     * Gets a Block object from those existing already
-     * 
-     * @param xPixel
-     *            the x pixel to look at
-     * @param yPixel
-     *            the y pixel to look at
-     * @return the Block object, null if there is none at the location
-     */
-    public Block getBlockFromPixel(int xPixel, int yPixel) {
-	int xTile = xPixel >> 4;
-	int yTile = yPixel >> 4;
-	return getBlockFromTile(xTile, yTile);
+    public boolean anyCollidableIntersecting(int xPixel, int yPixel, int widthPixels, int heightPixels) {
+	for (Chunk c : getChunksInBoundaryPixels(xPixel, yPixel, widthPixels, heightPixels)) {
+	    if (c.collidables.anyIntersecting(xPixel, yPixel, widthPixels, heightPixels))
+		return true;
+	}
+	return false;
     }
 
-    /**
-     * Gets a Block object from those existing already
-     * 
-     * @param xTile
-     *            the x tile to look at
-     * @param yTile
-     *            the y tile to look at
-     * @return the Block object, null if there is none at the location
-     */
-    public Block getBlockFromTile(int xTile, int yTile) {
-	if (!(xTile < 0 || yTile < 0 || xTile >= width || yTile >= height))
-	    return blocks[xTile + yTile * width];
-	return null;
+    public boolean anyCollidableIntersecting(int xPixel, int yPixel, int widthPixels, int heightPixels, Predicate<Collidable> condition) {
+	for (Chunk c : getChunksInBoundaryPixels(xPixel, yPixel, widthPixels, heightPixels)) {
+	    if (c.collidables.anyIntersecting(xPixel, yPixel, widthPixels, heightPixels, condition))
+		return true;
+	}
+	return false;
     }
 
-    private void loadTileFromString(String tile) throws NoSuchTileException {
-	int x, y, id;
-	String[] split = tile.split(" ");
-	x = Integer.parseInt(split[0].substring(1));
-	y = Integer.parseInt(split[1].substring(1));
-	id = Integer.parseInt(split[2].substring(1));
-	tiles[x + y * width] = new Tile(TileType.getTileType(id), y, x);
+    public boolean anyCollidableIntersecting(Hitbox h, int xPixel, int yPixel) {
+	return anyCollidableIntersecting(xPixel + h.getXStart(), yPixel + h.getYStart(), h.getWidthPixels(), h.getHeightPixels());
+    }
+
+    public boolean anyCollidableIntersecting(Hitbox h, int xPixel, int yPixel, Predicate<Collidable> condition) {
+	return anyCollidableIntersecting(xPixel + h.getXStart(), yPixel + h.getYStart(), h.getWidthPixels(), h.getHeightPixels(), condition);
+    }
+
+    public void saveLevel() {
+	if (path != null) {
+	    File fileCheck = new File(path);
+	    if (!fileCheck.exists()) {
+		fileCheck.mkdirs();
+	    }
+	}
     }
 
     public void unload() {
+	Game.getAudioManager().closeSoundSources();
 	rand = null;
+	for (Chunk c : chunks)
+	    c.unload();
 	chunks = null;
-	tiles = null;
-	blocks = null;
-	collidables = null;
-	droppedItems = null;
-	livingEntities = null;
-	movingEntities = null;
 	path = null;
     }
 }

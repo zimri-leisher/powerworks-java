@@ -5,10 +5,12 @@ import powerworks.main.Game;
 
 public abstract class ClickableScreenObject extends ScreenObject {
 
-    protected int widthPixels, heightPixels;
     /**
-     * Don't forget about this!
+     * Used to determine whether or not to adjusst width and height when the
+     * screen size changes
      */
+    protected boolean adjustDimensions;
+    protected int widthPixels, heightPixels;
     protected boolean mouseOn = false;
 
     /**
@@ -58,12 +60,16 @@ public abstract class ClickableScreenObject extends ScreenObject {
 
     public void setMouseOn(boolean mouseOn) {
 	this.mouseOn = mouseOn;
+	if(mouseOn)
+	    onMouseEnter();
+	else
+	    onMouseLeave();
     }
 
     @Override
     public void close() {
 	super.close();
-	mouseOn = false;
+	setMouseOn(false);
     }
 
     /**
@@ -88,6 +94,17 @@ public abstract class ClickableScreenObject extends ScreenObject {
      * classes to always override it
      */
     public void onScrollOn(int scroll) {
+    }
+
+    @Override
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+	super.onScreenSizeChange(oldWidthPixels, oldHeightPixels);
+	if (adjustDimensions) {
+	    int width = Game.getScreenWidth();
+	    int height = Game.getScreenHeight();
+	    this.widthPixels = (int) (width * ((float) widthPixels / oldWidthPixels));
+	    this.heightPixels = (int) (height * ((float) heightPixels / oldHeightPixels));
+	}
     }
 
     @Override

@@ -145,6 +145,7 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 		    }
 		}
 	    } catch (ConcurrentModificationException | NullPointerException e) {
+		e.printStackTrace();
 	    }
 	queue.clear();
 	if (mouseButton != -1 && Game.getScreenManager().getClickableScreenObjectsAt(mouseXPixel, mouseYPixel).size() == 0) {
@@ -209,8 +210,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
     }
 
     public static void screenMoved() {
-	mouseLevelXPixel = (int) ((mouseXPixel) + Game.getRenderEngine().getXPixelOffset());
-	mouseLevelYPixel = (int) (mouseYPixel + Game.getRenderEngine().getYPixelOffset());
+	mouseLevelXPixel = (int) ((mouseXPixel / Game.getRenderEngine().getZoom()) + Game.getRenderEngine().getXPixelOffset());
+	mouseLevelYPixel = (int) (mouseYPixel / Game.getRenderEngine().getZoom() + Game.getRenderEngine().getYPixelOffset());
     }
 
     static boolean containsControlOption(ControlOption[] options, ControlOption option) {
@@ -260,8 +261,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	mouseX = e.getX();
 	mouseYPixel = mouseY / Game.getScreenScale();
 	mouseXPixel = mouseX / Game.getScreenScale();
-	mouseLevelXPixel = (int) ((mouseXPixel) + Game.getRenderEngine().getXPixelOffset());
-	mouseLevelYPixel = (int) (mouseYPixel + Game.getRenderEngine().getYPixelOffset());
+	mouseLevelXPixel = (int) ((mouseXPixel / Game.getRenderEngine().getZoom()) + Game.getRenderEngine().getXPixelOffset());
+	mouseLevelYPixel = (int) (mouseYPixel / Game.getRenderEngine().getZoom() + Game.getRenderEngine().getYPixelOffset());
 	mouseMoved = true;
 	mouseMovedRelativeToLevel = true;
     }
@@ -274,8 +275,8 @@ public class InputManager implements KeyListener, MouseWheelListener, MouseListe
 	mouseX = e.getX();
 	mouseYPixel = mouseY / Game.getScreenScale();
 	mouseXPixel = mouseX / Game.getScreenScale();
-	mouseLevelXPixel = (int) ((mouseXPixel) + Game.getRenderEngine().getXPixelOffset());
-	mouseLevelYPixel = (int) (mouseYPixel + Game.getRenderEngine().getYPixelOffset());
+	mouseLevelXPixel = (int) ((mouseXPixel / Game.getRenderEngine().getZoom()) + Game.getRenderEngine().getXPixelOffset());
+	mouseLevelYPixel = (int) (mouseYPixel / Game.getRenderEngine().getZoom() + Game.getRenderEngine().getYPixelOffset());
 	mouseMoved = true;
 	mouseMovedRelativeToLevel = true;
     }

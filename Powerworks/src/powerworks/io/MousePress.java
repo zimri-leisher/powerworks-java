@@ -10,4 +10,5 @@ public class MousePress extends ControlPress{
     public MouseControlOption getOption() {
 	return (MouseControlOption) option;
     }
+    
 }

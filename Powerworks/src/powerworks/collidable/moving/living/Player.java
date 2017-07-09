@@ -1,10 +1,12 @@
 package powerworks.collidable.moving.living;
 
-import powerworks.block.Block;
-import powerworks.block.machine.ConveyorBeltBlock;
-import powerworks.collidable.Collidable;
+import powerworks.audio.AudioHearer;
+import powerworks.collidable.block.Block;
+import powerworks.collidable.block.machine.ConveyorBeltBlock;
 import powerworks.collidable.moving.droppeditem.DroppedItem;
 import powerworks.event.EventListener;
+import powerworks.event.EventManager;
+import powerworks.event.ViewMoveEvent;
 import powerworks.graphics.Renderer;
 import powerworks.inventory.item.Item;
 import powerworks.inventory.item.ItemType;
@@ -20,7 +22,7 @@ import powerworks.main.Game;
 import powerworks.world.level.GhostBlock;
 import powerworks.world.level.Level;
 
-public class Player extends Living implements KeyControlHandler, EventListener, MouseControlHandler {
+public class Player extends Living implements KeyControlHandler, EventListener, MouseControlHandler, AudioHearer {
 
     public static int MOVE_SPEED = 1;
     public static int SPRINT_SPEED = 2;
@@ -28,15 +30,19 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
     private GhostBlock block = new GhostBlock(null, 0, 0, false, 0);
     private boolean sprinting = false;
     private String username;
+    private float distance;
+    private static int FOOTSTEP_DISTANCE = 30;
 
     public Player(String username) {
 	super(LivingType.PLAYER, Game.getLevel().getWidthPixels() / 2, Game.getLevel().getHeightPixels() / 2);
 	this.username = username;
+	this.texXPixelOffset = -16;
+	this.texYPixelOffset = -16;
 	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.UP, KeyControlOption.DOWN, KeyControlOption.LEFT, KeyControlOption.RIGHT, KeyControlOption.SPRINT,
 		KeyControlOption.ROTATE_SELECTED_BLOCK,
 		KeyControlOption.SLOT_1, KeyControlOption.SLOT_2, KeyControlOption.SLOT_3, KeyControlOption.SLOT_4, KeyControlOption.SLOT_5, KeyControlOption.SLOT_6, KeyControlOption.SLOT_7,
 		KeyControlOption.SLOT_8,
-		KeyControlOption.GIVE_CONVEYOR_BELT, KeyControlOption.DROP_ITEM, KeyControlOption.TOGGLE_PLAYER_INVENTORY, KeyControlOption.GIVE_ORE_MINER);
+		KeyControlOption.GIVE_CONVEYOR_BELT, KeyControlOption.DROP_ITEM, KeyControlOption.TOGGLE_PLAYER_INVENTORY, KeyControlOption.GIVE_ORE_MINER, KeyControlOption.PICK_UP_ITEMS);
 	InputManager.registerMouseControlHandler(this, ControlMap.DEFAULT_INGAME, MouseControlOption.PLACE_BLOCK, MouseControlOption.REMOVE_BLOCK);
     }
 
@@ -78,14 +84,15 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	    block.setRender(false);
 	}
     }
-    
+
     /**
-     * The ghost block is the transparent block that shows up where you are going to place a block
+     * The ghost block is the transparent block that shows up where you are
+     * going to place a block
      */
     public GhostBlock getGhostBlock() {
 	return block;
     }
-    
+
     public String getUsername() {
 	return username;
     }
@@ -100,68 +107,26 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
     }
 
     @Override
-    protected void move() {
-	Level l = Game.getLevel();
-	if (velX > 0 && dir != 1)
-	    dir = 1;
-	if (velX < 0 && dir != 3)
-	    dir = 3;
-	if (velY > 0 && dir != 2)
-	    dir = 2;
-	if (velY < 0 && dir != 0)
-	    dir = 0;
-	if (velX + xPixel + hitbox.getXStart() + hitbox.getWidthPixels() > l.getWidthPixels())
-	    xPixel = -hitbox.getXStart();
-	if (velY + yPixel + hitbox.getYStart() + hitbox.getHeightPixels() > l.getHeightPixels())
-	    yPixel = -hitbox.getYStart();
-	if (velX + xPixel + hitbox.getXStart() < 0)
-	    xPixel = l.getWidthPixels() - (hitbox.getXStart() + hitbox.getWidthPixels());
-	if (velY + yPixel + hitbox.getYStart() < 0)
-	    yPixel = l.getHeightPixels() - (hitbox.getYStart() + hitbox.getHeightPixels());
-	int pXPixel = xPixel, pYPixel = yPixel;
-	if (!getCollision(velX, velY)) {
-	    xPixel += velX;
-	    yPixel += velY;
-	} else {
-	    if (!getCollision(velX, 0)) {
-		xPixel += velX;
-	    }
-	    if (!getCollision(0, velY)) {
-		yPixel += velY;
-	    }
+    public void onMove(int pXPixel, int pYPixel) {
+	super.onMove(pXPixel, pYPixel);
+	EventManager.sendEvent(new ViewMoveEvent(xPixel, yPixel));
+	Renderer r = Game.getRenderEngine();
+	distance += Math.sqrt(Math.pow(xPixel - pXPixel, 2) + Math.pow(yPixel - pYPixel, 2));
+	if (distance >= FOOTSTEP_DISTANCE) {
+	    distance = 0;
+	    Game.getAudioManager().play(Game.getLevel().getTileFromPixel(xPixel, yPixel).getFootstepSound());
 	}
-	if (pXPixel != xPixel || pYPixel != yPixel) {
-	    Renderer r = Game.getRenderEngine();
-	    r.setOffset(xPixel - r.getWidthPixels() / 2, yPixel - r.getHeightPixels() / 2);
-	    hasMoved = true;
-	} else
-	    hasMoved = false;
-	velX /= AIR_DRAG;
-	velY /= AIR_DRAG;
+	r.setOffset(xPixel - r.getWidthPixels() / 2, yPixel - r.getHeightPixels() / 2);
     }
 
     @Override
     protected boolean getCollision(int moveX, int moveY) {
-	for (Collidable col : Game.getLevel().getCollidables().getIntersecting(xPixel + moveX + hitbox.getXStart(), yPixel + moveY + hitbox.getYStart(), hitbox.getWidthPixels(),
-		hitbox.getHeightPixels())) {
-	    if (col != this && !(col instanceof DroppedItem))
-		return true;
-	}
-	return false;
-    }
-
-    @Override
-    public void render() {
-	Game.getRenderEngine().renderLevelObject(this, 16, 16);
-	if (Game.showHitboxes())
-	    renderHitbox();
+	return Game.getLevel().anyCollidableIntersecting(hitbox, moveX + xPixel, moveY + yPixel, c -> c != this && !(c instanceof DroppedItem));
     }
 
     @Override
     public void remove() {
-	Game.getLevel().getCollidables().remove(this);
-	Game.getLevel().getLivingEntities().remove(this);
-	Game.getLevel().getMovingEntities().remove(this);
+	super.remove();
 	username = null;
 	block = null;
     }
@@ -269,6 +234,7 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 		break;
 	    case DROP_ITEM:
 		switch (p.getType()) {
+		    case REPEAT:
 		    case PRESSED:
 			if (getHeldItem() != null) {
 			    if (Game.getLevel().tryDropItem(getHeldItem().getType(), InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel()))
@@ -299,10 +265,11 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 		break;
 	    case PICK_UP_ITEMS:
 		switch (p.getType()) {
+		    case REPEAT:
 		    case PRESSED:
-			for (DroppedItem item : Game.getLevel().getDroppedItems(InputManager.getMouseXPixel(), InputManager.getMouseYPixel(), 8)) {
+			for (DroppedItem item : Game.getLevel().getDroppedItems(InputManager.getMouseLevelXPixel(), InputManager.getMouseLevelYPixel(), 8)) {
+			    inv.giveItem(item.getType(), 1);
 			    item.remove();
-			    // inv.giveItem(new Item(item.getType()));
 			}
 			break;
 		    default:
@@ -385,18 +352,13 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 	switch (p.getOption()) {
 	    case PLACE_BLOCK:
 		switch (p.getType()) {
+		    case REPEAT:
 		    case PRESSED:
 			if (getHeldItem() != null && getHeldItem().isPlaceable() && block.isPlaceable()) {
-			    Game.getLevel().tryPlaceBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4, block.getRotation());
-			    block.setPlaceable(false);
-			    inv.takeItem(getHeldItem().getType(), 1);
-			}
-			break;
-		    case REPEAT:
-			if (getHeldItem() != null && getHeldItem().isPlaceable() && block.isPlaceable()) {
-			    Game.getLevel().tryPlaceBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4, block.getRotation());
-			    block.setPlaceable(false);
-			    inv.takeItem(getHeldItem().getType(), 1);
+			    if (Game.getLevel().tryPlaceBlock(getHeldItem().getPlacedBlock(), InputManager.getMouseLevelXPixel() >> 4, InputManager.getMouseLevelYPixel() >> 4, block.getRotation())) {
+				block.setPlaceable(false);
+				inv.takeItem(getHeldItem().getType(), 1);
+			    }
 			}
 			break;
 		    default:

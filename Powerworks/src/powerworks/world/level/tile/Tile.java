@@ -8,9 +8,9 @@ import powerworks.world.level.LevelObject;
 
 public class Tile extends LevelObject {
 
-    private Texture texture;
-    private TileType type;
-    private int rotation;
+    protected Texture texture;
+    protected TileType type;
+    protected int rotation;
 
     public Tile(TileType type, int xTile, int yTile, int rotation) {
 	super(xTile << 4, yTile << 4);
@@ -61,16 +61,12 @@ public class Tile extends LevelObject {
     }
 
     @Override
-    public void render() {
-	Game.getRenderEngine().renderLevelObject(this);
-    }
-
-    @Override
     public void update() {
     }
 
     @Override
     public void remove() {
+	Game.getLevel().removeTile(this);
 	texture = null;
 	type = null;
     }
@@ -79,4 +75,5 @@ public class Tile extends LevelObject {
     public Texture getTexture() {
 	return texture;
     }
+
 }

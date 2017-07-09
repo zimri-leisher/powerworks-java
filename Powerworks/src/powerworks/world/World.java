@@ -1,11 +1,12 @@
 package powerworks.world;
 
-import powerworks.block.Block;
 import powerworks.collidable.Collidable;
+import powerworks.collidable.block.Block;
 import powerworks.collidable.moving.Moving;
 import powerworks.collidable.moving.droppeditem.DroppedItem;
 import powerworks.collidable.moving.living.Living;
 import powerworks.data.SpatialOrganizer;
+import powerworks.main.State;
 import powerworks.world.level.Level;
 import powerworks.world.level.tile.Tile;
 
@@ -24,7 +25,6 @@ public class World {
     }
     
     public void update() {
-	level.update();
     }
     
     public void render() {
@@ -57,30 +57,6 @@ public class World {
     
     public int getHeightTiles() {
 	return level.getHeightTiles();
-    }
-    
-    public SpatialOrganizer<Moving> getMovingEntities() {
-	return level.getMovingEntities();
-    }
-    
-    public SpatialOrganizer<Living> getLivingEntities() {
-	return level.getLivingEntities();
-    }
-    
-    public SpatialOrganizer<Collidable> getCollidables() {
-	return level.getCollidables();
-    }
-    
-    public SpatialOrganizer<DroppedItem> getDroppedItems() {
-	return level.getDroppedItems();
-    }
-
-    public Block[] getBlocks() {
-	return level.getBlocks();
-    }
-
-    public Tile[] getTiles() {
-	return level.getTiles();
     }
     
     public void unload() {

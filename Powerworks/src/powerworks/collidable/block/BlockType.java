@@ -1,52 +1,85 @@
-package powerworks.block;
+package powerworks.collidable.block;
 
 import java.util.HashMap;
 import java.util.function.BiFunction;
 import powerworks.audio.Sound;
 import powerworks.collidable.Hitbox;
 import powerworks.graphics.Image;
+import powerworks.graphics.ImageCollection;
 import powerworks.graphics.Texture;
+import powerworks.inventory.item.ItemType;
 
 public class BlockType {
 
     private static HashMap<String, BlockType> types = new HashMap<String, BlockType>();
-    public static final BlockType ERROR = new BlockType(Hitbox.TILE, Image.ERROR, 1, 1, "Error", 0, false);
+    public static final BlockType ERROR = new BlockType("Error");
     
-    Hitbox hitbox;
-    Texture[] textures;
-    int widthTiles, heightTiles;
+    Hitbox hitbox = Hitbox.TILE;
+    Texture[] textures = new Texture[] { Image.ERROR , Image.ERROR, Image.ERROR, Image.ERROR};
+    int widthTiles = 1, heightTiles = 1;
     String name;
-    boolean placeable;
+    boolean placeable = true;
     boolean defaultRequiresUpdate = true;
     int id;
-    Sound footstep;
-    int texXPixelOffset, texYPixelOffset;
+    Sound footstep = Sound.GRASS_FOOTSTEP;
+    int texXPixelOffset = 0, texYPixelOffset = 0;
 
     /**
      * Remember to set appropriate functions and instantiator
      */
-    protected BlockType(Hitbox hitbox, Texture[] textures, int texXPixelOffset, int texYPixelOffset, int widthTiles, int heightTiles, String name, int id, boolean placeable, Sound footstep) {
-	this.hitbox = hitbox;
-	if (textures.length != 4)
-	    System.err.println("Block does not have adequate textures");
-	this.textures = textures;
-	this.widthTiles = widthTiles;
-	this.heightTiles = heightTiles;
+    protected BlockType(String name) {
 	this.name = name;
-	this.placeable = placeable;
-	this.id = id;
-	this.footstep = footstep;
-	this.texXPixelOffset = texXPixelOffset;
-	this.texYPixelOffset = texYPixelOffset;
 	types.put(name, this);
     }
     
-    protected BlockType(Hitbox hitbox, Texture texture, int width, int height, String name, int id, boolean placeable) {
-	this(hitbox, new Texture[] { texture, texture, texture, texture }, 0, 0, width, height, name, id, placeable, Sound.GRASS_FOOTSTEP);
+    public BlockType setHitbox(Hitbox hitbox) {
+	this.hitbox = hitbox;
+	return this;
     }
-
-    protected BlockType(Hitbox hitbox, Texture texture, int texXPixelOffset, int texYPixelOffset, int width, int height, String name, int id, boolean placeable) {
-	this(hitbox, new Texture[] { texture, texture, texture, texture }, texXPixelOffset, texYPixelOffset, width, height, name, id, placeable, Sound.GRASS_FOOTSTEP);
+    
+    BlockType setTextures(ImageCollection textures) {
+	this.textures = textures.getTextures();
+	return this;
+    }
+    
+    BlockType setTextures(Texture[] textures) {
+	this.textures = textures;
+	return this;
+    }
+    
+    BlockType setTexture(Texture texture) {
+	this.textures = new Texture[] { texture, texture, texture, texture};
+	return this;
+    }
+    
+    BlockType setWidthTiles(int w) {
+	widthTiles = w;
+	return this;
+    }
+    
+    BlockType setHeightTiles(int h) {
+	heightTiles = h;
+	return this;
+    }
+    
+    BlockType setPlaceable(boolean p) {
+	placeable = p;
+	return this;
+    }
+    
+    BlockType setTextureXPixelOffset(int x) {
+	texXPixelOffset = x;
+	return this;
+    }
+    
+    BlockType setTextureYPixelOffset(int y) {
+	texYPixelOffset = y;
+	return this;
+    }
+    
+    BlockType setFootstepSound(Sound s) {
+	footstep = s;
+	return this;
     }
     
     public boolean defaultRequiresUpdate() {
@@ -110,11 +143,12 @@ public class BlockType {
 	return name + " block type with id " + id + ", width tiles " + widthTiles + ", height tiles " + heightTiles + ", texture x pixel offset " + texXPixelOffset + " and y pixel offset"
 		+ texYPixelOffset + " and footstep sound " + footstep.toString();
     }
+    
+    public ItemType getDroppedItem() {
+	return ItemType.ERROR;
+    }
 
-    /**
-     * Creates and returns a block instance using the BiFunction defined in the function setInstantiator, or just creates an instance of the default Block class
-     */
-    public Block<?> createInstance(int xTile, int yTile) {
-	return new Block<BlockType>(this, xTile, yTile);
+    public Block createInstance(int xTile, int yTile) {
+	return new Block(this, xTile, yTile);
     }
 }

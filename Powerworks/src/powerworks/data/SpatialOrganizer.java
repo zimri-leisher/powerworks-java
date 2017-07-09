@@ -19,13 +19,28 @@ public class SpatialOrganizer<T extends Collidable> implements Iterable<T> {
 	return returnObj;
     }
 
+    public List<T> getIntersecting(int x, int y, int width, int height, Predicate<T> condition) {
+	List<T> returnObj = new ArrayList<T>();
+	objects.stream().filter((T t) -> {
+	    return condition.test(t)
+		    && GeometryHelper.intersects(x, y, width, height, t.getXPixel() + t.getHitbox().getXStart(), t.getYPixel() + t.getHitbox().getYStart(), t.getHitbox().getWidthPixels(),
+			    t.getHitbox().getHeightPixels());
+	}).forEach(returnObj::add);
+	return returnObj;
+    }
+
+    public boolean anyIntersecting(int x, int y, int width, int height, Predicate<T> condition) {
+	return objects.stream().filter(condition).anyMatch((T t) -> GeometryHelper.intersects(x, y, width, height, t.getXPixel() + t.getHitbox().getXStart(), t.getYPixel() + t.getHitbox().getYStart(), t.getHitbox().getWidthPixels(),
+		    t.getHitbox().getHeightPixels()));
+    }
+
     public boolean anyIntersecting(int x, int y, int width, int height) {
 	return objects.stream().anyMatch((T t) -> {
 	    return GeometryHelper.intersects(x, y, width, height, t.getXPixel() + t.getHitbox().getXStart(), t.getYPixel() + t.getHitbox().getYStart(), t.getHitbox().getWidthPixels(),
 		    t.getHitbox().getHeightPixels());
 	});
     }
-    
+
     public List<T> query(Predicate<? super T> p) {
 	List<T> returnObj = new ArrayList<T>();
 	objects.stream().filter(p).forEach(returnObj::add);
@@ -44,7 +59,7 @@ public class SpatialOrganizer<T extends Collidable> implements Iterable<T> {
     public void add(T t) {
 	objects.add(t);
     }
- 
+
     public void remove(T t) {
 	Iterator<T> i = objects.iterator();
 	while (i.hasNext()) {
@@ -52,6 +67,10 @@ public class SpatialOrganizer<T extends Collidable> implements Iterable<T> {
 	    if (t1 == t)
 		i.remove();
 	}
+    }
+    
+    public int size() {
+	return objects.size();
     }
 
     @Override

@@ -17,7 +17,7 @@ public class Renderer {
     private Graphics2D g2d = null;
     private int widthPixels, heightPixels;
     private int xPixelOffset, yPixelOffset;
-    private double zoom = 1.0, scaleWidth = 1.0, scaleHeight = 1.0;
+    private float zoom = 1.0f, scaleWidth = 1.0f, scaleHeight = 1.0f;
     private Rectangle clip, defClip;
 
     public Renderer(int widthPixels, int heightPixels) {
@@ -42,7 +42,7 @@ public class Renderer {
 	return yPixelOffset;
     }
 
-    public double getZoom() {
+    public float getZoom() {
 	return zoom;
     }
 
@@ -52,7 +52,7 @@ public class Renderer {
 
     /**
      * All drawing operations will not do anything outside this rectangle on the
-     * screen. It can be reset by Renderer.resetClip()
+     * screen. It can be reset by <tt>Renderer.resetClip</tt>
      */
     public void setClip(int xPixel, int yPixel, int widthPixels, int heightPixels) {
 	int s = Game.getScreenScale();
@@ -67,12 +67,12 @@ public class Renderer {
 
     public void setOffset(int xPixel, int yPixel) {
 	boolean used = false;
-	if (xPixel - widthPixels / 2 >= 0 && xPixel + widthPixels < Game.getLevel().getWidthPixels()) {
+	if (xPixel >= 0 && xPixel + widthPixels < Game.getLevel().getWidthPixels()) {
 	    if (this.xPixelOffset != xPixel)
 		used = true;
 	    this.xPixelOffset = xPixel;
 	}
-	if (yPixel - heightPixels / 2 >= 0 && yPixel + heightPixels < Game.getLevel().getHeightPixels()) {
+	if (yPixel >= 0 && yPixel + heightPixels < Game.getLevel().getHeightPixels()) {
 	    if (this.yPixelOffset != yPixel)
 		used = true;
 	    this.yPixelOffset = yPixel;
@@ -87,17 +87,15 @@ public class Renderer {
 	this.widthPixels = widthPixels;
 	this.heightPixels = heightPixels;
 	defClip = new Rectangle(0, 0, widthPixels * Game.getScreenScale(), heightPixels * Game.getScreenScale());
-	Game.getScreenManager().getScreenObjects().forEach((ScreenObject obj) -> obj.onScreenSizeChange(w, h));
+	Game.getScreenManager().onScreenSizeChange(w, h);
     }
 
-    public void setZoom(double zoom) {
+    public void setZoom(float zoom) {
 	this.zoom = zoom;
     }
 
     public Rectangle getCurrentViewArea() {
-	int xPixel = xPixelOffset;
-	int yPixel = yPixelOffset;
-	return new Rectangle(xPixel, yPixel, (int) (widthPixels / zoom), (int) (heightPixels / zoom));
+	return new Rectangle(xPixelOffset, yPixelOffset, (int) (widthPixels / zoom), (int) (heightPixels / zoom));
     }
 
     /**
@@ -121,7 +119,7 @@ public class Renderer {
 	yPixel -= yPixelOffset;
 	g2d.fillRect(xPixel * Game.getScreenScale(), yPixel * Game.getScreenScale(), width * Game.getScreenScale(), height * Game.getScreenScale());
     }
-    
+
     public void renderTexture(Texture texture, int xPixel, int yPixel) {
 	int mainScale = Game.getScreenScale();
 	BufferedImage image = texture.getImage();
@@ -168,10 +166,10 @@ public class Renderer {
 	}
 	int mainScale = Game.getScreenScale();
 	BufferedImage image = texture.getImage();
-	int absoluteXPixel = xPixel * mainScale;
-	int absoluteYPixel = yPixel * mainScale;
-	int absoluteWidth = (int) (p.widthScale * image.getWidth() * scaleWidth * p.scale * mainScale);
-	int absoluteHeight = (int) (p.heightScale * image.getHeight() * scaleHeight * p.scale * mainScale);
+	float absoluteXPixel = xPixel * mainScale;
+	float absoluteYPixel = yPixel * mainScale;
+	float absoluteWidth = (p.widthScale * image.getWidth() * scaleWidth * p.scale * mainScale);
+	float absoluteHeight = (p.heightScale * image.getHeight() * scaleHeight * p.scale * mainScale);
 	if (!p.screenObject) {
 	    absoluteWidth *= zoom;
 	    absoluteHeight *= zoom;
@@ -192,7 +190,7 @@ public class Renderer {
 	    old = g2d.getTransform();
 	    g2d.rotate(Math.toRadians(p.rotation * 90), absoluteXPixel + absoluteWidth / 2, absoluteYPixel + absoluteHeight / 2);
 	}
-	g2d.drawImage(image, absoluteXPixel, absoluteYPixel, absoluteWidth, absoluteHeight, null);
+	g2d.drawImage(image, (int) absoluteXPixel, (int) absoluteYPixel, (int) absoluteWidth, (int) absoluteHeight, null);
 	if (p.rotation != 0)
 	    g2d.setTransform(old);
 	if (p.alpha != 1)
@@ -270,7 +268,7 @@ public class Renderer {
 	if (p.clip != null)
 	    g2d.setClip(oldClip);
     }
-    
+
     /**
      * This method should be used for performance when you know the exact width
      * and height pixels already
@@ -408,16 +406,34 @@ public class Renderer {
 	float oScale = o.getScale();
 	int mainScale = Game.getScreenScale();
 	BufferedImage image = o.getTexture().getImage();
-	int absoluteXPixel = (int) (xPixel * mainScale * zoom);
-	int absoluteYPixel = (int) (yPixel * mainScale * zoom);
-	int absoluteWidth = (int) (o.getWidthScale() * image.getWidth() * scaleWidth * oScale * mainScale * zoom);
-	int absoluteHeight = (int) (o.getHeightScale() * image.getHeight() * scaleHeight * oScale * mainScale * zoom);
+	float absoluteXPixel = xPixel * mainScale * zoom;
+	float absoluteYPixel = yPixel * mainScale * zoom;
+	float absoluteWidth = o.getWidthScale() * image.getWidth() * scaleWidth * oScale * mainScale * zoom;
+	float absoluteHeight = o.getHeightScale() * image.getHeight() * scaleHeight * oScale * mainScale * zoom;
 	AffineTransform old = g2d.getTransform();
+	Composite oc = g2d.getComposite();
+	if (Game.highlightedChunk != null && o.getXChunk() == Game.highlightedChunk.getXChunk() && o.getYChunk() == Game.highlightedChunk.getYChunk()) {
+	    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.1f));
+	}
 	if (rotation != 0) {
 	    g2d.rotate(Math.toRadians(rotation * 90), absoluteXPixel + absoluteWidth / 2, absoluteYPixel + absoluteHeight / 2);
 	}
-	g2d.drawImage(image, absoluteXPixel, absoluteYPixel, absoluteWidth, absoluteHeight, null);
+	g2d.drawImage(image, (int) absoluteXPixel, (int) absoluteYPixel, (int) absoluteWidth, (int) absoluteHeight, null);
 	if (rotation != 0)
 	    g2d.setTransform(old);
+	g2d.setComposite(oc);
+    }
+
+    /*
+     * Credit goes to Riven & roquen from JGO
+     */
+    private static final int BIG_ENOUGH_INT = 16 * 1024;
+
+    private int fastCeil(float v) {
+	return BIG_ENOUGH_INT - (int) (BIG_ENOUGH_INT - v);
+    }
+
+    private int fastFloor(float v) {
+	return (int) (v + BIG_ENOUGH_INT) - BIG_ENOUGH_INT;
     }
 }

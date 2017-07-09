@@ -29,7 +29,6 @@ public class ScreenManager {
 		    cObj.onMouseActionOff(mouse);
 	    }
 	}
-	
 	return used;
     }
 
@@ -49,6 +48,10 @@ public class ScreenManager {
 	return used;
     }
 
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+	objects.forEach(o -> o.onScreenSizeChange(oldWidthPixels, oldHeightPixels));
+    }
+
     /**
      * @return the screen object which is currently being interacted with
      */
@@ -64,11 +67,9 @@ public class ScreenManager {
 		if (GeometryHelper.contains(cObj.getXPixel(), cObj.getYPixel(), cObj.getWidthPixels(), cObj.getHeightPixels(), mXPixel, mYPixel, 0, 0)) {
 		    if (!cObj.isMouseOn()) {
 			cObj.setMouseOn(true);
-			cObj.onMouseEnter();
 		    }
 		} else if (cObj.isMouseOn()) {
 		    cObj.setMouseOn(false);
-		    cObj.onMouseLeave();
 		}
 	    }
 	});

@@ -2,11 +2,15 @@ package powerworks.collidable;
 
 import powerworks.io.MouseEvent;
 import powerworks.main.Game;
+import powerworks.world.level.Chunk;
 import powerworks.world.level.LevelObject;
 
 public abstract class Collidable extends LevelObject {
 
     protected Hitbox hitbox;
+    protected boolean mouseOn = false;
+    
+    protected Chunk currentChunk;
     
     protected Collidable(int xPixel, int yPixel, Hitbox hitbox) {
 	this(xPixel, yPixel, 0, 0, hitbox);
@@ -15,13 +19,34 @@ public abstract class Collidable extends LevelObject {
     protected Collidable(int xPixel, int yPixel, int texXPixelOffset, int texYPixelOffset, Hitbox hitbox) {
 	super(xPixel, yPixel, texXPixelOffset, texYPixelOffset);
 	this.hitbox = hitbox;
+	currentChunk = Game.getLevel().getAndLoadChunkAtPixel(xPixel, yPixel);
+	System.out.println("teeeet");
+    }
+    
+    public void addToLevel() {
 	if(hitbox.isSolid())
-	    Game.getLevel().getCollidables().add(this);
+	    currentChunk.getCollidables().add(this);
+    }
+    
+    public Chunk getCurrentChunk() {
+	return currentChunk;
+    }
+    
+    public boolean isMouseOn() {
+	return mouseOn;
+    }
+    
+    /**
+     * For use by the level manager
+     */
+    public void setMouseOn(boolean mouseOn) {
+	this.mouseOn = mouseOn;
+	if(mouseOn)
+	    onMouseEnter();
+	else
+	    onMouseLeave();
     }
 
-    /**
-     * @return the hitbox for collision
-     */
     public Hitbox getHitbox() {
 	return hitbox;
     }
@@ -41,18 +66,26 @@ public abstract class Collidable extends LevelObject {
     public void onScrollOn(int scroll) {
 	
     }
+    
+    @Override
+    public void render() {
+	super.render();
+	if(Game.showHitboxes())
+	    renderHitbox();
+    }
 
-    /**
-     * Renders the hitbox
-     */
     public void renderHitbox() {
-	Game.getRenderEngine().renderSquare(0xFF0C00, xPixel + hitbox.getXStart(), yPixel + hitbox.getYStart(), hitbox.getWidthPixels(), hitbox.getHeightPixels());
+	renderHitbox(0xFF0C00);
+    }
+    
+    public void renderHitbox(int color) {
+	Game.getRenderEngine().renderSquare(color, xPixel + hitbox.getXStart(), yPixel + hitbox.getYStart(), hitbox.getWidthPixels(), hitbox.getHeightPixels());
     }
     
     @Override
     public void remove() {
 	if(hitbox.isSolid())
-	    Game.getLevel().getCollidables().remove(this);
+	    currentChunk.getCollidables().remove(this);
 	hitbox = null;
     }
     

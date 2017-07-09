@@ -22,7 +22,7 @@ public abstract class Setting<T> {
 		    Game.setFPSMode(true);
 		}
 	    });
-    public static final Setting<Boolean> PAUSE_IN_ESCAPE_MENU = new BooleanSetting("Pause in Escape Menu", "Pauses the game while the escape menu is open", true, new Task() {
+    public static final Setting<Boolean> PAUSE_IN_ESCAPE_MENU = new BooleanSetting("Pause in Escape", "Pauses the game while the escape menu is open", true, new Task() {
 
 	@Override
 	public void run() {
@@ -46,6 +46,19 @@ public abstract class Setting<T> {
 	@Override
 	public void run() {
 	    Game.setShowHitboxes(false);
+	}
+    });
+    public static final Setting<Boolean> SOUND_ENABLED = new BooleanSetting("Sound enabled", "Whether or not sound should be played", true, new Task() {
+
+	@Override
+	public void run() {
+	    Game.getAudioManager().enableSound(true);
+	}
+    }, new Task() {
+
+	@Override
+	public void run() {
+	    Game.getAudioManager().enableSound(false);
 	}
     });
     String name, desc;

@@ -3,9 +3,8 @@ package powerworks.collidable;
 public class Hitbox {
 
     public static final Hitbox PLAYER = new Hitbox(-8, 0, 16, 16);
+    public static final Hitbox DROPPED_ITEM = new Hitbox(0, 0, 8, 8);
     public static final Hitbox TILE = new Hitbox(0, 0, 16, 16);
-    public static final Hitbox CONVEYOR_BELT_ITEM = new Hitbox(1, 0, 14, 16);
-    public static final Hitbox IRON_ORE_ITEM = new Hitbox(0, 1, 16, 15);
     public static final Hitbox TWO_BY_TWO_TILE = new Hitbox(0, 0, 32, 32);
     public static final Hitbox NONE = new Hitbox(false);
     private int width, height;

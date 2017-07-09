@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Scanner;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
-import kuusisto.tinysound.TinySound;
+import powerworks.audio.AudioManager;
 import powerworks.chat.ChatCommandExecutor;
 import powerworks.chat.ChatManager;
 import powerworks.collidable.moving.living.Player;
@@ -30,7 +30,7 @@ import powerworks.graphics.SyncAnimation;
 import powerworks.graphics.screen.HUD;
 import powerworks.graphics.screen.Mouse;
 import powerworks.graphics.screen.ScreenManager;
-import powerworks.graphics.screen.ScreenObject;
+import powerworks.graphics.screen.gui.DebugInfoOverlay;
 import powerworks.graphics.screen.gui.EscapeMenuGUI;
 import powerworks.graphics.screen.gui.EscapeOptionsMenuGUI;
 import powerworks.graphics.screen.gui.MainMenuGUI;
@@ -44,80 +44,63 @@ import powerworks.io.KeyPress;
 import powerworks.io.Logger;
 import powerworks.io.Statistic;
 import powerworks.task.Task;
-import powerworks.world.World;
 import powerworks.world.WorldManager;
+import powerworks.world.level.Chunk;
 import powerworks.world.level.Level;
 import powerworks.world.level.LevelManager;
 
-public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler{
+public final class Game extends Canvas implements Runnable, EventListener, KeyControlHandler {
 
     private static Game game;
     boolean running = false;
-    
     private static final long serialVersionUID = 1L;
-    
     public static final float UPDATES_PER_SECOND = 60.0f;
-    public static final float FRAMES_PER_SECOND = 1000000.0f;
+    public static final float FRAMES_PER_SECOND = 100000000.0f;
     public static final float MS_PER_UPDATE = 1000 / UPDATES_PER_SECOND;
     public static final float MS_PER_FRAME = 1000 / FRAMES_PER_SECOND;
     public static final float NS_PER_UPDATE = 1000000000 / UPDATES_PER_SECOND;
     public static final float NS_PER_FRAME = 1000000000 / FRAMES_PER_SECOND;
     public static final int MAX_UPDATES_BEFORE_RENDER = 5;
-    
     private static boolean FPS_MODE = false;
     private static boolean PAUSE_IN_ESCAPE_MENU = true;
-    
     static boolean paused = false;
     static boolean showHitboxes = false;
-    
     static int width = 300, zoomedWidth = width;
     static int height = width / 16 * 9, zoomedHeight = height;
     static int scale = 4;
-    
     static int secondCount = 0;
     static long updateCount = 0;
     static long frameCount = 0;
-    
     int prevFrameWidth = 0;
     int prevFrameHeight = 0;
-    
     static Thread gameThread;
     static JFrame frame;
-   
-    static Renderer render; 
+    static Renderer render;
     static Mouse mouse;
     static HUD hud;
     static Cursor defCursor;
     static ScreenManager screen;
-    
     static MainMenuGUI mainMenu;
     static OptionsMenuGUI optionsMenu;
     static EscapeMenuGUI escapeMenu;
     static EscapeOptionsMenuGUI escapeOptionsMenu;
-    
+    static DebugInfoOverlay debugInfo;
     static GraphicsConfiguration gConf = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
-    
     static Font mainFont = null;
     static HashMap<Integer, Font> fonts = new HashMap<Integer, Font>();
-    
-    
+    static AudioManager audio;
     static List<String> allPlayerNames;
     static List<Player> allPlayers;
     static Player player;
-    
-    static World world;
-    static WorldManager worldManager;
-    static LevelManager levelManager;
-    
-    //Required to have listeners
+    static WorldManager world;
+    static LevelManager level;
+    // Required to have listeners
     static InputManager input;
     static Logger logger;
     static ChatCommandExecutor chatCmdExecutor;
     static ChatManager chatManager;
-    
     static boolean showRenderTimes = false;
     static boolean showUpdateTimes = false;
-    
 
     private Game() {
 	loadFont();
@@ -133,6 +116,9 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	optionsMenu = new OptionsMenuGUI();
 	escapeMenu = new EscapeMenuGUI();
 	escapeOptionsMenu = new EscapeOptionsMenuGUI();
+	audio = new AudioManager();
+	audio.load();
+	debugInfo = new DebugInfoOverlay();
 	addKeyListener(input);
 	addMouseWheelListener(input);
 	addMouseListener(input);
@@ -144,8 +130,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	EventManager.registerEventListener(this);
 	InputManager.registerKeyControlHandler(this, ControlMap.DEFAULT_INGAME, KeyControlOption.EXIT, KeyControlOption.SHOW_RENDER_TIMES, KeyControlOption.SHOW_UPDATE_TIMES,
 		KeyControlOption.RENDER_HITBOX,
-		KeyControlOption.TOGGLE_FPS_MODE);
-	InputManager.registerKeyControlHandler(this, ControlMap.MAIN_MENU, KeyControlOption.EXIT, KeyControlOption.TOGGLE_FPS_MODE);
+		KeyControlOption.DEBUG_INFO);
+	InputManager.registerKeyControlHandler(this, ControlMap.MAIN_MENU, KeyControlOption.EXIT, KeyControlOption.DEBUG_INFO);
     }
 
     private synchronized void start() {
@@ -156,7 +142,6 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     private synchronized void stop() {
 	logger.close();
-	TinySound.shutdown();
 	System.exit(0);
 	try {
 	    gameThread.join();
@@ -174,7 +159,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     public static boolean isPaused() {
-	return game.paused;
+	return paused;
     }
 
     /**
@@ -212,7 +197,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static EscapeMenuGUI getEscapeMenuGUI() {
 	return escapeMenu;
     }
-    
+
     public static EscapeOptionsMenuGUI getEscapeOptionsMenuGUI() {
 	return escapeOptionsMenu;
     }
@@ -236,16 +221,21 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static long getFramesSinceStart() {
 	return frameCount;
     }
-    
+
+    public static AudioManager getAudioManager() {
+	return audio;
+    }
+
     /**
      * For generating, loading and unloading worlds
      */
     public static WorldManager getWorldManager() {
-	return worldManager;
+	return world;
     }
 
     /**
-     * For sending input to be processed by GUIs and rendering and updating GUIs/HUD 
+     * For sending input to be processed by GUIs and rendering and updating
+     * GUIs/HUD
      */
     public static ScreenManager getScreenManager() {
 	return screen;
@@ -257,11 +247,11 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static ChatManager getChatManager() {
 	return chatManager;
     }
-    
+
     public static LevelManager getLevelManager() {
-	return levelManager;
+	return level;
     }
-    
+
     /**
      * The HUD includes the hotbar, healthbar and chatbar
      */
@@ -270,7 +260,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     /**
-     * For setting the texture. To get coordinates one should really use InputManager appropriately
+     * For setting the texture. To get coordinates one should really use
+     * InputManager appropriately
      */
     public static Mouse getMouse() {
 	return mouse;
@@ -278,6 +269,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     /**
      * For drawing textures, setting clips, scaling, getting width, height, etc.
+     * 
      * @return
      */
     public static Renderer getRenderEngine() {
@@ -316,11 +308,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     }
 
     /**
-     * The main game level. More may well be implemented, but for now this is
-     * where the magic happens
+     * The main game level as set by the current
      */
     public static Level getLevel() {
-	return world.getLevel();
+	return level.getLevel();
     }
 
     /**
@@ -331,10 +322,16 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	return logger;
     }
 
+    /**
+     * Same as <tt> RenderEngine.getWidthPixels</tt>, just for convenience
+     */
     public static int getScreenWidth() {
 	return render.getWidthPixels();
     }
-
+    
+    /**
+     * Same as <tt> RenderEngine.getHeightPixels</tt>, just for convenience
+     */
     public static int getScreenHeight() {
 	return render.getHeightPixels();
     }
@@ -423,7 +420,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    Task.update();
 	    screen.update();
 	    if (!paused)
-		world.update();
+		level.update();
+	    audio.update();
 	    Timer.update();
 	    if (!paused)
 		SyncAnimation.update();
@@ -434,6 +432,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    Timer.update();
 	    SyncAnimation.update();
 	}
+	State.update();
 	showUpdateTimes = false;
     }
 
@@ -449,7 +448,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		Graphics2D g2d = (Graphics2D) bufferStrat.getDrawGraphics();
 		render.feed(g2d);
 		if (s == State.INGAME) {
-		    world.render();
+		    level.render();
 		    screen.render();
 		} else if (s == State.MAIN_MENU) {
 		    screen.render();
@@ -499,10 +498,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 
     public static void main(String[] args) {
 	try {
+	    System.setProperty("sun.java2d.opengl", "true");
 	    System.setProperty("sun.java2d.translaccel", "true");
 	    System.setProperty("sun.java2d.ddforcevram", "true");
 	    System.out.println("Starting game...");
-	    // TinySound.init();
 	    game = new Game();
 	    frame.setIconImage(ImageIO.read(Game.class.getResource("/textures/misc/logo.png")));
 	    frame.setResizable(true);
@@ -524,6 +523,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    e.printStackTrace();
 	} finally {
 	    logger.close();
+	    audio.close();
 	}
     }
 
@@ -531,6 +531,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	return showHitboxes;
     }
 
+    public static Chunk highlightedChunk = null;
+    
     @Override
     public void handleKeyControlPress(KeyPress p) {
 	KeyControlOption option = p.getOption();
@@ -575,22 +577,18 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case RENDER_HITBOX:
 		switch (pressType) {
 		    case PRESSED:
-			// render.setZoom(render.getZoom() + 0.1);
-			// System.out.println(render.getCurrentViewArea());
-			chatManager.sendMessage("Hitbox rendering toggled to: " + !showHitboxes);
-			showHitboxes = !showHitboxes;
+			Setting.SHOW_HITBOXES.setValue(!Setting.SHOW_HITBOXES.getValue());
+			chatManager.sendMessage("Hitbox rendering toggled to: " + Setting.SHOW_HITBOXES.getValue());
 			break;
 		    default:
 			break;
 		}
 		break;
-	    case TOGGLE_FPS_MODE:
+	    case DEBUG_INFO:
 		switch (pressType) {
 		    case PRESSED:
-			optionsMenu.getOptions().test();
-			//Setting.THREAD_WAITING.setValue(!Setting.THREAD_WAITING.getValue());
-			//if (State.getState() == State.INGAME)
-			//    chatManager.sendMessage("FPS mode toggled to: " + Setting.THREAD_WAITING.getValue());
+			highlightedChunk = level.getLevel().getChunkAtPixel(player.getXPixel(), player.getYPixel());
+			//debugInfo.toggle();
 			break;
 		    default:
 			break;
@@ -600,5 +598,4 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 		break;
 	}
     }
-
 }

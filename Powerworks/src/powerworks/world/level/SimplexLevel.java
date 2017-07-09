@@ -2,6 +2,7 @@ package powerworks.world.level;
 
 import java.util.Random;
 import powerworks.world.level.tile.OreTile;
+import powerworks.world.level.tile.OreTileType;
 import powerworks.world.level.tile.Tile;
 import powerworks.world.level.tile.TileType;
 
@@ -24,22 +25,13 @@ public class SimplexLevel extends Level {
     protected void generateLevel() {
 	System.out.println("Generating level, seed: " + seed);
 	singleOre = new SimplexNoise(100, 0.5, genRandom(seed, 99));
-	for (int y = 0; y < height; y++) {
-	    for (int x = 0; x < width; x++) {
-		double singleOreNoise = (1 + singleOre.getNoise(x, y));
-		if (singleOreNoise < IRON_ORE_THRESHOLD) {
-		    tiles[x + y * width] = new Tile(TileType.GRASS, x, y);
-		} else if (singleOreNoise < IRON_ORE_MAX_THRESHOLD) {
-		    if (scatter(IRON_ORE_SCATTER)) {
-			tiles[x + y * width] = new OreTile(TileType.IRON_ORE, x, y, rand.nextInt(4) + 1);
-		    } else {
-			tiles[x + y * width] = new Tile(TileType.GRASS, x, y);
-		    }
-		} else {
-		    tiles[x + y * width] = new Tile(TileType.GRASS, x, y);
-		}
+	/*
+	for (int y = 0; y < heightChunks; y++) {
+	    for (int x = 0; x < widthChunks; x++) {
+		chunks[x + y * widthChunks] = generateChunk(x, y);
 	    }
 	}
+	*/
     }
 
     private boolean scatter(int scatter) {
@@ -47,5 +39,30 @@ public class SimplexLevel extends Level {
 	    return true;
 	}
 	return false;
+    }
+
+    @Override
+    public Chunk generateChunk(int xChunk, int yChunk) {
+	System.out.println("Loading chunk at " + xChunk + ", " + yChunk);
+	int xTile = xChunk << 3;
+	int yTile = yChunk << 3;
+	Tile[] tiles = new Tile[(int) Math.pow(Chunk.CHUNK_SIZE, 2)];
+	for (int y = 0; y < Chunk.CHUNK_SIZE; y++) {
+	    for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
+		double singleOreNoise = (1 + singleOre.getNoise(x + xTile, y + yTile));
+		if (singleOreNoise < IRON_ORE_THRESHOLD) {
+		    tiles[x + y * Chunk.CHUNK_SIZE] = new Tile(TileType.GRASS, x + xTile, y + yTile);
+		} else if (singleOreNoise < IRON_ORE_MAX_THRESHOLD) {
+		    if (scatter(IRON_ORE_SCATTER)) {
+			tiles[x + y * Chunk.CHUNK_SIZE] = new OreTile(OreTileType.IRON_ORE, x + xTile, y + yTile, rand.nextInt(OreTileType.IRON_ORE.getBaseOreMultiplier()) + 1);
+		    } else {
+			tiles[x + y * Chunk.CHUNK_SIZE] = new Tile(TileType.GRASS, x + xTile, y + yTile);
+		    }
+		} else {
+		    tiles[x + y * Chunk.CHUNK_SIZE] = new Tile(TileType.GRASS, x + xTile, y + yTile);
+		}
+	    }
+	}
+	return new Chunk(this, xChunk, yChunk, tiles);
     }
 }

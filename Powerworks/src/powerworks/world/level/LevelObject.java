@@ -1,6 +1,7 @@
 package powerworks.world.level;
 
 import powerworks.graphics.Texture;
+import powerworks.main.Game;
 
 public abstract class LevelObject {
 
@@ -10,7 +11,7 @@ public abstract class LevelObject {
     protected int xPixel, yPixel;
     
     protected int texXPixelOffset, texYPixelOffset;
-
+    
     protected LevelObject(int xPixel, int yPixel, int texXPixelOffset, int texYPixelOffset) {
 	this.xPixel = xPixel;
 	this.yPixel = yPixel;
@@ -42,6 +43,22 @@ public abstract class LevelObject {
      */
     public int getYPixel() {
 	return yPixel;
+    }
+    
+    public int getXTile() {
+	return xPixel >> 3;
+    }
+    
+    public int getYTile() {
+	return yPixel >> 3;
+    }
+    
+    public int getXChunk() {
+	return xPixel >> 7;
+    }
+    
+    public int getYChunk() {
+	return yPixel >> 7;
     }
 
     /**
@@ -84,10 +101,12 @@ public abstract class LevelObject {
     /**
      * Should immediately render, taking into account texture offsets
      */
-    public abstract void render();
-
+    public void render() {
+	Game.getRenderEngine().renderLevelObject(this);
+    }
+    
     public abstract void update();
-
+    
     /**
      * Removes from level, frees resources, basically totally deletes from existance
      */

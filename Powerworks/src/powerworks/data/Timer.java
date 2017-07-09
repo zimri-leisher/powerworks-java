@@ -1,6 +1,7 @@
 package powerworks.data;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import powerworks.main.Game;
 import powerworks.main.Setting;
@@ -12,7 +13,7 @@ public class Timer {
     int upt, maxTicks, updateCount = 0, currentTick = 0;
     Task perNTicks, onFinish, perNUpdates;
     int nUpdates, nTicks;
-    boolean loop = false, playing = false, world = false;
+    boolean loop = false, playing = false, world = false, remove = false;
 
     public Timer(int updatesPerTick, int maxTicks, boolean world) {
 	upt = updatesPerTick;
@@ -86,6 +87,17 @@ public class Timer {
     }
 
     public static void update() {
+	Iterator<Timer> i = timers.iterator();
+	while(i.hasNext()) {
+	    Timer t = i.next();
+	    if(t.remove)
+		i.remove();
+	}
 	timers.stream().filter(Timer::isPlaying).forEach(Timer::nextUpdate);
+    }
+    
+    public void remove() {
+	remove = true;
+	perNTicks = onFinish = perNUpdates = null;
     }
 }

@@ -8,13 +8,13 @@ public class LivingType {
     
     public static final LivingType PLAYER = new LivingType("Player", 100, null, 8, 4, true, Hitbox.PLAYER, ImageCollection.PLAYER);
     
-    String name;
-    double health;
-    AI ai;
-    int invWidth, invHeight;
-    boolean createInvGUI;
-    Hitbox hitbox;
-    ImageCollection textures;
+    private String name;
+    private double health;
+    private AI ai;
+    private int invWidth, invHeight;
+    private boolean createInvGUI;
+    private Hitbox hitbox;
+    private ImageCollection textures;
     
     /**
      * @param createInvGUI whether or not to create and load appropriate images for this inventory (may save memory if the inventory goes unopened normally)

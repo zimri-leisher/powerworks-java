@@ -85,6 +85,11 @@ public abstract class ScreenObject {
     }
 
     /**
+     * Used to determine whether or not to change position when the screen size
+     * changes.
+     */
+    boolean adjustPosition;
+    /**
      * Relative to screen, however, constructor values are relative to parent
      */
     protected int xPixel, yPixel;
@@ -119,10 +124,9 @@ public abstract class ScreenObject {
 	this.xPixel = xPixel + this.parent.xPixel;
 	this.yPixel = yPixel + this.parent.yPixel;
 	this.layer = layer;
+	this.parent.children.add(this);
 	id = nextId++;
 	Game.getScreenManager().getScreenObjects().add(this);
-	System.out.println("adding " + getClass().getSimpleName() + " to " + this.parent.getClass().getSimpleName());
-	this.parent.children.add(this);
     }
 
     /**
@@ -145,8 +149,13 @@ public abstract class ScreenObject {
 	this.parent.children.remove(this);
 	this.parent = parent;
 	parent.children.add(this);
-	System.out.println("moving " + getClass().getSimpleName() + " to " + this.parent.getClass().getSimpleName());
+	// System.out.println("moving " + getClass().getSimpleName() + " to " +
+	// this.parent.getClass().getSimpleName());
 	onParentMove();
+	if (parent.open && !open)
+	    open();
+	else if (!parent.open && open)
+	    close();
     }
 
     public ScreenObject getParent() {
@@ -352,5 +361,12 @@ public abstract class ScreenObject {
      * Used for keeping objects that should remain at a certain position
      * relative to the screen where they should be, i.e. the hotbar
      */
-    public abstract void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels);
+    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
+	if (adjustPosition) {
+	    int width = Game.getScreenWidth();
+	    int height = Game.getScreenHeight();
+	    this.xPixel = (int) (width * ((float) xPixel / oldWidthPixels));
+	    this.yPixel = (int) (height * ((float) yPixel / oldHeightPixels));
+	}
+    }
 }

@@ -1,6 +1,6 @@
 package powerworks.event;
 
-import powerworks.block.Block;
+import powerworks.collidable.block.Block;
 
 public class PlaceBlockEvent extends Event{
     public int xTile, yTile;

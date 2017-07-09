@@ -16,6 +16,7 @@ public class Hotbar extends ScreenObject {
 	super(xPixel, yPixel, 1);
 	this.numSlots = numSlots;
 	this.inv = Game.getMainPlayer().getInventory();
+	adjustPosition = true;
     }
 
     public int getNumberOfItems() {
@@ -65,13 +66,6 @@ public class Hotbar extends ScreenObject {
 
     @Override
     public void onClose() {
-    }
-
-    @Override
-    public void onScreenSizeChange(int oldWidthPixels, int oldHeightPixels) {
-	Renderer r = Game.getRenderEngine();
-	xPixel = r.getWidthPixels() / 2 - 8 * (Image.HOTBAR_SLOT.getWidthPixels() / 2);
-	yPixel = r.getHeightPixels() - Image.HOTBAR_SLOT.getHeightPixels();
     }
 
     @Override
