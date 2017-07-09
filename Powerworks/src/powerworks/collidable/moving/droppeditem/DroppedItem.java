@@ -47,10 +47,15 @@ public class DroppedItem extends Moving {
     }
 
     @Override
+    public void removeFromLevel() {
+	super.removeFromLevel();
+	currentChunk.getDroppedItems().remove(this);
+    }
+    
+    @Override
     public void remove() {
 	super.remove();
 	type = null;
-	currentChunk.getDroppedItems().remove(this);
     }
     
     @Override

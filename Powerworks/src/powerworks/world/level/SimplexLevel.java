@@ -25,13 +25,11 @@ public class SimplexLevel extends Level {
     protected void generateLevel() {
 	System.out.println("Generating level, seed: " + seed);
 	singleOre = new SimplexNoise(100, 0.5, genRandom(seed, 99));
-	/*
 	for (int y = 0; y < heightChunks; y++) {
 	    for (int x = 0; x < widthChunks; x++) {
-		chunks[x + y * widthChunks] = generateChunk(x, y);
+		chunks[x + y * widthChunks] = new Chunk(this, x, y);
 	    }
 	}
-	*/
     }
 
     private boolean scatter(int scatter) {
@@ -42,8 +40,7 @@ public class SimplexLevel extends Level {
     }
 
     @Override
-    public Chunk generateChunk(int xChunk, int yChunk) {
-	System.out.println("Loading chunk at " + xChunk + ", " + yChunk);
+    public Tile[] generateChunkTiles(int xChunk, int yChunk) {
 	int xTile = xChunk << 3;
 	int yTile = yChunk << 3;
 	Tile[] tiles = new Tile[(int) Math.pow(Chunk.CHUNK_SIZE, 2)];
@@ -63,6 +60,6 @@ public class SimplexLevel extends Level {
 		}
 	    }
 	}
-	return new Chunk(this, xChunk, yChunk, tiles);
+	return tiles;
     }
 }

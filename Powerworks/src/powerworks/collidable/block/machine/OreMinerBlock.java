@@ -26,10 +26,8 @@ public class OreMinerBlock extends MachineBlock {
 	    public void run() {
 		for (OreTile t : getAvailableOreTiles()) {
 		    if (Game.getLevel().tryDropItem(t.getOreItem(), xPixel - 20, yPixel - 20)) {
-			System.out.println(t.getAmount());
 			t.addAmount(-1);
 			if (t.getAmount() <= 0) {
-			    System.out.println(xTile + ", " + yTile);
 			    Game.getLevel().replaceTile(xTile, yTile, TileType.GRASS);
 			}
 			break;

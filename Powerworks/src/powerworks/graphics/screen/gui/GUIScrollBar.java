@@ -140,7 +140,6 @@ public class GUIScrollBar extends GUIElement {
 		currentPos += mYPixel - mYPixelPrev;
 		mYPixelPrev = mYPixel;
 		((Scrollable) parent).onScrollbarMove();
-		System.out.println("test" + currentPos);
 	    }
 	}
     }

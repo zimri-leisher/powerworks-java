@@ -68,7 +68,7 @@ public final class MainMenuGUI extends GUI {
 	buttons.setRelXPixel((Image.MAIN_MENU_BUTTON_BOX.getWidthPixels() - buttons.getWidthPixels()) / 2);
 	buttons.setRelYPixel((Image.MAIN_MENU_BUTTON_BOX.getHeightPixels() - buttons.getHeightPixels()) / 2);
 	grip = new GUIDragGrip(box, Image.MAIN_MENU_BUTTON_BOX.getWidthPixels() - Image.GUI_DRAG_GRIP.getWidthPixels() - 1, Image.MAIN_MENU_BUTTON_BOX.getHeightPixels() - Image.GUI_DRAG_GRIP.getHeightPixels() - 1, 2);
-	text = new GUIText(this, 4, height - 4, 2, "Version 0.0.1 private build");
+	text = new GUIText(this, 4, height - 4, 2, "Version " + Game.VERSION + " private build");
     }
 
     @Override

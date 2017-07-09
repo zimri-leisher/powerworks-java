@@ -9,6 +9,20 @@ import powerworks.collidable.Collidable;
 public class SpatialOrganizer<T extends Collidable> implements Iterable<T> {
 
     List<T> objects = new ArrayList<T>();
+    int xPixel, yPixel, widthPixels, heightPixels;
+    boolean noDimensions;
+
+    public SpatialOrganizer(int xPixel, int yPixel, int widthPixels, int heightPixels) {
+	this.xPixel = xPixel;
+	this.yPixel = yPixel;
+	this.widthPixels = widthPixels;
+	this.heightPixels = heightPixels;
+	noDimensions = false;
+    }
+    
+    public SpatialOrganizer() {
+	noDimensions = true;
+    }
 
     public List<T> getIntersecting(int x, int y, int width, int height) {
 	List<T> returnObj = new ArrayList<T>();
@@ -30,8 +44,9 @@ public class SpatialOrganizer<T extends Collidable> implements Iterable<T> {
     }
 
     public boolean anyIntersecting(int x, int y, int width, int height, Predicate<T> condition) {
-	return objects.stream().filter(condition).anyMatch((T t) -> GeometryHelper.intersects(x, y, width, height, t.getXPixel() + t.getHitbox().getXStart(), t.getYPixel() + t.getHitbox().getYStart(), t.getHitbox().getWidthPixels(),
-		    t.getHitbox().getHeightPixels()));
+	return objects.stream().filter(condition)
+		.anyMatch((T t) -> GeometryHelper.intersects(x, y, width, height, t.getXPixel() + t.getHitbox().getXStart(), t.getYPixel() + t.getHitbox().getYStart(), t.getHitbox().getWidthPixels(),
+			t.getHitbox().getHeightPixels()));
     }
 
     public boolean anyIntersecting(int x, int y, int width, int height) {
@@ -56,8 +71,16 @@ public class SpatialOrganizer<T extends Collidable> implements Iterable<T> {
 	return returnObj;
     }
 
-    public void add(T t) {
-	objects.add(t);
+    /**
+     * @return whether or not the object added was at least partially the bounds
+     */
+    public boolean add(T t) {
+	if(noDimensions) return objects.add(t);
+	if (GeometryHelper.contains(xPixel, yPixel, widthPixels, heightPixels, t.getXPixel() + t.getHitbox().getXStart(), t.getYPixel() + t.getHitbox().getYStart(), t.getHitbox().getWidthPixels(),
+		t.getHitbox().getHeightPixels())) {
+	    return objects.add(t);
+	}
+	return false;
     }
 
     public void remove(T t) {
@@ -68,7 +91,7 @@ public class SpatialOrganizer<T extends Collidable> implements Iterable<T> {
 		i.remove();
 	}
     }
-    
+
     public int size() {
 	return objects.size();
     }

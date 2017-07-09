@@ -31,7 +31,7 @@ public abstract class Moving extends Collidable {
     @Override
     public void addToLevel() {
 	super.addToLevel();
-	System.out.println(currentChunk);
+	System.out.println("adding moving to " + currentChunk.toString());
 	currentChunk.getMovingEntities().add(this);
     }
 
@@ -146,10 +146,15 @@ public abstract class Moving extends Collidable {
     }
 
     @Override
+    public void removeFromLevel() {
+	super.removeFromLevel();
+	currentChunk.getMovingEntities().remove(this);
+    }
+    
+    @Override
     public void remove() {
 	super.remove();
 	textures = null;
-	currentChunk.getMovingEntities().remove(this);
     }
 
     @Override

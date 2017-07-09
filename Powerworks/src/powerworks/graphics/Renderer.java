@@ -410,12 +410,13 @@ public class Renderer {
 	float absoluteYPixel = yPixel * mainScale * zoom;
 	float absoluteWidth = o.getWidthScale() * image.getWidth() * scaleWidth * oScale * mainScale * zoom;
 	float absoluteHeight = o.getHeightScale() * image.getHeight() * scaleHeight * oScale * mainScale * zoom;
-	AffineTransform old = g2d.getTransform();
+	AffineTransform old = null;
 	Composite oc = g2d.getComposite();
 	if (Game.highlightedChunk != null && o.getXChunk() == Game.highlightedChunk.getXChunk() && o.getYChunk() == Game.highlightedChunk.getYChunk()) {
 	    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.1f));
 	}
 	if (rotation != 0) {
+	    old = g2d.getTransform();
 	    g2d.rotate(Math.toRadians(rotation * 90), absoluteXPixel + absoluteWidth / 2, absoluteYPixel + absoluteHeight / 2);
 	}
 	g2d.drawImage(image, (int) absoluteXPixel, (int) absoluteYPixel, (int) absoluteWidth, (int) absoluteHeight, null);

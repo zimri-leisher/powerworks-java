@@ -38,6 +38,7 @@ public abstract class Living extends Moving {
     @Override
     public void addToLevel() {
 	super.addToLevel();
+	System.out.println("adding living to " + currentChunk.toString());
 	currentChunk.getLivingEntities().add(this);
     }
 
@@ -64,6 +65,12 @@ public abstract class Living extends Moving {
     public double getArmor() {
 	return armor;
     }
+    
+    @Override
+    public void removeFromLevel() {
+	super.removeFromLevel();
+	currentChunk.getLivingEntities().remove(this);
+    }
 
     @Override
     public void remove() {
@@ -75,7 +82,6 @@ public abstract class Living extends Moving {
 	equips.unload();
 	equips = null;
 	type = null;
-	currentChunk.getLivingEntities().remove(this);
     }
 
     @Override

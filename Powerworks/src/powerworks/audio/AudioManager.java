@@ -128,7 +128,7 @@ public class AudioManager {
     }
 
     private double getPan(int xPixel, int yPixel) {
-	return Math.max(Math.min((xPixel - ears.getXPixel()) / MAX_HEARING_DISTANCE_PIXELS, 1), -1);
+	return Math.max(Math.min((float) (xPixel - ears.getXPixel()) / MAX_HEARING_DISTANCE_PIXELS, 1), -1);
     }
 
     public void update() {

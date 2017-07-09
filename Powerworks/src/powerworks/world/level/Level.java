@@ -14,6 +14,7 @@ import powerworks.collidable.moving.Moving;
 import powerworks.collidable.moving.droppeditem.DroppedItem;
 import powerworks.collidable.moving.living.Living;
 import powerworks.collidable.moving.living.Player;
+import powerworks.data.SpatialOrganizer;
 import powerworks.inventory.item.ItemType;
 import powerworks.main.Game;
 import powerworks.world.level.tile.Tile;
@@ -21,12 +22,17 @@ import powerworks.world.level.tile.TileType;
 
 public abstract class Level {
 
+    private class LevelOrganizer {
+	
+    }
+    
     protected Random rand;
     protected int width;
     protected int height;
     protected int widthChunks;
     protected int heightChunks;
     protected Chunk[] chunks;
+    protected SpatialOrganizer<Collidable> collidablesOnChunkBoundary;
     protected String path = null;
     protected long seed;
 
@@ -36,6 +42,7 @@ public abstract class Level {
 	widthChunks = width / Chunk.CHUNK_SIZE;
 	heightChunks = height / Chunk.CHUNK_SIZE;
 	chunks = new Chunk[widthChunks * heightChunks];
+	collidablesOnChunkBoundary = new SpatialOrganizer<Collidable>();
 	this.seed = seed;
 	rand = new Random(seed);
 	generateLevel();
@@ -46,8 +53,8 @@ public abstract class Level {
      */
     protected abstract void generateLevel();
 
-    protected abstract Chunk generateChunk(int xChunk, int yChunk);
-
+    protected abstract Tile[] generateChunkTiles(int xChunk, int yChunk);
+    
     public String getPath() {
 	return path;
     }
@@ -93,18 +100,25 @@ public abstract class Level {
     }
 
     public void update() {
+	Rectangle r = Game.getRenderEngine().getCurrentViewArea();
+	for (Chunk c : getChunksInBoundaryPixels(r.x, r.y, r.width, r.height))
+	    c.setInPlayerViewBounds(true);
 	for (int y = 0; y < heightChunks; y++) {
 	    for (int x = 0; x < widthChunks; x++) {
 		Chunk c = chunks[x + y * widthChunks];
-		if (c != null) {
-		    if (c.keepLoaded())
+		if (c.loaded) {
+		    if (c.determineRequiresUpdate()) {
 			c.update();
-		    else {
+		    } else {
 			// unloadChunk(x, y);
 		    }
 		}
 	    }
 	}
+    }
+
+    public void addToCollidablesOnChunkBoundary(Collidable c) {
+	collidablesOnChunkBoundary.add(c);
     }
 
     public List<Chunk> getChunksInBoundaryTiles(int xTile, int yTile, int widthTiles, int heightTiles) {
@@ -120,7 +134,7 @@ public abstract class Level {
     }
 
     public List<Chunk> getChunksInBoundaryPixels(int xPixel, int yPixel, int widthPixels, int heightPixels) {
-	return getChunksInBoundaryTiles(xPixel >> 4, yPixel >> 4, (widthPixels >> 4) + 1, (heightPixels >> 4) + 1);
+	return getChunksInBoundaryTiles(xPixel >> 4, yPixel >> 4, widthPixels >> 4, heightPixels >> 4);
     }
 
     public Chunk getChunkAtPixel(int xPixel, int yPixel) {
@@ -146,7 +160,6 @@ public abstract class Level {
     public void unloadChunk(int xChunk, int yChunk) {
 	int coord = xChunk + yChunk * widthChunks;
 	chunks[coord].unload();
-	chunks[coord] = null;
     }
 
     public Chunk loadChunkAtPixel(int xPixel, int yPixel) {
@@ -158,8 +171,8 @@ public abstract class Level {
     }
 
     public Chunk loadChunk(int xChunk, int yChunk) {
-	Chunk c = generateChunk(xChunk, yChunk);
-	chunks[xChunk + yChunk * widthChunks] = c;
+	Chunk c = chunks[xChunk + yChunk * widthChunks];
+	c.load();
 	return c;
     }
 
@@ -176,7 +189,7 @@ public abstract class Level {
      */
     public Chunk getAndLoadChunk(int xChunk, int yChunk) {
 	Chunk c = getChunk(xChunk, yChunk);
-	if (c == null)
+	if (!c.loaded)
 	    return loadChunk(xChunk, yChunk);
 	return c;
     }
@@ -347,7 +360,7 @@ public abstract class Level {
 	int yPixel = yTile << 4;
 	return !(anyCollidableIntersecting(type.getHitbox(), xPixel, yPixel));
     }
-    
+
     public void replaceTile(int xTile, int yTile, TileType type) {
 	setTile(type.createInstance(xTile, yTile), xTile, yTile);
     }
@@ -355,23 +368,15 @@ public abstract class Level {
     /**
      * Adjusts the chunk of the moving entity appropriately
      */
-    public Chunk updateChunk(Moving m) {
+    public Chunk updateChunk(Collidable m) {
+	System.out.println("test");
 	Chunk last = m.getCurrentChunk();
 	Chunk current = getAndLoadChunkAtPixel(m.getXPixel(), m.getYPixel());
-	if(last != current) {
-	    removeMovingFromChunk(last, m);
+	if (last != current) {
+	    m.removeFromLevel();
 	    m.addToLevel();
 	}
 	return current;
-    }
-
-    private void removeMovingFromChunk(Chunk c, Moving m) {
-	c.getCollidables().remove(m);
-	c.getMovingEntities().remove(m);
-	if (m instanceof Living)
-	    c.getLivingEntities().remove((Living) m);
-	else if (m instanceof DroppedItem)
-	    c.getDroppedItems().remove((DroppedItem) m);
     }
 
     /**

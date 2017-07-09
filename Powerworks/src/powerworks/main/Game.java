@@ -61,6 +61,7 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
     public static final float NS_PER_UPDATE = 1000000000 / UPDATES_PER_SECOND;
     public static final float NS_PER_FRAME = 1000000000 / FRAMES_PER_SECOND;
     public static final int MAX_UPDATES_BEFORE_RENDER = 5;
+    public static final String VERSION = "0.0.2";
     private static boolean FPS_MODE = false;
     private static boolean PAUSE_IN_ESCAPE_MENU = true;
     static boolean paused = false;
@@ -173,6 +174,10 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	setCursor(Toolkit.getDefaultToolkit().createCustomCursor(
 		new BufferedImage(3, 3, BufferedImage.TYPE_INT_ARGB),
 		new Point(0, 0), "null"));
+    }
+    
+    public static void setPaused(boolean val) {
+	paused = val;
     }
 
     /**
@@ -587,8 +592,8 @@ public final class Game extends Canvas implements Runnable, EventListener, KeyCo
 	    case DEBUG_INFO:
 		switch (pressType) {
 		    case PRESSED:
-			highlightedChunk = level.getLevel().getChunkAtPixel(player.getXPixel(), player.getYPixel());
-			//debugInfo.toggle();
+			//highlightedChunk = level.getLevel().getChunkAtPixel(player.getXPixel(), player.getYPixel());
+			debugInfo.toggle();
 			break;
 		    default:
 			break;

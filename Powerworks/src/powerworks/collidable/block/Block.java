@@ -36,8 +36,9 @@ public class Block extends Collidable {
 	    renderHitbox();
     }
 
-    public void remove() {
-	super.remove();
+    @Override
+    public void removeFromLevel() {
+	super.removeFromLevel();
 	Game.getLevel().removeBlock(this);
     }
 

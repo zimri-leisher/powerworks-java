@@ -20,10 +20,20 @@ public class DebugInfoOverlay extends GUI implements EventListener {
 	EventManager.registerEventListener(this);
     }
 
+    @Override
+    public void onOpen() {
+	super.onOpen();
+	Player p = Game.getMainPlayer();
+	if (position == null)
+	    position = new GUIText(this, 4, 8, 3, "");
+	position.setText("Position:\n  Pixel: " + p.getXPixel() + ", " + p.getYPixel() + "\n  Tile: " + (p.getXPixel() >> 4) + ", " + (p.getYPixel() >> 4) + "\n  Chunk: " + (p.getXPixel() >> 7) + ", "
+		+ (p.getYPixel() >> 7));
+    }
+
     @EventHandler
     public void handleViewMoveEvent(ViewMoveEvent e) {
 	Player p = Game.getMainPlayer();
-	if(position == null)
+	if (position == null)
 	    position = new GUIText(this, 4, 8, 3, "");
 	position.setText("Position:\n  Pixel: " + p.getXPixel() + ", " + p.getYPixel() + "\n  Tile: " + (p.getXPixel() >> 4) + ", " + (p.getYPixel() >> 4) + "\n  Chunk: " + (p.getXPixel() >> 7) + ", "
 		+ (p.getYPixel() >> 7));

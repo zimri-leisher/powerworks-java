@@ -10,20 +10,24 @@ import powerworks.collidable.moving.Moving;
 import powerworks.collidable.moving.droppeditem.DroppedItem;
 import powerworks.collidable.moving.living.Living;
 import powerworks.data.SpatialOrganizer;
+import powerworks.main.Game;
 import powerworks.world.level.tile.Tile;
 import powerworks.world.level.tile.TileType;
 
 public class Chunk {
 
     public class ChunkObjectOrganizer {
+	
     }
+    
+    boolean loaded;
 
     Level parent;
     /*
      * If changing, make sure to edit all the bitwise operations in Level.render
      */
     public static final int CHUNK_SIZE = 8;
-    private int xChunk, yChunk, xTile, yTile;
+    private int xChunk, yChunk, xTile, yTile, xPixel, yPixel;
     private int numberOfBlocks;
     private boolean requiresUpdate = false, inPlayerViewBounds = false;
     private Tile[] tiles;
@@ -33,26 +37,14 @@ public class Chunk {
     SpatialOrganizer<Living> livingEntities;
     SpatialOrganizer<DroppedItem> droppedItems;
 
-    Chunk(Level parent, int xChunk, int yChunk, Tile[] tiles) {
-	this.tiles = tiles;
-	this.parent = parent;
-	this.xChunk = xChunk;
-	this.yChunk = yChunk;
-	this.xTile = xChunk << 3;
-	this.yTile = yChunk << 3;
-	blocks = new Block[tiles.length];
-	collidables = new SpatialOrganizer<Collidable>();
-	movingEntities = new SpatialOrganizer<Moving>();
-	livingEntities = new SpatialOrganizer<Living>();
-	droppedItems = new SpatialOrganizer<DroppedItem>();
-    }
-
     Chunk(Level parent, int xChunk, int yChunk) {
 	this.parent = parent;
 	this.xChunk = xChunk;
 	this.yChunk = yChunk;
 	this.xTile = xChunk << 3;
 	this.yTile = yChunk << 3;
+	this.xPixel = xTile << 4;
+	this.yPixel = yTile << 4;
     }
 
     public SpatialOrganizer<Moving> getMovingEntities() {
@@ -88,8 +80,6 @@ public class Chunk {
     }
 
     public void update() {
-	if (numberOfBlocks > 0 || movingEntities.size() > 0)
-	    requiresUpdate = true;
 	if (!requiresUpdate)
 	    return;
 	for (Moving m : movingEntities)
@@ -99,6 +89,7 @@ public class Chunk {
 	for (Block b : blocks)
 	    if (b != null)
 		b.update();
+	inPlayerViewBounds = false;
     }
 
     public Tile[] getTiles() {
@@ -183,19 +174,23 @@ public class Chunk {
 	inPlayerViewBounds = b;
     }
 
-    public boolean keepLoaded() {
-	return numberOfBlocks > 0 || movingEntities.size() > 0 || inPlayerViewBounds;
+    public boolean determineRequiresUpdate() {
+	return requiresUpdate = numberOfBlocks > 0 || movingEntities.size() > 0 || inPlayerViewBounds;
     }
 
-    public void load() throws IOException {
-	InputStreamReader i = new InputStreamReader(Chunk.class.getResourceAsStream(parent.getPath()));
-	BufferedReader reader = new BufferedReader(i);
-	String line = "";
-	while ((line = reader.readLine()) != null) {
-	}
+    public void load() {
+	loaded = true;
+	int size = CHUNK_SIZE << 4;
+	tiles = parent.generateChunkTiles(xChunk, yChunk);
+	blocks = new Block[tiles.length];
+	collidables = new SpatialOrganizer<Collidable>(xPixel, yPixel, size, size);
+	movingEntities = new SpatialOrganizer<Moving>(xPixel, yPixel, size, size);
+	livingEntities = new SpatialOrganizer<Living>(xPixel, yPixel, size, size);
+	droppedItems = new SpatialOrganizer<DroppedItem>(xPixel, yPixel, size, size);
     }
 
     public void unload() {
+	loaded = false;
 	tiles = null;
 	blocks = null;
 	collidables = null;
@@ -204,7 +199,7 @@ public class Chunk {
 	droppedItems = null;
 	parent = null;
     }
-    
+
     @Override
     public String toString() {
 	return "Chunk at " + xChunk + ", " + yChunk + " with " + numberOfBlocks + " blocks, requires update: " + requiresUpdate + ", in player view bounds: " + inPlayerViewBounds;

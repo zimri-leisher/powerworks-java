@@ -5,11 +5,12 @@ import powerworks.graphics.Image;
 import powerworks.main.Game;
 import powerworks.main.State;
 import powerworks.task.Task;
+import powerworks.main.Setting;
 
 public class EscapeMenuGUI extends GUI {
 
     private GUITexturePane background;
-    private GUIButton mainMenu, exit, options;
+    private GUIButton mainMenu, exit, options, resume;
     private GUIGroup buttons;
 
     public EscapeMenuGUI() {
@@ -56,7 +57,22 @@ public class EscapeMenuGUI extends GUI {
 		Game.exit();
 	    }
 	});
-	buttons = new AutoFormatGUIGroup(this, 0, 0, 3, 0, 0, Arrays.asList(mainMenu, options, exit));
+	resume = new GUIButton(this, 0, 0, 4, "Resume", true, new Task() {
+
+	    @Override
+	    public void run() {
+		close();
+		if(Setting.PAUSE_IN_ESCAPE_MENU.getValue()) {
+		    Game.setPaused(false);
+		}
+	    }
+	}, new Task() {
+
+	    @Override
+	    public void run() {
+	    }
+	});
+	buttons = new AutoFormatGUIGroup(this, 0, 0, 3, 0, 0, Arrays.asList(resume, mainMenu, options, exit));
 	buttons.setRelXPixel((w - buttons.getWidthPixels()) / 2);
 	buttons.setRelYPixel((h - buttons.getHeightPixels()) / 2);
     }

@@ -48,15 +48,8 @@ public class Player extends Living implements KeyControlHandler, EventListener, 
 
     @Override
     public void update() {
+	super.update();
 	Level l = Game.getLevel();
-	Block b = l.getBlockFromPixel(xPixel + hitbox.getXStart() + hitbox.getWidthPixels() / 2, yPixel + hitbox.getYStart() + hitbox.getHeightPixels());
-	if (b instanceof ConveyorBeltBlock) {
-	    int xVel = (b.getRotation() == 1) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 3) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
-	    int yVel = (b.getRotation() == 0) ? -ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : (b.getRotation() == 2) ? ConveyorBeltBlock.CONVEYOR_BELT_ACCELERATION : 0;
-	    addVel(xVel, yVel);
-	}
-	if (velX != 0 || velY != 0)
-	    move();
 	int mouseXPixel = InputManager.getMouseLevelXPixel();
 	int mouseYPixel = InputManager.getMouseLevelYPixel();
 	Item item = getHeldItem();
