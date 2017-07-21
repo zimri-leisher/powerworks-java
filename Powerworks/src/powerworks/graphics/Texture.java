@@ -1,13 +1,9 @@
 package powerworks.graphics;
 
+import java.awt.image.BufferedImage;
+
 public interface Texture {
-
-    public int[] getPixels();
-
+    public BufferedImage getImage();
     public int getWidthPixels();
-    
     public int getHeightPixels();
-    
-    public boolean hasTransparency();
-    
 }

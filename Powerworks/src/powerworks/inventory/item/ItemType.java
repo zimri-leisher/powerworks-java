@@ -1,68 +1,75 @@
 package powerworks.inventory.item;
 
-import powerworks.block.BlockType;
+import java.util.HashMap;
 import powerworks.collidable.Hitbox;
-import powerworks.graphics.StaticTexture;
+import powerworks.collidable.block.BlockType;
+import powerworks.collidable.block.MachineBlockType;
+import powerworks.graphics.Image;
 import powerworks.graphics.Texture;
 
-public enum ItemType {
-    TEST("Test Item", StaticTexture.ERROR, 0, 10),
-    IRON_INGOT("Iron Ingot", StaticTexture.IRON_INGOT, 1, 10), 
-    IRON_ORE("Iron Ore", StaticTexture.IRON_ORE_ITEM, 2, 5, Hitbox.IRON_ORE_ITEM),
-    CONVEYOR_BELT("Conveyor Belt", StaticTexture.CONVEYOR_BELT_ITEM, 3, 20, BlockType.CONVEYOR_BELT_CONNECTED_UP, Hitbox.CONVEYOR_BELT_ITEM),
-    ORE_MINER("Ore Miner", StaticTexture.ERROR, 4, 10, BlockType.ORE_MINER, Hitbox.TILE);
+public class ItemType {
 
+    public static HashMap<String, ItemType> types = new HashMap<String, ItemType>();
+    public static final ItemType ERROR = new ItemType("Error", Image.ERROR, 0, 10);
+    public static final ItemType IRON_INGOT = new ItemType("Iron Ingot", Image.IRON_INGOT, 1, 10);
+    public static final ItemType IRON_ORE = new ItemType("Iron Ore", Image.IRON_ORE_ITEM, 2, 5);
+    public static final ItemType CONVEYOR_BELT = new ItemType("Conveyor Belt", Image.CONVEYOR_BELT_ITEM, 3, 20, MachineBlockType.CONVEYOR_BELT_CONNECTED_UP);
+    public static final ItemType ORE_MINER = new ItemType("Ore Miner", Image.ERROR, 4, 10, MachineBlockType.ORE_MINER);
+    
     int id;
     Texture texture;
     String name;
-    String desc;
+    String desc = "";
     int maxStackSize;
     BlockType placedBlock;
-    Hitbox droppedHitbox;
 
-    private ItemType(String name, Texture texture, int id, int maxStackSize, BlockType block, Hitbox dropppedHitbox) {
+    protected ItemType(String name, Texture texture, int id, int maxStackSize, BlockType block) {
 	this.id = id;
 	this.texture = texture;
 	this.name = name;
-	this.desc = null;
 	this.maxStackSize = maxStackSize;
 	this.placedBlock = block;
-	this.droppedHitbox = dropppedHitbox;
+	types.put(name, this);
     }
-    
-    private ItemType(String name, Texture texture, int id, int maxStackSize) {
-	this(name, texture, id, maxStackSize, BlockType.ERROR, Hitbox.NONE);
+
+    protected ItemType(String name, Texture texture, int id, int maxStackSize) {
+	this(name, texture, id, maxStackSize, BlockType.ERROR);
     }
-    
-    private ItemType(String name, Texture texture, int id, int maxStackSize, Hitbox hitbox) {
-	this(name, texture, id, maxStackSize, BlockType.ERROR, hitbox);
-    }
-    
+
     public int getID() {
 	return id;
     }
-    
+
     public Texture getTexture() {
 	return texture;
     }
-    
+
     public String getName() {
 	return name;
     }
-    
+
     public String getDesc() {
 	return desc;
     }
-    
+
     public int getMaxStackSize() {
 	return maxStackSize;
     }
-    
+
     public BlockType getPlacedBlock() {
 	return placedBlock;
     }
+
+    @Override
+    public String toString() {
+	return name;
+    }
     
-    public Hitbox getDroppedHitbox() {
-	return droppedHitbox;
+    public static ItemType getItemType(String t) {
+	return types.get(t);
+    }
+
+    public static HashMap<String, ItemType> getItemTypes() {
+	return types;
     }
 }

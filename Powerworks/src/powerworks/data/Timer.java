@@ -1,96 +1,103 @@
 package powerworks.data;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import powerworks.main.Game;
+import powerworks.main.Setting;
+import powerworks.task.Task;
 
 public class Timer {
 
-    static ArrayList<Timer> timers = new ArrayList<Timer>();
-    int tickTime, tickOffset, minTicks, maxTicks, timer, currentTick;
+    static List<Timer> timers = new ArrayList<Timer>();
+    int upt, maxTicks, updateCount = 0, currentTick = 0;
+    Task perNTicks, onFinish, perNUpdates;
+    int nUpdates, nTicks;
+    boolean loop = false, playing = false, world = false, remove = false;
 
-    /**
-     * Instantiates a Timer object, which is a handy and easily extendible way
-     * for objects to keep track of cooldowns or other things
-     * 
-     * @param tickTime
-     *            the time it takes to go up a tick
-     * @param tickOffset
-     *            the number of ticks it starts at (will go back to minTicks
-     *            when maxTicks is reached)
-     * @param minTicks
-     *            how many ticks to reset to when it reaches maxTicks
-     * @param maxTicks
-     *            the maximum number of ticks (it will reach this and then the
-     *            next time tickTime is reached it will go to minTicks)
-     */
-    public Timer(int tickTime, int tickOffset, int minTicks, int maxTicks) {
-	if(tickTime < 0 || tickOffset < 0 || minTicks < 0 || maxTicks < 0) throw new IllegalArgumentException("Arguments cannot be less than 0");
-	this.tickTime = tickTime;
-	this.tickOffset = tickOffset;
-	this.minTicks = minTicks;
+    public Timer(int updatesPerTick, int maxTicks, boolean world) {
+	upt = updatesPerTick;
 	this.maxTicks = maxTicks;
+	this.world = world;
+	timers.add(this);
     }
 
-    /**
-     * Resets the timer that counts 60ths of a second (keeping the current frame
-     * and all other attributes)
-     */
-    public void resetTimer() {
-	timer = 0;
+    public int getCurrentUpdate() {
+	return updateCount;
     }
 
-    /**
-     * Sets the timer that counts 60ths of a second (keeping the current frame
-     * and all other attributes). If the time is above the tickTime it will
-     * simply automatically go to the next tick and reset the timer
-     * 
-     * @param time
-     *            the time, in 60ths of a second, to set it to
-     */
-    public void setTimer(int time) {
-	if(time < 0) throw new IllegalArgumentException("Invalid time, can't be less than 0");
-	if (time > tickTime) {
-	    timer = 0;
-	    nextTick();
-	}
-	timer = time;
+    public void play() {
+	playing = true;
+    }
+
+    public void stop() {
+	playing = false;
+    }
+
+    public void resetTimes() {
+	currentTick = 0;
+	updateCount = 0;
+    }
+
+    public void setLoop(boolean loop) {
+	this.loop = loop;
     }
 
     public int getCurrentTick() {
 	return currentTick;
     }
-    
-    public int getMaxTicks() {
-	return maxTicks;
-    }
-    
-    public int getMinTicks() {
-	return minTicks;
-    }
-    
-    public int getTimer() {
-	return timer;
+
+    public void runTaskEveryNUpdates(int updates, Task t) {
+	perNUpdates = t;
+	nUpdates = updates;
     }
 
-    /**
-     * Goes to the next tick, if it is already at maxTicks then it goes back to minTicks
-     */
-    public void nextTick() {
-	if (currentTick == maxTicks)
-	    currentTick = minTicks;
-	else
-	    currentTick++;
+    public void runTaskEveryNTicks(int ticks, Task t) {
+	perNTicks = t;
+	nTicks = ticks;
     }
-    
-    public void setCurrentTick(int currentTick) {
-	if (currentTick > maxTicks || currentTick < minTicks)
-	    throw new IllegalArgumentException("Cannot set tick number above or below max or min");
-	this.currentTick = currentTick;
+
+    public void runTaskOnFinish(Task t) {
+	onFinish = t;
     }
-    
-    public static void update() {
-	for(Timer t : timers) {
-	    t.timer++;
-	    if(t.timer == t.tickTime) t.nextTick();
+
+    private void nextUpdate() {
+	if (!world || !(Setting.PAUSE_IN_ESCAPE_MENU.getValue() && Game.isPaused())) {
+	    updateCount++;
+	    if (nUpdates > 0 && updateCount % nUpdates == 0)
+		perNUpdates.run();
+	    if (updateCount % upt == 0) {
+		currentTick++;
+		if (currentTick % maxTicks == 0) {
+		    if (onFinish != null)
+			onFinish.run();
+		    if (!loop)
+			playing = false;
+		} else {
+		    if (nTicks > 0 && currentTick % nTicks == 0) {
+			perNTicks.run();
+		    }
+		}
+	    }
 	}
+    }
+
+    public boolean isPlaying() {
+	return playing;
+    }
+
+    public static void update() {
+	Iterator<Timer> i = timers.iterator();
+	while(i.hasNext()) {
+	    Timer t = i.next();
+	    if(t.remove)
+		i.remove();
+	}
+	timers.stream().filter(Timer::isPlaying).forEach(Timer::nextUpdate);
+    }
+    
+    public void remove() {
+	remove = true;
+	perNTicks = onFinish = perNUpdates = null;
     }
 }

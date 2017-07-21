@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="WINDOWS-1252" standalone="no"?>
+<jardesc>
+    <jar path="C:/Users/Zimri/Desktop/Powerworks.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/Powerworks/build.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" mainClassHandleIdentifier="=Powerworks/src&lt;powerworks.main{Game.java[Game" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="true">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+        <file path="/Powerworks/.gitignore"/>
+        <file path="/Powerworks/.project"/>
+        <javaElement handleIdentifier="=Powerworks/res"/>
+        <folder path="/Powerworks/lib"/>
+        <javaElement handleIdentifier="=Powerworks/src"/>
+        <javaElement handleIdentifier="=Powerworks/data"/>
+        <file path="/Powerworks/.classpath"/>
+    </selectedElements>
+</jardesc>
