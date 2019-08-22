@@ -20,3 +20,6 @@ files : 127
 blank : 1612           
 comment : 1838           
 code : 8768
+
+Check out https://twitter.com/PowerworksGame for news about the current version!
+Message me if you want to get a download of it right now, or look at the current source code (I've come a long way from this)
